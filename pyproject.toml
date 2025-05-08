@@ -13,6 +13,20 @@ dependencies = [
     "django-simple-history>=3.8.0",
     "gunicorn>=23.0.0",
 ]
+
+[tool.setuptools]
+package-dir = {"" = "/src/app"}
+packages = {find = {where = ["src"], include = ["app*"], exclude = []}}
+
 [build-system]
 requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "prospector>=1.16.1",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+    "pytest-django>=4.11.1",
+    "pytest-it>=0.1.5",
+]
