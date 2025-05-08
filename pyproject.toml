@@ -1,0 +1,18 @@
+[project]
+name = "app"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.2.1",
+    "django-guardian>=3.0.0",
+    "django-htmx>=1.23.0",
+    "django-ninja>=1.4.1",
+    "django-oauth-toolkit>=3.0.1",
+    "django-simple-history>=3.8.0",
+    "gunicorn>=23.0.0",
+]
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"

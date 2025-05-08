@@ -1,0 +1,70 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfiles/app.Dockerfile
+      args:
+        - ENVIRONMENT=development
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/src
+    environment:
+      - DATABASE_URL=postgres://app_user:${APP_DB_PASSWORD}@db:5432/webapp
+      - DEBUG=1
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+    depends_on:
+      database_startup:
+        condition: service_completed_successfully
+      database:
+        condition: service_healthy
+
+  database_startup:
+    image: db_startup
+    build:
+      context: .
+      dockerfile: dockerfiles/db_startup.Dockerfile
+      args:
+        - ENVIRONMENT=development
+    environment:
+      - APP_DB_PASSWORD=${APP_DB_PASSWORD}
+      - LANGFUSE_DB_PASSWORD=${LANGFUSE_DB_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    image: postgres:16
+    volumes:
+      - .data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - APP_DB_PASSWORD=${APP_DB_PASSWORD}
+      - LANGFUSE_DB_PASSWORD=${LANGFUSE_DB_PASSWORD}
+      - ENVIRONMENT=${ENVIRONMENT}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: app_nginx
+    build:
+      context: .
+      dockerfile: dockerfiles/nginx.Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+      - database
