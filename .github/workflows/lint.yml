@@ -1,0 +1,15 @@
+name: Run Linter
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run linter with Docker Compose
+      run: docker compose run --rm lint

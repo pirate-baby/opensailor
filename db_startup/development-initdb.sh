@@ -16,18 +16,19 @@ create_user_and_db() {
         END
         \$do\$;
 EOSQL
+    # Make postgres user a member of the new user's role
     psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -v ON_ERROR_STOP=1 <<-EOSQL
-        SELECT 'CREATE DATABASE $db'
-        WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$db')\gexec
+        GRANT $user TO $POSTGRES_USER;
 EOSQL
     psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -v ON_ERROR_STOP=1 <<-EOSQL
-        GRANT ALL PRIVILEGES ON DATABASE $db TO $user;
+        SELECT 'CREATE DATABASE $db OWNER $user'
+        WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$db')\gexec
 EOSQL
 }
 
-create_user_and_db "app" "$APP_DB_PASSWORD" "app"
+create_user_and_db "$APP_DB_USER" "$APP_DB_PASSWORD" "$APP_DB"
 create_user_and_db "langfuse" "$LANGFUSE_DB_PASSWORD" "langfuse"
 
 if [ "$ENVIRONMENT" = "development" ]; then
-    create_user_and_db "app" "$APP_DB_PASSWORD" "test"
+    create_user_and_db "$APP_DB_USER" "$APP_DB_PASSWORD" "test"
 fi

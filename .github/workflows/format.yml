@@ -1,0 +1,15 @@
+name: Check Formatting
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check formatting with Docker Compose
+      run: docker compose run --rm format --check

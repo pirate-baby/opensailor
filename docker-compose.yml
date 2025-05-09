@@ -10,9 +10,13 @@ services:
     volumes:
       - .:/src
     environment:
-      - DATABASE_URL=postgres://app_user:${APP_DB_PASSWORD}@db:5432/webapp
       - DEBUG=1
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - APP_DB_PASSWORD=${APP_DB_PASSWORD}
+      - APP_DB_USER=${APP_DB_USER}
+      - APP_DB=${APP_DB}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
     depends_on:
       database_startup:
         condition: service_completed_successfully
@@ -23,6 +27,16 @@ services:
     profiles:
       - test
     entrypoint: ["uv", "run", "pytest", "/src/tests","--it"]
+  format:
+    <<: *app
+    profiles:
+      - test
+    entrypoint: ["uv", "run", "black", "/src/app/webapp"]
+  lint:
+    <<: *app
+    profiles:
+      - test
+    entrypoint: ["uv", "run", "prospector", "--profile", ".prospector.yaml"]
 
   database_startup:
     image: db_startup
@@ -33,6 +47,8 @@ services:
         - ENVIRONMENT=development
     environment:
       - APP_DB_PASSWORD=${APP_DB_PASSWORD}
+      - APP_DB_USER=${APP_DB_USER}
+      - APP_DB=${APP_DB}
       - LANGFUSE_DB_PASSWORD=${LANGFUSE_DB_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}

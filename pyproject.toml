@@ -12,6 +12,7 @@ dependencies = [
     "django-oauth-toolkit>=3.0.1",
     "django-simple-history>=3.8.0",
     "gunicorn>=23.0.0",
+    "psycopg2-binary>=2.9.10",
 ]
 
 [tool.setuptools]
@@ -24,6 +25,7 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
+    "black>=25.1.0",
     "prospector>=1.16.1",
     "pytest>=8.3.5",
     "pytest-cov>=6.1.1",
