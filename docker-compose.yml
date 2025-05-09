@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/src
+      - static_volume:/src/staticfiles
     environment:
       - DEBUG=1
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
@@ -111,6 +112,11 @@ services:
       dockerfile: dockerfiles/nginx.Dockerfile
     ports:
       - "80:80"
+    volumes:
+      - static_volume:/usr/share/nginx/static
     depends_on:
       - app
       - database
+
+volumes:
+  static_volume:
