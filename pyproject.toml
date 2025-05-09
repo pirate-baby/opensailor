@@ -5,14 +5,18 @@ description = "Open and free sailing database"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "cryptography>=44.0.3",
     "django>=5.2.1",
+    "django-allauth>=65.8.0",
     "django-guardian>=3.0.0",
     "django-htmx>=1.23.0",
     "django-ninja>=1.4.1",
-    "django-oauth-toolkit>=3.0.1",
     "django-simple-history>=3.8.0",
     "gunicorn>=23.0.0",
     "psycopg2-binary>=2.9.10",
+    "pyjwt>=2.10.1",
+    "python3-openid>=3.2.0",
+    "requests>=2.32.3",
 ]
 
 [tool.setuptools]

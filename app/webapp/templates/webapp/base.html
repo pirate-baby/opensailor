@@ -1,4 +1,5 @@
 {% load django_htmx %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,17 +8,21 @@
     <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
     {% htmx_script %}
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rouge+Script&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#0F172A',
-                        secondary: '#1E293B',
-                        accent: '#3B82F6',
+                        primary: '#217399',
+                        accent: '#4CA6CF',
+                        secondary: '#A7D3E8',
+                        white: '#FFFFFF',
                     },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        script: ['Rouge Script', 'cursive'],
                     },
                 }
             }
@@ -35,12 +40,33 @@
     <header class="bg-white shadow-sm">
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0">
-                    <a href="/" class="text-2xl font-bold text-primary">{{ APP_NAME }}</a>
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="flex items-center space-x-2">
+                        <img src="/static/logo.png" alt="OpenSailor Logo" class="h-8 w-8">
+                        <span class="text-3xl font-script text-primary">{{ APP_NAME }}</span>
+                    </a>
                 </div>
                 <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                     <a href="/" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-accent">Home</a>
                     <!-- Add more navigation items here -->
+                </div>
+                <div class="flex items-center">
+                    {% if user.is_authenticated %}
+                        <div class="relative group">
+                            <div class="flex items-center text-gray-700 hover:text-accent cursor-pointer">
+                                <span>{{ user.email|split_first:"@" }}</span>
+                            </div>
+                            <!-- Invisible bridge to prevent menu from disappearing -->
+                            <div class="absolute top-full left-0 right-0 h-2"></div>
+                            <div class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50">
+                                <div class="py-1" role="menu" aria-orientation="vertical">
+                                    <a href="{% url 'account_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Log out</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'account_login' %}" class="text-gray-900 hover:text-accent">Log in</a>
+                    {% endif %}
                 </div>
             </div>
         </nav>

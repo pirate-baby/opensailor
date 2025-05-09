@@ -1,0 +1,8 @@
+{% load allauth %}
+<div>
+    <label for="{{ attrs.id }}" class="block text-sm font-medium text-gray-700">{{ attrs.label }}</label>
+    <input type="{{ attrs.type }}" name="{{ attrs.name }}" id="{{ attrs.id }}" value="{{ attrs.value|default:'' }}" {% if attrs.required %}required{% endif %} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm">
+    {% if attrs.errors %}
+        <p class="mt-1 text-sm text-red-600">{{ attrs.errors.0 }}</p>
+    {% endif %}
+</div>
