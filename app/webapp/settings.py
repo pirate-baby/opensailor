@@ -26,10 +26,13 @@ DEBUG = os.environ["ENVIRONMENT"] == "development"
 
 ALLOWED_HOSTS = ["localhost", "app.localhost"]
 
+# Custom user model
+AUTH_USER_MODEL = 'webapp.User'
 
 # Application definition
 
 INSTALLED_APPS = [
+    "webapp",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -62,6 +65,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "webapp.context_processors.app_name",
             ],
         },
     },

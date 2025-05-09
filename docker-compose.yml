@@ -27,16 +27,37 @@ services:
     profiles:
       - test
     entrypoint: ["uv", "run", "pytest", "/src/tests","--it"]
+    ports: []
   format:
     <<: *app
     profiles:
-      - test
+      - utils
     entrypoint: ["uv", "run", "black", "/src/app/webapp"]
+    ports: []
   lint:
     <<: *app
     profiles:
-      - test
+      - utils
     entrypoint: ["uv", "run", "prospector", "--profile", ".prospector.yaml"]
+    ports: []
+  makemigrations:
+    <<: *app
+    profiles:
+      - utils
+    entrypoint: ["uv", "run", "python", "/src/app/manage.py", "makemigrations"]
+    depends_on:
+      database:
+        condition: service_healthy
+    ports: []
+  migrate:
+    <<: *app
+    profiles:
+      - utils
+    entrypoint: ["uv", "run", "python", "/src/app/manage.py", "migrate"]
+    depends_on:
+      database:
+        condition: service_healthy
+    ports: []
 
   database_startup:
     image: db_startup
