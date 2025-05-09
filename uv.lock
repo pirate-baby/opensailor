@@ -12,53 +12,6 @@ wheels = [
 ]
 
 [[package]]
-name = "app"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "django" },
-    { name = "django-guardian" },
-    { name = "django-htmx" },
-    { name = "django-ninja" },
-    { name = "django-oauth-toolkit" },
-    { name = "django-simple-history" },
-    { name = "gunicorn" },
-    { name = "psycopg2-binary" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "black" },
-    { name = "prospector" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-django" },
-    { name = "pytest-it" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "django", specifier = ">=5.2.1" },
-    { name = "django-guardian", specifier = ">=3.0.0" },
-    { name = "django-htmx", specifier = ">=1.23.0" },
-    { name = "django-ninja", specifier = ">=1.4.1" },
-    { name = "django-oauth-toolkit", specifier = ">=3.0.1" },
-    { name = "django-simple-history", specifier = ">=3.8.0" },
-    { name = "gunicorn", specifier = ">=23.0.0" },
-    { name = "psycopg2-binary", specifier = ">=2.9.10" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "black", specifier = ">=25.1.0" },
-    { name = "prospector", specifier = ">=1.16.1" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "pytest-cov", specifier = ">=6.1.1" },
-    { name = "pytest-django", specifier = ">=4.11.1" },
-    { name = "pytest-it", specifier = ">=0.1.5" },
-]
-
-[[package]]
 name = "asgiref"
 version = "3.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -496,6 +449,53 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/6d/fa/fbf4001037904031639e6bfbfc02badfc7e12f137a8afa254df6c4c8a670/oauthlib-3.2.2.tar.gz", hash = "sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918", size = 177352, upload-time = "2022-10-17T20:04:27.471Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/80/cab10959dc1faead58dc8384a781dfbf93cb4d33d50988f7a69f1b7c9bbe/oauthlib-3.2.2-py3-none-any.whl", hash = "sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca", size = 151688, upload-time = "2022-10-17T20:04:24.037Z" },
+]
+
+[[package]]
+name = "opensailor-org"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "django" },
+    { name = "django-guardian" },
+    { name = "django-htmx" },
+    { name = "django-ninja" },
+    { name = "django-oauth-toolkit" },
+    { name = "django-simple-history" },
+    { name = "gunicorn" },
+    { name = "psycopg2-binary" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "black" },
+    { name = "prospector" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-django" },
+    { name = "pytest-it" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "django", specifier = ">=5.2.1" },
+    { name = "django-guardian", specifier = ">=3.0.0" },
+    { name = "django-htmx", specifier = ">=1.23.0" },
+    { name = "django-ninja", specifier = ">=1.4.1" },
+    { name = "django-oauth-toolkit", specifier = ">=3.0.1" },
+    { name = "django-simple-history", specifier = ">=3.8.0" },
+    { name = "gunicorn", specifier = ">=23.0.0" },
+    { name = "psycopg2-binary", specifier = ">=2.9.10" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "black", specifier = ">=25.1.0" },
+    { name = "prospector", specifier = ">=1.16.1" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "pytest-cov", specifier = ">=6.1.1" },
+    { name = "pytest-django", specifier = ">=4.11.1" },
+    { name = "pytest-it", specifier = ">=0.1.5" },
 ]
 
 [[package]]

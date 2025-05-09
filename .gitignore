@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
+staticfiles/
 
 # Virtual environments
 .venv
@@ -15,3 +16,6 @@ wheels/
 # data
 .data/
 !.data/.gitkeep
+
+# tailwind
+node_modules/

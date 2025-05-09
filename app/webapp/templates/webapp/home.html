@@ -1,0 +1,83 @@
+{% extends "webapp/base.html" %}
+
+{% block hero %}
+<div class="relative isolate w-full">
+    <!-- Video Background -->
+    <div class="absolute inset-0 -z-10 overflow-hidden w-full">
+        <video
+            class="absolute min-w-full min-h-full object-cover"
+            autoplay
+            loop
+            muted
+            playsinline
+        >
+            <source src="/static/header_vid.mp4" type="video/mp4">
+        </video>
+        <!-- Dark overlay for better text readability -->
+        <div class="absolute inset-0 bg-black/50"></div>
+    </div>
+
+    <div class="py-24 sm:py-32 w-full">
+        <div class="max-w-2xl text-center px-6 lg:px-8 mx-auto">
+            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+                Welcome to OpenSailor
+            </h1>
+            <p class="mt-6 text-lg leading-8 text-gray-200">
+                The world's largest open-source sailing data platform. Free as in freedom, free as in cost. Join our community-driven mission to make sailing information accessible to everyone.
+            </p>
+            <div class="mt-10 flex items-center justify-center gap-x-6">
+                <a href="#" class="rounded-md bg-accent px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    Get started
+                </a>
+                <a href="#" class="text-sm font-semibold leading-6 text-white">
+                    Learn more <span aria-hidden="true">→</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white py-24 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl lg:text-center">
+            <h2 class="text-base font-semibold leading-7 text-accent">Why <i>Open</i></h2>
+            <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                The World's Most Comprehensive Open Sailing Resource
+            </p>
+            <p class="mt-6 text-lg leading-8 text-gray-600">
+                Built by sailors, for sailors. Our mission is to create the world's largest and most comprehensive open-access sailing data source, completely free from ads and paywalls.
+            </p>
+        </div>
+        <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+                <div class="flex flex-col">
+                    <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                        Completely Free & Open
+                    </dt>
+                    <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                        <p class="flex-auto">All data and resources are freely available under open-source licenses. No ads, no paywalls, no restrictions.</p>
+                    </dd>
+                </div>
+                <div class="flex flex-col">
+                    <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                        Community Driven
+                    </dt>
+                    <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                        <p class="flex-auto">Built and maintained by a global community of volunteers passionate about making sailing information accessible to all.</p>
+                    </dd>
+                </div>
+                <div class="flex flex-col">
+                    <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                        Comprehensive Data
+                    </dt>
+                    <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                        <p class="flex-auto">Access the world's largest collection of open sailing data, from navigation to weather, maintenance to community knowledge.</p>
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}

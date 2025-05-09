@@ -1,3 +1,3 @@
-# Webapp Template
+# OpenSailor.org
 
-This is a template to serve as a new webapp starting point. Whenever a new convention makes sense, update this template first.
+Sailing is about freedom. Sailing data should be to.
