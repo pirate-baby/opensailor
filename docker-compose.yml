@@ -9,7 +9,6 @@ services:
       - "8000:8000"
     volumes:
       - .:/src
-      - static_volume:/src/staticfiles
     environment:
       - DEBUG=1
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
@@ -22,10 +21,18 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_ENDPOINT_URL=${AWS_S3_ENDPOINT_URL}
+      - AWS_S3_CLIENT_ENDPOINT_URL=http://minio.localhost
+      - AWS_DEFAULT_REGION_NAME=${AWS_DEFAULT_REGION_NAME}
+      - AWS_S3_STORAGE_BUCKET=${AWS_S3_STORAGE_BUCKET}
     depends_on:
       database_startup:
         condition: service_completed_successfully
       database:
+        condition: service_healthy
+      minio:
         condition: service_healthy
   test:
     <<: *app
@@ -112,11 +119,25 @@ services:
       dockerfile: dockerfiles/nginx.Dockerfile
     ports:
       - "80:80"
-    volumes:
-      - static_volume:/usr/share/nginx/static
     depends_on:
       - app
       - database
+      - minio
 
-volumes:
-  static_volume:
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID}
+      - MINIO_REGION_NAME=${AWS_DEFAULT_REGION_NAME}
+      - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - .data/minio:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3

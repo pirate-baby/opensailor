@@ -1,4 +1,5 @@
 {% extends "webapp/base.html" %}
+{% load static %}
 
 {% block hero %}
 <div class="relative isolate w-full">
@@ -11,7 +12,7 @@
             muted
             playsinline
         >
-            <source src="/static/header_vid.mp4" type="video/mp4">
+            <source src="{% static 'assets/videos/header_vid.mp4' %}" type="video/mp4">
         </video>
         <!-- Dark overlay for better text readability -->
         <div class="absolute inset-0 bg-black/50"></div>

@@ -1,3 +1,4 @@
+{% load static %}
 {% load django_htmx %}
 {% load custom_filters %}
 <!DOCTYPE html>
@@ -6,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
-    <link rel="icon" type="image/png" href="/static/logo.png">
+    <link rel="icon" type="image/png" href="{% static 'assets/images/logo.png' %}">
     {% htmx_script %}
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,7 +44,7 @@
             <div class="flex justify-between h-16 items-center">
                 <div class="flex-shrink-0 flex items-center">
                     <a href="/" class="flex items-center space-x-2">
-                        <img src="/static/logo.png" alt="OpenSailor Logo" class="h-8 w-8">
+                        <img src="{% static 'assets/images/logo.png' %}" alt="OpenSailor Logo" class="h-8 w-8">
                         <span class="text-3xl font-script text-primary">{{ APP_NAME }}</span>
                     </a>
                 </div>

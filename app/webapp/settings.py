@@ -32,14 +32,14 @@ AUTH_USER_MODEL = 'webapp.User'
 # Application definition
 
 INSTALLED_APPS = [
+    "django.contrib.staticfiles",
     "webapp",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "django.contrib.sites",  # Required for allauth
+    "django.contrib.sites",
     "django_htmx",
     "guardian",
     "allauth",
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.github",
     "allauth.socialaccount.providers.facebook",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -93,9 +94,8 @@ SITE_ID = 1
 # Authentication settings
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
@@ -185,17 +185,47 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = "/static/"
-
-STATIC_ROOT = "/src/staticfiles"
+STATIC_ROOT = "/staticfiles"  # Required for collectstatic, even with S3 storage
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    "/src/static",
 ]
+
+
+# Static files configuration
+
+base_aws_url = f'{os.environ.get("AWS_S3_CLIENT_ENDPOINT_URL")}/{os.environ.get("AWS_S3_STORAGE_BUCKET")}/'
+STATIC_URL = base_aws_url + 'static/'
+MEDIA_URL = base_aws_url + 'media/'
+
+s3_storage_options = {
+    "bucket_name": os.environ.get('AWS_S3_STORAGE_BUCKET'),
+    "region_name": os.environ.get('AWS_DEFAULT_REGION_NAME'),
+    "endpoint_url": os.environ.get('AWS_S3_ENDPOINT_URL'),
+    "location": "static",
+    "querystring_auth": False,
+    "url_protocol": "https:" if os.environ.get('ENVIRONMENT') == 'production' else "http:",
+    "file_overwrite": True,
+    "gzip": True,
+    "verify": True,
+    "object_parameters": {
+        "CacheControl": "max-age=31536000, public",
+        "ACL": "public-read",
+    },
+    "custom_domain": None,  # This ensures Django serves the files
+}
+
+media_storage_options, staticfiles_storage_options = [s3_storage_options.copy() for _ in range(2)]
+media_storage_options["location"] = "media"
+staticfiles_storage_options["location"] = "static"
+
+STORAGES = {
+    "default": {'BACKEND': "storages.backends.s3.S3Storage", 'OPTIONS': media_storage_options},
+    "staticfiles": {'BACKEND': "storages.backends.s3.S3Storage", 'OPTIONS': staticfiles_storage_options},
+}
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGGING = {
