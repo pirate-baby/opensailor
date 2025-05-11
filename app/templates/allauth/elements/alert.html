@@ -1,0 +1,4 @@
+{% load allauth %}
+<div class="p-4 mb-4 rounded-lg {% if attrs.tags == 'error' %}bg-red-100 text-red-700{% elif attrs.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+    {% slot %}{% endslot %}
+</div>
