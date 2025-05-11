@@ -1,4 +1,5 @@
 from django.db import models
+import re
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 
@@ -7,7 +8,7 @@ class Attribute(models.Model):
         STRING = 'string', _('String')
         FLOAT = 'float', _('Float')
         OPTIONS = 'options', _('Options')
-
+        INTEGER = 'integer', _('Integer')
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -26,6 +27,10 @@ class Attribute(models.Model):
         blank=True,
         help_text=_('List of allowed options for OPTIONS type attributes')
     )
+
+    @property
+    def snake_case_name(self):
+        return re.sub(r'(?<!^)(?=[A-Z])', '_', self.name).lower()
 
     class Meta:
         verbose_name = _('attribute')

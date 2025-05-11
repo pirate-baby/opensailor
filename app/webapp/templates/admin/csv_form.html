@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='webapp' %}">{% trans 'Webapp' %}</a>
+    &rsaquo; <a href="{% url 'admin:webapp_attribute_changelist' %}">{% trans 'Attributes' %}</a>
+    &rsaquo; {% trans 'Import CSV' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div>
+        <form action="." method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div>
+                <fieldset class="module aligned">
+                    <div class="form-row">
+                        <label for="csv_file">{% trans "CSV File:" %}</label>
+                        <input type="file" name="csv_file" id="csv_file" required>
+                    </div>
+                </fieldset>
+                <div class="submit-row">
+                    <input type="submit" value="{% trans 'Upload' %}" class="default">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

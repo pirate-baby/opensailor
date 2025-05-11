@@ -1,10 +1,11 @@
+from typing import List
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from webapp.models.make import Make
 from webapp.models.designer import Designer
-from webapp.models.attribute import Attribute
+from webapp.models.sailboat_attribute import SailboatAttribute
 
 class Sailboat(models.Model):
     name = models.CharField(
@@ -61,111 +62,12 @@ class Sailboat(models.Model):
                 'manufactured_end_year': _('End year cannot be before start year')
             })
 
-    def __getattr__(self, name):
-        """Handle dynamic attribute access"""
-        try:
-            attr = Attribute.objects.get(name=name.lower())
-        except Attribute.DoesNotExist:
-            raise AttributeError(f"Sailboat has no attribute '{name}'")
+    @property
+    def attributes(self):
 
-        # Get all values for this attribute
-        values = self.attribute_values.filter(attribute=attr).values_list('values', flat=True)
-        if not values:
-            return None
-        # Flatten the list of lists into a single list
-        return [v for sublist in values for v in sublist]
+        class AttributeProxy:
+                def __init__(self, attributes: List[SailboatAttribute]):
+                    for attribute in attributes:
+                        self.__dict__[attribute.name] = attribute
 
-    def __setattr__(self, name, value):
-        """Handle dynamic attribute assignment"""
-        if name in self._meta.get_fields():
-            super().__setattr__(name, value)
-            return
-
-        if not self.pk:
-            super().__setattr__(name, value)
-            return
-
-        try:
-            attr = Attribute.objects.get(name=name.lower())
-        except Attribute.DoesNotExist:
-            raise AttributeError(f"Cannot set attribute '{name}' - it does not exist")
-
-        # Delete existing values
-        self.attribute_values.filter(attribute=attr).delete()
-
-        # Create new values
-        if value is not None:
-            self.attribute_values.create(attribute=attr, values=value)
-
-    @classmethod
-    def get_filtered_queryset(cls, filters=None, order_by=None):
-        """
-        Get a filtered and ordered queryset of sailboats.
-
-        Args:
-            filters (dict): Dictionary of filter parameters
-            order_by (str): Field to order by, prefixed with '-' for descending order
-
-        Returns:
-            QuerySet: Filtered and ordered queryset of sailboats
-        """
-        queryset = cls.objects.all()
-
-        if filters:
-            # Handle basic model fields
-            if 'name' in filters:
-                queryset = queryset.filter(name__icontains=filters['name'].lower())
-            if 'make' in filters:
-                queryset = queryset.filter(make__name__icontains=filters['make'].lower())
-            if 'designer' in filters:
-                queryset = queryset.filter(designers__name__icontains=filters['designer'].lower())
-            if 'year_start' in filters:
-                queryset = queryset.filter(manufactured_start_year__gte=filters['year_start'])
-            if 'year_end' in filters:
-                queryset = queryset.filter(manufactured_end_year__lte=filters['year_end'])
-
-            # Handle dynamic attributes
-            for key, value in filters.items():
-                if key.startswith('attr_'):
-                    attr_name = key[5:]  # Remove 'attr_' prefix
-                    try:
-                        attr = Attribute.objects.get(name=attr_name.lower())
-                        if isinstance(value, list):
-                            # For multiple values, we want boats that have ANY of the selected values
-                            queryset = queryset.filter(
-                                attribute_values__attribute=attr,
-                                attribute_values__values__overlap=value
-                            )
-                        else:
-                            queryset = queryset.filter(
-                                attribute_values__attribute=attr,
-                                attribute_values__values__contains=[value]
-                            )
-                    except Attribute.DoesNotExist:
-                        continue
-
-        # Apply ordering
-        if order_by:
-            if order_by.startswith('-'):
-                field = order_by[1:]
-                if field.startswith('attr_'):
-                    attr_name = field[5:]
-                    try:
-                        attr = Attribute.objects.get(name=attr_name.lower())
-                        queryset = queryset.order_by(f'-attribute_values__values__0')
-                    except Attribute.DoesNotExist:
-                        pass
-                else:
-                    queryset = queryset.order_by(order_by)
-            else:
-                if order_by.startswith('attr_'):
-                    attr_name = order_by[5:]
-                    try:
-                        attr = Attribute.objects.get(name=attr_name.lower())
-                        queryset = queryset.order_by('attribute_values__values__0')
-                    except Attribute.DoesNotExist:
-                        pass
-                else:
-                    queryset = queryset.order_by(order_by)
-
-        return queryset.distinct()
+        return AttributeProxy(self.attribute_values.all())

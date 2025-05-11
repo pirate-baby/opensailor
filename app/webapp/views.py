@@ -32,7 +32,7 @@ def sailboats_index(request):
     page_number = request.GET.get('page', 1)
 
     # Get filtered queryset
-    sailboats = Sailboat.get_filtered_queryset(filters, order_by)
+    sailboats = Sailboat.objects.all() #(filters, order_by)
 
     # Paginate results
     paginator = Paginator(sailboats, 12)  # Show 12 sailboats per page
@@ -42,30 +42,11 @@ def sailboats_index(request):
     makes = Sailboat.objects.values_list('make__name', flat=True).distinct().order_by('make__name')
     designers = Sailboat.objects.values_list('designers__name', flat=True).distinct().order_by('designers__name')
 
-    # Get all attributes and their values for multi-select filters
-    attributes = {}
-    for attr in Attribute.objects.all():
-        # Get all unique values for this attribute across all sailboats
-        values = Sailboat.objects.filter(
-            attribute_values__attribute=attr
-        ).values_list(
-            'attribute_values__values', flat=True
-        ).distinct()
-
-        # Flatten the list of lists and get unique values
-        unique_values = sorted(set(
-            value for sublist in values if sublist
-            for value in sublist
-        ))
-
-        if unique_values:  # Only include attributes that have values
-            attributes[attr.name] = unique_values
-
     context = {
         'page_obj': page_obj,
         'makes': makes,
         'designers': designers,
-        'attributes': attributes,
+        'attributes': Attribute.objects.all(),
         'current_filters': request.GET,
         'order_by': order_by,
     }

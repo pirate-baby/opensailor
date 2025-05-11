@@ -59,22 +59,36 @@
                 </div>
 
                 <!-- Property Filters -->
-                {% for attr_name, values in attributes.items %}
+                {% for attr in attributes %}
                     <div>
-                        <label for="attr_{{ attr_name }}" class="block text-sm font-medium text-gray-700">{{ attr_name|title }}</label>
-                        <select name="attr_{{ attr_name }}" id="attr_{{ attr_name }}" multiple
+                        <label for="attr_{{ attr.snake_case_name }}" class="block text-sm font-medium text-gray-700">{{ attr.name|title }}</label>
+                        {% if attr.input_type == 'options' %}
+                            <select name="attr_{{ attr.snake_case_name }}" id="attr_{{ attr.snake_case_name }}" multiple
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
-                            {% for value in values %}
+                            {% for value in attr.options %}
                                 <option value="{{ value }}"
-                                    {% with attr_key="attr_"|add:attr_name %}
+                                    {% with attr_key="attr_"|add:attr.snake_case_name %}
                                         {% if current_filters|get_item:attr_key == value or value in current_filters|get_item:attr_key %}
                                             selected
                                         {% endif %}
                                     {% endwith %}>
                                     {{ value }}
                                 </option>
-                            {% endfor %}
-                        </select>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <input name="attr_{{ attr.snake_case_name }}" id="attr_{{ attr.snake_case_name }}" value="{{ current_filters|get_item:attr.snake_case_name|default:'' }}"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent"
+                                {% if attr.input_type == 'float' %}
+                                    type="number"
+                                    step="0.01"
+                                {% elif attr.input_type == 'integer' %}
+                                    type="number"
+                                {% else %}
+                                    type="text"
+                                {% endif %}
+                            >
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
