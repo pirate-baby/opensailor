@@ -4,6 +4,7 @@ from .designer import Designer
 from .attribute import Attribute
 from .sailboat import Sailboat
 from .sailboat_attribute import SailboatAttribute
+from .media import Media
 
 __all__ = [
     'User',
@@ -11,5 +12,6 @@ __all__ = [
     'Designer',
     'Attribute',
     'Sailboat',
-    'SailboatAttribute'
+    'SailboatAttribute',
+    'Media'
 ]

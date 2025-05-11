@@ -192,15 +192,17 @@ STATICFILES_DIRS = [
 
 
 # Static files configuration
-
-base_aws_url = f'{os.environ.get("AWS_S3_CLIENT_ENDPOINT_URL")}/{os.environ.get("AWS_S3_STORAGE_BUCKET")}/'
+AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
+AWS_S3_CLIENT_ENDPOINT_URL = os.environ.get('AWS_S3_CLIENT_ENDPOINT_URL')
+base_aws_url = f'{AWS_S3_CLIENT_ENDPOINT_URL}/{os.environ.get("AWS_S3_STORAGE_BUCKET")}/'
 STATIC_URL = base_aws_url + 'static/'
 MEDIA_URL = base_aws_url + 'media/'
+
 
 s3_storage_options = {
     "bucket_name": os.environ.get('AWS_S3_STORAGE_BUCKET'),
     "region_name": os.environ.get('AWS_DEFAULT_REGION_NAME'),
-    "endpoint_url": os.environ.get('AWS_S3_ENDPOINT_URL'),
+    "endpoint_url": AWS_S3_ENDPOINT_URL,
     "location": "static",
     "querystring_auth": False,
     "url_protocol": "https:" if os.environ.get('ENVIRONMENT') == 'production' else "http:",

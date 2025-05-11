@@ -108,6 +108,9 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for sailboat in page_obj %}
             <div class="bg-white shadow rounded-lg overflow-hidden">
+                {% if sailboat.photos.first %}
+                    <img src="{{ sailboat.photos.first.url }}" alt="{{ sailboat.make.name }} {{ sailboat.name }}" class="w-full h-48 object-cover">
+                {% endif %}
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900">{{ sailboat.make.name }} {{ sailboat.name }}</h3>
                     <div class="mt-2 text-sm text-gray-500">

@@ -3,10 +3,8 @@ from django.conf import settings
 
 
 @register.simple_tag
-def static(path):
+def media(path):
     """
     For some reason django-storages breaks this tag if the client and server s3 paths are different.
     """
-    return settings.STATIC_URL + path
-
-
+    return settings.MEDIA_URL + path

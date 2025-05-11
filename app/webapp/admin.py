@@ -8,7 +8,7 @@ from django.http import HttpResponse
 import csv
 from io import TextIOWrapper, StringIO
 
-from webapp.models import User, Make, Designer, Attribute, Sailboat, SailboatAttribute
+from webapp.models import User, Make, Designer, Attribute, Sailboat, SailboatAttribute, Media
 
 class CSVImportMixin:
     def get_urls(self):
@@ -198,3 +198,15 @@ class SailboatAttributeAdmin(CSVImportMixin, admin.ModelAdmin):
                 attribute=attribute,
                 defaults={'values': values}
             )
+
+@admin.register(Media)
+class MediaAdmin(admin.ModelAdmin):
+    list_display = ('file', 'media_type', 'url')
+    list_filter = ('media_type',)
+    search_fields = ('file',)
+    readonly_fields = ('url',)
+    fields = ('file', 'media_type', 'url')
+
+    def url(self, obj):
+        return obj.url
+    url.short_description = 'URL'

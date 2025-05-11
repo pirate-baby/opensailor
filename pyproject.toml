@@ -19,6 +19,8 @@ dependencies = [
     "pyjwt>=2.10.1",
     "python3-openid>=3.2.0",
     "requests>=2.32.3",
+    "python-magic>=0.4.27",
+    "pillow>=11.2.1",
 ]
 
 [tool.setuptools]

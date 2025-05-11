@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from webapp.models.make import Make
 from webapp.models.designer import Designer
 from webapp.models.sailboat_attribute import SailboatAttribute
+from webapp.models.media import Media
 
 class Sailboat(models.Model):
     name = models.CharField(
@@ -23,6 +24,13 @@ class Sailboat(models.Model):
         related_name='sailboats',
         blank=True,
         help_text=_('Designers of the sailboat')
+    )
+    photos = models.ManyToManyField(
+        Media,
+        related_name='sailboats',
+        blank=True,
+        limit_choices_to={'media_type': 'image'},
+        help_text=_('Photos of the sailboat')
     )
     manufactured_start_year = models.PositiveIntegerField(
         null=True,
