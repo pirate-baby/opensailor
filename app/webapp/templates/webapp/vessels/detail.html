@@ -1,0 +1,198 @@
+{% extends "webapp/base.html" %}
+{% load custom_filters %}
+
+{% block title %}{{ vessel.name }} - {{ APP_NAME }}{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/@tiptap/extension-markdown@2.1.13/dist/tiptap-extension-markdown.min.css" rel="stylesheet">
+<script type="module">
+    import { Editor } from 'https://unpkg.com/@tiptap/core@2.1.13/dist/tiptap-core.esm.js'
+    import StarterKit from 'https://unpkg.com/@tiptap/starter-kit@2.1.13/dist/tiptap-starter-kit.esm.js'
+    import Markdown from 'https://unpkg.com/@tiptap/extension-markdown@2.1.13/dist/tiptap-extension-markdown.esm.js'
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const editor = new Editor({
+            element: document.querySelector('#editor'),
+            extensions: [
+                StarterKit,
+                Markdown
+            ],
+            content: {{ user_note.content|default:"''"|safe }},
+            autofocus: true,
+            editable: true,
+        });
+
+        const saveButton = document.querySelector('#saveNote');
+        const noteForm = document.querySelector('#noteForm');
+        const noteContent = document.querySelector('#noteContent');
+
+        saveButton.addEventListener('click', function() {
+            noteContent.value = editor.getHTML();
+            noteForm.dispatchEvent(new Event('submit'));
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">{{ vessel.name }}</h1>
+            <p class="mt-1 text-lg text-gray-500">{{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }}</p>
+        </div>
+        {% if user.is_admin or user.is_moderator %}
+        <div class="flex space-x-4">
+            <a href="{% url 'vessel_update' vessel.pk %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                Edit Vessel
+            </a>
+            <a href="{% url 'vessel_delete' vessel.pk %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Delete
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Images -->
+        <div class="col-span-1 lg:col-span-2">
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                {% if vessel.has_images %}
+                    <div class="relative h-96 bg-gray-200">
+                        <img src="{{ vessel.first_image.url }}" alt="{{ vessel.name }}" class="absolute h-full w-full object-cover">
+                    </div>
+                    {% with images=vessel.images_all %}
+                        {% if images|length > 1 %}
+                            <div class="grid grid-cols-6 gap-2 p-2">
+                                {% for image in images %}
+                                    <div class="h-20 bg-gray-200 rounded overflow-hidden">
+                                        <img src="{{ image.url }}" alt="{{ vessel.name }}" class="h-full w-full object-cover">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    <div class="h-96 bg-gray-100 flex items-center justify-center">
+                        <p class="text-gray-400">No images available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Vessel Information -->
+        <div class="col-span-1">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-medium text-gray-900">Vessel Details</h2>
+                <dl class="mt-4 space-y-4">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Hull ID Number (HIN)</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.hull_identification_number }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Year Built</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.year_built|default:"Unknown" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Home Port</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.home_port|default:"Not specified" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Model</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <a href="{% url 'sailboat_detail' vessel.sailboat.pk %}" class="text-accent hover:text-primary">
+                                {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }}
+                            </a>
+                        </dd>
+                    </div>
+                    {% if vessel.sailboat.designers.exists %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Designer(s)</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.sailboat.designers.all|join:", " }}</dd>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Manufacturing Period</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {{ vessel.sailboat.manufactured_start_year|default:"Unknown" }}
+                            {% if vessel.sailboat.manufactured_end_year %}
+                                - {{ vessel.sailboat.manufactured_end_year }}
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Added to Database</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.created_at|date:"F j, Y" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.updated_at|date:"F j, Y" }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sailboat Specifications -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-medium text-gray-900">Sailboat Specifications</h2>
+        <p class="mt-2 text-sm text-gray-500">These are the specifications for the {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }} model.</p>
+
+        {% with sailboat_attributes=vessel.sailboat.attribute_values.all %}
+            {% if sailboat_attributes %}
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for attr_value in sailboat_attributes %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">{{ attr_value.attribute.display_name }}</dt>
+                            <dd class="mt-1 text-sm text-gray-900">
+                                {% if attr_value.values|is_list %}
+                                    {{ attr_value.values|join:", " }}
+                                {% else %}
+                                    {{ attr_value.values }}
+                                {% endif %}
+                                {% if attr_value.attribute.unit %}
+                                    {{ attr_value.attribute.unit }}
+                                {% endif %}
+                            </dd>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="mt-4 text-sm text-gray-500">No specifications available for this sailboat model.</p>
+            {% endif %}
+        {% endwith %}
+
+        <div class="mt-6">
+            <a href="{% url 'sailboat_detail' vessel.sailboat.pk %}" class="text-accent hover:text-primary">
+                View full details for {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }} →
+            </a>
+        </div>
+    </div>
+
+    <!-- Private Notes Section (only visible to authenticated users) -->
+    {% if user.is_authenticated %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-medium text-gray-900">Private Notes</h2>
+            <button id="saveNote"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+                    hx-post="{% url 'vessel_note_update' vessel.pk %}"
+                    hx-trigger="click"
+                    hx-target="#noteStatus"
+                    hx-swap="outerHTML">
+                Save Note
+            </button>
+        </div>
+        <form id="noteForm" hx-post="{% url 'vessel_note_update' vessel.pk %}" hx-trigger="submit" hx-target="#noteStatus">
+            {% csrf_token %}
+            <input type="hidden" name="content" id="noteContent">
+            <div id="editor" class="prose max-w-none min-h-[200px] border border-gray-300 rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"></div>
+            <div id="noteStatus" class="mt-2"></div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

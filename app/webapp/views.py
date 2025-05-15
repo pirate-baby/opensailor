@@ -7,9 +7,13 @@ from webapp.models.attribute import Attribute
 from webapp.models.make import Make
 from webapp.models.designer import Designer
 from webapp.models.media import Media
+from webapp.models.vessel import Vessel, VesselImage
 from webapp.decorators import admin_or_moderator_required
 from webapp.models.sailboat_attribute import SailboatAttribute
+from webapp.models.vessel_note import VesselNote
 import logging
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
@@ -228,3 +232,143 @@ def sailboat_delete(request, pk):
             messages.error(request, f'Error deleting sailboat: {str(e)}')
 
     return render(request, 'webapp/sailboats/delete.html', {'sailboat': sailboat})
+
+def vessels_index(request):
+    # Get search parameter from request
+    search_query = request.GET.get('search', '')
+
+    # Start with all vessels
+    vessels = Vessel.objects.all().select_related('sailboat', 'sailboat__make')
+
+    # Filter by search query - check both HIN and name
+    if search_query:
+        vessels = vessels.filter(hull_identification_number__icontains=search_query) | vessels.filter(name__icontains=search_query)
+
+    # Get page number
+    page_number = request.GET.get('page', 1)
+
+    # Paginate results
+    paginator = Paginator(vessels, 12)  # Show 12 vessels per page
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+    }
+
+    return render(request, 'webapp/vessels/index.html', context)
+
+def vessel_detail(request, pk):
+    vessel = get_object_or_404(Vessel, pk=pk)
+    user_note = None
+    if request.user.is_authenticated:
+        user_note = VesselNote.objects.filter(vessel=vessel, user=request.user).first()
+    context = {
+        'vessel': vessel,
+        'user_note': user_note,
+    }
+    return render(request, 'webapp/vessels/detail.html', context)
+
+@admin_or_moderator_required
+def vessel_create(request):
+    if request.method == 'POST':
+        try:
+            # Get the sailboat
+            sailboat_id = request.POST.get('sailboat')
+            sailboat = get_object_or_404(Sailboat, pk=sailboat_id)
+
+            # Create vessel
+            vessel = Vessel.objects.create(
+                sailboat=sailboat,
+                hull_identification_number=request.POST.get('hull_identification_number').upper(),
+                name=request.POST.get('name'),
+                year_built=request.POST.get('year_built') or None,
+            )
+
+            # Handle images
+            images = request.FILES.getlist('images')
+            for index, image in enumerate(images):
+                media = Media.objects.create(file=image)
+                VesselImage.objects.create(vessel=vessel, image=media, order=index)
+
+            messages.success(request, 'Vessel created successfully.')
+            return redirect('vessel_detail', pk=vessel.pk)
+        except Exception as e:
+            messages.error(request, f'Error creating vessel: {str(e)}')
+
+    context = {
+        'sailboats': Sailboat.objects.all().order_by('make__name', 'name'),
+    }
+    return render(request, 'webapp/vessels/create.html', context)
+
+@admin_or_moderator_required
+def vessel_update(request, pk):
+    vessel = get_object_or_404(Vessel, pk=pk)
+
+    if request.method == 'POST':
+        try:
+            # Get the sailboat
+            sailboat_id = request.POST.get('sailboat')
+            sailboat = get_object_or_404(Sailboat, pk=sailboat_id)
+
+            # Update vessel
+            vessel.sailboat = sailboat
+            for field in ['hull_identification_number', 'name', 'home_port', 'year_built']:
+                setattr(vessel, field, request.POST.get(field))
+            vessel.save()
+
+            # Handle new images
+            images = request.FILES.getlist('images')
+            for index, image in enumerate(images):
+                media = Media.objects.create(file=image)
+                # Get the highest order value
+                highest_order = vessel.vesselimage_set.order_by('-order').first()
+                next_order = (highest_order.order + 1) if highest_order else 0
+                VesselImage.objects.create(vessel=vessel, image=media, order=next_order + index)
+
+            messages.success(request, 'Vessel updated successfully.')
+            return redirect('vessel_detail', pk=vessel.pk)
+        except Exception as e:
+            messages.error(request, f'Error updating vessel: {str(e)}')
+
+    context = {
+        'vessel': vessel,
+        'sailboats': Sailboat.objects.all().order_by('make__name', 'name'),
+    }
+    return render(request, 'webapp/vessels/update.html', context)
+
+@admin_or_moderator_required
+def vessel_delete(request, pk):
+    vessel = get_object_or_404(Vessel, pk=pk)
+
+    if request.method == 'POST':
+        try:
+            vessel.delete()
+            messages.success(request, 'Vessel deleted successfully.')
+            return redirect('vessels_index')
+        except Exception as e:
+            messages.error(request, f'Error deleting vessel: {str(e)}')
+
+    return render(request, 'webapp/vessels/delete.html', {'vessel': vessel})
+
+@login_required
+def vessel_note_update(request, pk):
+    vessel = get_object_or_404(Vessel, pk=pk)
+    if request.method == 'POST':
+        content = request.POST.get('content', '').strip()
+        note, created = VesselNote.objects.get_or_create(
+            vessel=vessel,
+            user=request.user,
+            defaults={'content': content}
+        )
+        if not created:
+            note.content = content
+            note.save()
+
+        if request.headers.get('HX-Request'):
+            return render(request, 'webapp/components/note_status.html', {
+                'status': 'success',
+                'message': 'Note saved successfully'
+            })
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)

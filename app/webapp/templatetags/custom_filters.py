@@ -23,6 +23,11 @@ def in_list(value, list_value):
     return False
 
 @register.filter
+def is_list(value):
+    """Check if a value is a list type"""
+    return isinstance(value, (list, tuple))
+
+@register.filter
 def get_attr(sailboat, attr_name):
     """Get attribute values from a sailboat's attributes"""
     try:

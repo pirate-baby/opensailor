@@ -1,5 +1,5 @@
 {% load static %}
-{% load django_htmx %}
+{% load dj_htmx %}
 {% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
@@ -8,8 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'assets/images/logo.png' %}">
-    {% htmx_script %}
     <script src="https://cdn.tailwindcss.com"></script>
+    {% htmx_script %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rouge+Script&display=swap" rel="stylesheet">
@@ -50,7 +50,8 @@
                 </div>
                 <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                     <a href="/" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-accent">Home</a>
-                    <a href="{% url 'sailboats_index' %}" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-accent">Sailboats</a>
+                    <a href="{% url 'sailboats_index' %}" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-accent">Sailing Models</a>
+                    <a href="{% url 'vessels_index' %}" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-accent">Vessels</a>
                     <!-- Add more navigation items here -->
                 </div>
                 <div class="flex items-center">

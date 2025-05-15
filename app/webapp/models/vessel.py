@@ -52,6 +52,12 @@ class Vessel(models.Model):
         limit_choices_to={'media_type': 'image'},
         help_text=_('Images of this specific vessel')
     )
+    home_port = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_('Home port of this vessel')
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -79,3 +85,24 @@ class Vessel(models.Model):
             raise ValidationError({
                 'year_built': _('Year built cannot be after the sailboat model\'s manufacturing end year')
             })
+
+    @property
+    def images_queryset(self):
+        """Get the queryset of vessel images ordered by the 'order' field"""
+        return self.images.through.objects.filter(vessel=self).order_by('order').select_related('image')
+
+    @property
+    def images_all(self):
+        """Get all images ordered by the 'order' field"""
+        return [vessel_image.image for vessel_image in self.images_queryset]
+
+    @property
+    def first_image(self):
+        """Get the first image, if it exists"""
+        image_relation = self.images.through.objects.filter(vessel=self).order_by('order').first()
+        return image_relation.image if image_relation else None
+
+    @property
+    def has_images(self):
+        """Check if the vessel has any images"""
+        return self.images.exists()

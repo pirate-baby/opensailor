@@ -1,0 +1,125 @@
+{% extends "webapp/base.html" %}
+{% load custom_filters %}
+
+{% block title %}Vessels - {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Vessels</h1>
+        {% if user.is_admin or user.is_moderator %}
+        <a href="{% url 'vessel_create' %}"
+           class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+            Register New Vessel
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Search Box -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="get" class="space-y-4">
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700">Search by Hull Identification Number (HIN) or Vessel Name</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input type="text" name="search" id="search" value="{{ search_query }}"
+                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent"
+                               placeholder="Enter HIN or vessel name">
+                        <button type="submit"
+                                class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Register New Vessel Box -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="text-center">
+            <h2 class="text-lg font-medium text-gray-900">Can't find your vessel?</h2>
+            <p class="mt-1 text-sm text-gray-500">Register your vessel in our database to start tracking it.</p>
+            <div class="mt-6">
+                <a href="{% url 'vessel_create' %}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                    Register New Vessel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for vessel in page_obj %}
+            <a href="{% url 'vessel_detail' vessel.pk %}" class="block bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                {% if vessel.first_image %}
+                    <img src="{{ vessel.first_image.url }}" alt="{{ vessel.name }}" class="w-full h-48 object-cover">
+                {% else %}
+                    <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
+                        <span class="text-gray-400">No Image</span>
+                    </div>
+                {% endif %}
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900">{{ vessel.name }}</h3>
+                    <div class="mt-2 text-sm text-gray-500">
+                        <p>HIN: {{ vessel.hull_identification_number }}</p>
+                        <p class="mt-1">Model: {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }}</p>
+                        {% if vessel.year_built %}
+                            <p class="mt-1">Year: {{ vessel.year_built }}</p>
+                        {% endif %}
+                        {% if vessel.home_port %}
+                            <p class="mt-1">Home Port: {{ vessel.home_port }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        {% empty %}
+            <div class="col-span-full bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-gray-500">No vessels found matching your search criteria.</p>
+                <div class="mt-4">
+                    <a href="{% url 'vessel_create' %}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                        Register New Vessel
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    Previous
+                </a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-accent bg-accent text-sm font-medium text-white">
+                        {{ num }}
+                    </span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {{ num }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    Next
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
