@@ -1,0 +1,28 @@
+{% extends "webapp/base.html" %}
+
+{% block title %}Delete {{ sailboat.make.name }} {{ sailboat.name }} - {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow rounded-lg p-6">
+        <h1 class="text-2xl font-bold mb-6">Delete Sailboat</h1>
+
+        <div class="mb-6">
+            <p class="text-gray-700">Are you sure you want to delete the sailboat "{{ sailboat.make.name }} {{ sailboat.name }}"?</p>
+            <p class="text-red-600 mt-2">This action cannot be undone.</p>
+        </div>
+
+        <form method="post" class="flex justify-end space-x-4">
+            {% csrf_token %}
+            <a href="{% url 'sailboat_detail' sailboat.pk %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                Cancel
+            </a>
+            <button type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Delete Sailboat
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

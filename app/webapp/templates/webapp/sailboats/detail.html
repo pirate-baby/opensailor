@@ -1,0 +1,77 @@
+{% extends "webapp/base.html" %}
+{% load custom_filters %}
+
+{% block title %}{{ sailboat.make.name }} {{ sailboat.name }} - {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ sailboat.make.name }} {{ sailboat.name }}</h1>
+                    {% if sailboat.manufactured_start_year %}
+                    <p class="mt-2 text-gray-600">
+                        Years: {{ sailboat.manufactured_start_year }}{% if sailboat.manufactured_end_year %} - {{ sailboat.manufactured_end_year }}{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                {% if user.is_admin or user.is_moderator %}
+                <div class="flex space-x-4">
+                    <a href="{% url 'sailboat_update' sailboat.pk %}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                        Edit
+                    </a>
+                    <a href="{% url 'sailboat_delete' sailboat.pk %}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Delete
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Images -->
+        {% if sailboat.images.exists %}
+        <div class="p-6 border-b border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for image in sailboat.images.all %}
+                <div class="relative aspect-w-16 aspect-h-9">
+                    <img src="{{ image.url }}" alt="Sailboat image" class="w-full h-full object-cover rounded-lg">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Details -->
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Designers -->
+                {% if sailboat.designers.exists %}
+                <div>
+                    <p class="text-gray-700"><strong>Designers:</strong> {{ sailboat.designers.all|join:", " }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Attributes -->
+                {% for attr_value in sailboat_attributes %}
+                <div>
+                    <p class="text-gray-700">
+                        <strong>{{ attr_value.attribute.name }}:</strong>
+                        {% if attr_value|is_boolean_attribute %}
+                            {% for value in attr_value.values %}
+                                <span class="ml-2 inline-flex items-center">{{ value|format_boolean }}</span>
+                            {% endfor %}
+                        {% else %}
+                            {{ attr_value.values|join:", " }}
+                        {% endif %}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

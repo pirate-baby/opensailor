@@ -5,6 +5,17 @@
 
 {% block content %}
 <div class="space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Sailboats</h1>
+        {% if user.is_admin or user.is_moderator %}
+        <a href="{% url 'sailboat_create' %}"
+           class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+            Add New Sailboat
+        </a>
+        {% endif %}
+    </div>
+
     <!-- Filters -->
     <div class="bg-white shadow rounded-lg p-6">
         <form method="get" class="space-y-4">
@@ -37,14 +48,14 @@
                 </div>
 
                 <div>
-                    <label for="year_start" class="block text-sm font-medium text-gray-700">Year Start</label>
-                    <input type="number" name="year_start" id="year_start" value="{{ current_filters.year_start|default:'' }}"
+                    <label for="year_start" class="block text-sm font-medium text-gray-700">Start Year</label>
+                    <input type="number" name="year_start" id="year_start" value="{{ current_filters.year_start|default:'' }}" min="1800"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
                 </div>
 
                 <div>
-                    <label for="year_end" class="block text-sm font-medium text-gray-700">Year End</label>
-                    <input type="number" name="year_end" id="year_end" value="{{ current_filters.year_end|default:'' }}"
+                    <label for="year_end" class="block text-sm font-medium text-gray-700">End Year</label>
+                    <input type="number" name="year_end" id="year_end" value="{{ current_filters.year_end|default:'' }}" min="1800"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
                 </div>
 
@@ -60,36 +71,7 @@
 
                 <!-- Property Filters -->
                 {% for attr in attributes %}
-                    <div>
-                        <label for="attr_{{ attr.snake_case_name }}" class="block text-sm font-medium text-gray-700">{{ attr.name|title }}</label>
-                        {% if attr.input_type == 'options' %}
-                            <select name="attr_{{ attr.snake_case_name }}" id="attr_{{ attr.snake_case_name }}" multiple
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
-                            {% for value in attr.options %}
-                                <option value="{{ value }}"
-                                    {% with attr_key="attr_"|add:attr.snake_case_name %}
-                                        {% if current_filters|get_item:attr_key == value or value in current_filters|get_item:attr_key %}
-                                            selected
-                                        {% endif %}
-                                    {% endwith %}>
-                                    {{ value }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        {% else %}
-                            <input name="attr_{{ attr.snake_case_name }}" id="attr_{{ attr.snake_case_name }}" value="{{ current_filters|get_item:attr.snake_case_name|default:'' }}"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent"
-                                {% if attr.input_type == 'float' %}
-                                    type="number"
-                                    step="0.01"
-                                {% elif attr.input_type == 'integer' %}
-                                    type="number"
-                                {% else %}
-                                    type="text"
-                                {% endif %}
-                            >
-                        {% endif %}
-                    </div>
+                    {% include "webapp/sailboats/partials/sailboat_attribute_input.html" with attr=attr current_value=current_filters|get_item:attr.snake_case_name name_prefix="attr_" multiple=True %}
                 {% endfor %}
             </div>
 
@@ -107,9 +89,9 @@
     <!-- Results -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for sailboat in page_obj %}
-            <div class="bg-white shadow rounded-lg overflow-hidden">
-                {% if sailboat.photos.first %}
-                    <img src="{{ sailboat.photos.first.url }}" alt="{{ sailboat.make.name }} {{ sailboat.name }}" class="w-full h-48 object-cover">
+            <a href="{% url 'sailboat_detail' sailboat.pk %}" class="block bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                {% if sailboat.images.first %}
+                    <img src="{{ sailboat.images.first.url }}" alt="{{ sailboat.make.name }} {{ sailboat.name }}" class="w-full h-48 object-cover">
                 {% endif %}
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900">{{ sailboat.make.name }} {{ sailboat.name }}</h3>
@@ -129,7 +111,7 @@
                         {% endfor %}
                     </div>
                 </div>
-            </div>
+            </a>
         {% empty %}
             <div class="col-span-full text-center py-12">
                 <p class="text-gray-500">No sailboats found matching your criteria.</p>
@@ -139,25 +121,36 @@
 
     <!-- Pagination -->
     {% if page_obj.has_other_pages %}
-        <div class="flex justify-center space-x-2">
+    <div class="flex justify-center">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
             {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                     Previous
                 </a>
             {% endif %}
 
-            <span class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            </span>
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-accent bg-accent text-sm font-medium text-white">
+                        {{ num }}
+                    </span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {{ num }}
+                    </a>
+                {% endif %}
+            {% endfor %}
 
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <a href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                     Next
                 </a>
             {% endif %}
-        </div>
+        </nav>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

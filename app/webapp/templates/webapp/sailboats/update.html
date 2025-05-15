@@ -1,0 +1,9 @@
+{% extends "webapp/sailboats/form.html" %}
+
+{% block title %}Update {{ sailboat.make.name }} {{ sailboat.name }} - {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+{% with title="Update Sailboat" submit_text="Update Sailboat" %}
+{{ block.super }}
+{% endwith %}
+{% endblock %}

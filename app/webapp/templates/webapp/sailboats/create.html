@@ -1,0 +1,9 @@
+{% extends "webapp/sailboats/form.html" %}
+
+{% block title %}Create Sailboat - {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+{% with title="Create New Sailboat" submit_text="Create Sailboat" %}
+{{ block.super }}
+{% endwith %}
+{% endblock %}

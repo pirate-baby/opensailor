@@ -30,7 +30,67 @@ class Attribute(models.Model):
 
     @property
     def snake_case_name(self):
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', self.name).lower()
+        return re.sub(r'(?<!^\s)(?=[A-Z])', '_', self.name).lower()
+
+    def get_form_field_name(self, prefix="attr_"):
+        """
+        Returns the name of the form field for this attribute,
+        with the given prefix (default: 'attr_')
+        """
+        return f"{prefix}{self.snake_case_name}"
+
+    def is_in_form_data(self, form_data, prefix="attr_"):
+        """
+        Checks if this attribute exists in the form data.
+        Handles both regular input names and array-style input names (with []).
+
+        Args:
+            form_data: The request POST or GET data
+            prefix: Prefix used for the attribute name in the form (default: 'attr_')
+
+        Returns:
+            bool: True if the attribute is in the form data, False otherwise
+        """
+        field_name = self.get_form_field_name(prefix)
+        array_field_name = f"{field_name}[]"
+
+        # Check for direct match
+        if field_name in form_data:
+            return True
+
+        # Check for array-style fields
+        for key in form_data.keys():
+            if key.startswith(array_field_name.replace('[]', '[')):
+                return True
+
+        return False
+
+    def get_values_from_form_data(self, form_data, prefix="attr_"):
+        """
+        Extracts all values for this attribute from the form data.
+        Handles both regular input names and array-style input names.
+
+        Args:
+            form_data: The request POST or GET data
+            prefix: Prefix used for the attribute name in the form (default: 'attr_')
+
+        Returns:
+            list: List of values for this attribute
+        """
+        field_name = self.get_form_field_name(prefix)
+        array_field_name = f"{field_name}[]"
+
+        if field_name in form_data:
+            values = form_data.getlist(field_name)
+        else:
+            # For array-style inputs, collect all values with matching prefix
+            values = []
+            for key in form_data.keys():
+                if key.startswith(array_field_name.replace('[]', '[')):
+                    values.extend(form_data.getlist(key))
+
+        # Filter out empty values
+        return [v for v in values if v]
 
     class Meta:
         verbose_name = _('attribute')

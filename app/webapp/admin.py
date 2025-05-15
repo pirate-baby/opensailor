@@ -9,6 +9,8 @@ import csv
 from io import TextIOWrapper, StringIO
 
 from webapp.models import User, Make, Designer, Attribute, Sailboat, SailboatAttribute, Media
+from webapp.models.vessel import Vessel, VesselImage
+from webapp.models.sailboat import SailboatImage
 
 class CSVImportMixin:
     def get_urls(self):
@@ -147,13 +149,18 @@ class SailboatAttributeInline(admin.TabularInline):
     model = SailboatAttribute
     extra = 1
 
+class SailboatImageInline(admin.TabularInline):
+    model = SailboatImage
+    extra = 1
+    fields = ('image', 'order')
+
 @admin.register(Sailboat)
 class SailboatAdmin(CSVImportMixin, admin.ModelAdmin):
     list_display = ('name', 'make', 'manufactured_start_year', 'manufactured_end_year')
     list_filter = ('make', 'designers')
     search_fields = ('name', 'make__name', 'designers__name')
     filter_horizontal = ('designers',)
-    inlines = [SailboatAttributeInline]
+    inlines = [SailboatAttributeInline, SailboatImageInline]
     ordering = ('make__name', 'name')
 
     def process_csv(self, reader):
@@ -210,3 +217,41 @@ class MediaAdmin(admin.ModelAdmin):
     def url(self, obj):
         return obj.url
     url.short_description = 'URL'
+
+class VesselImageInline(admin.TabularInline):
+    model = VesselImage
+    extra = 1
+    fields = ('image', 'order')
+
+@admin.register(Vessel)
+class VesselAdmin(CSVImportMixin, admin.ModelAdmin):
+    list_display = ('name', 'sailboat', 'hull_identification_number', 'year_built')
+    list_filter = ('sailboat', 'year_built')
+    search_fields = ('name', 'hull_identification_number', 'sailboat__name')
+    inlines = [VesselImageInline]
+    ordering = ('sailboat__name', 'name')
+
+    def process_csv(self, reader):
+        for row in reader:
+            try:
+                sailboat = Sailboat.objects.get(name=row['sailboat_name'].lower())
+
+                Vessel.objects.update_or_create(
+                    hull_identification_number=row['hull_identification_number'],
+                    defaults={
+                        'sailboat': sailboat,
+                        'name': row['name'],
+                        'year_built': row.get('year_built', None)
+                    }
+                )
+            except Sailboat.DoesNotExist:
+                raise Exception(f"Sailboat with name '{row['sailboat_name']}' does not exist")
+            except KeyError as e:
+                raise Exception(f"Missing required field: {str(e)}")
+
+@admin.register(SailboatImage)
+class SailboatImageAdmin(admin.ModelAdmin):
+    list_display = ('sailboat', 'image', 'order')
+    list_filter = ('sailboat',)
+    search_fields = ('sailboat__name', 'image__file')
+    ordering = ('sailboat__name', 'order')

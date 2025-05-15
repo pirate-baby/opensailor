@@ -1,0 +1,108 @@
+{% comment %}
+This partial template renders an input for a SailboatAttribute.
+It can be used in both search filters and forms.
+
+Required context variables:
+- attr: The Attribute model instance
+- current_value: The current value for this attribute (optional, can be a list)
+- name_prefix: Prefix for the input name (e.g. 'attr_' for filters)
+
+Optional context variables:
+- multiple: Whether to allow multiple values (default: false)
+- required: Whether the input is required (default: false)
+{% endcomment %}
+
+<div>
+    <label for="{{ name_prefix }}{{ attr.snake_case_name }}" class="block text-sm font-medium text-gray-700">
+        {{ attr.name }}
+        {% if required %}
+            <span class="text-red-500">*</span>
+        {% endif %}
+    </label>
+    {% if attr.input_type == 'options' %}
+        <select name="{{ name_prefix }}{{ attr.snake_case_name }}{% if multiple %}[]{% endif %}"
+                id="{{ name_prefix }}{{ attr.snake_case_name }}"
+                {% if multiple %}multiple{% endif %}
+                {% if required %}required{% endif %}
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
+            {% if not required %}
+                <option value=""> --- </option>
+            {% endif %}
+            {% for option in attr.options %}
+                <option value="{{ option }}"
+                    {% if multiple and current_value %}
+                        {% if option in current_value %}selected{% endif %}
+                    {% elif current_value == option %}selected{% endif %}>
+                    {{ option }}
+                </option>
+            {% endfor %}
+        </select>
+    {% elif attr.input_type == 'float' or attr.input_type == 'integer' %}
+        {% if multiple and current_value %}
+            {% for value in current_value %}
+                <div class="flex items-center mb-2">
+                    <input name="{{ name_prefix }}{{ attr.snake_case_name }}[]"
+                          value="{{ value|default:'' }}"
+                          {% if required %}required{% endif %}
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent"
+                          {% if attr.input_type == 'float' %}
+                              type="number"
+                              step="0.01"
+                          {% else %}
+                              type="number"
+                          {% endif %}
+                    >
+                    {% if not forloop.first %}
+                        <button type="button" class="ml-2 text-red-500 remove-value">&times;</button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="button" class="text-accent add-value">+ Add another value</button>
+        {% else %}
+            <input name="{{ name_prefix }}{{ attr.snake_case_name }}{% if multiple %}[]{% endif %}"
+                  value="{% if current_value %}{% if current_value|first %}{{ current_value|first }}{% endif %}{% endif %}"
+                  {% if required %}required{% endif %}
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent"
+                  {% if attr.input_type == 'float' %}
+                      type="number"
+                      step="0.01"
+                  {% else %}
+                      type="number"
+                  {% endif %}
+            >
+            {% if multiple %}
+                <button type="button" class="text-accent add-value">+ Add another value</button>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        {% if multiple and current_value %}
+            {% for value in current_value %}
+                <div class="flex items-center mb-2">
+                    <input name="{{ name_prefix }}{{ attr.snake_case_name }}[]"
+                          value="{{ value|default:'' }}"
+                          {% if required %}required{% endif %}
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent"
+                          type="text"
+                    >
+                    {% if not forloop.first %}
+                        <button type="button" class="ml-2 text-red-500 remove-value">&times;</button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="button" class="text-accent add-value">+ Add another value</button>
+        {% else %}
+            <input name="{{ name_prefix }}{{ attr.snake_case_name }}{% if multiple %}[]{% endif %}"
+                  value="{% if current_value %}{% if current_value|first %}{{ current_value|first }}{% endif %}{% endif %}"
+                  {% if required %}required{% endif %}
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent"
+                  type="text"
+            >
+            {% if multiple %}
+                <button type="button" class="text-accent add-value">+ Add another value</button>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+    {% if attr.description %}
+        <p class="mt-1 text-sm text-gray-500">{{ attr.description }}</p>
+    {% endif %}
+</div>
