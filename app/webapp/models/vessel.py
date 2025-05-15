@@ -34,6 +34,13 @@ class Vessel(models.Model):
         unique=True,
         help_text=_('Unique Hull Identification Number (HIN) for this vessel')
     )
+    USCG_number = models.CharField(
+        max_length=14,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text=_('Number issued by the USCG for this vessel')
+    )
     name = models.CharField(
         max_length=255,
         help_text=_('Name of this vessel')
@@ -106,3 +113,11 @@ class Vessel(models.Model):
     def has_images(self):
         """Check if the vessel has any images"""
         return self.images.exists()
+
+    @property
+    def has_user_notes(self):
+        """Check if the current user has any notes on this vessel"""
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.context_processors import get_user
+        User = get_user_model()
+        return self.notes.filter(user=get_user()).exists()

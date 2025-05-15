@@ -42,10 +42,17 @@
             <h2 class="text-lg font-medium text-gray-900">Can't find your vessel?</h2>
             <p class="mt-1 text-sm text-gray-500">Register your vessel in our database to start tracking it.</p>
             <div class="mt-6">
-                <a href="{% url 'vessel_create' %}"
-                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
-                    Register New Vessel
-                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'vessel_create' %}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                        Register New Vessel
+                    </a>
+                {% else %}
+                    <a href="{% url 'account_login' %}?next={{ request.path }}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                        Sign in to Register New Vessel
+                    </a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -61,16 +68,21 @@
                         <span class="text-gray-400">No Image</span>
                     </div>
                 {% endif %}
-                <div class="p-6">
-                    <h3 class="text-lg font-medium text-gray-900">{{ vessel.name }}</h3>
-                    <div class="mt-2 text-sm text-gray-500">
-                        <p>HIN: {{ vessel.hull_identification_number }}</p>
-                        <p class="mt-1">Model: {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }}</p>
-                        {% if vessel.year_built %}
-                            <p class="mt-1">Year: {{ vessel.year_built }}</p>
-                        {% endif %}
-                        {% if vessel.home_port %}
-                            <p class="mt-1">Home Port: {{ vessel.home_port }}</p>
+                <div class="p-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">{{ vessel.name }}</h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                {% if vessel.year_built %}{{ vessel.year_built }}{% endif %} {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }}
+                            </p>
+                            {% if vessel.home_port %}
+                                <p class="mt-1 text-sm text-gray-500">Hailing from {{ vessel.home_port }}</p>
+                            {% endif %}
+                        </div>
+                        {% if vessel in user_vessels_with_notes %}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent" viewBox="0 0 20 20" fill="currentColor" title="You have notes on this vessel">
+                                <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" />
+                            </svg>
                         {% endif %}
                     </div>
                 </div>

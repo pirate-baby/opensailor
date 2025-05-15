@@ -251,9 +251,15 @@ def vessels_index(request):
     paginator = Paginator(vessels, 12)  # Show 12 vessels per page
     page_obj = paginator.get_page(page_number)
 
+    # Get vessels with notes for the current user if they're authenticated
+    user_vessels_with_notes = Vessel.objects.filter(
+        notes__user=request.user
+    ) if request.user.is_authenticated else Vessel.objects.none()
+
     context = {
         'page_obj': page_obj,
         'search_query': search_query,
+        'user_vessels_with_notes': user_vessels_with_notes,
     }
 
     return render(request, 'webapp/vessels/index.html', context)

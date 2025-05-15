@@ -4,22 +4,63 @@
 {% block title %}{{ vessel.name }} - {{ APP_NAME }}{% endblock %}
 
 {% block extra_head %}
-<link href="https://cdn.jsdelivr.net/npm/@tiptap/extension-markdown@2.1.13/dist/tiptap-extension-markdown.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@tiptap/extension-text-align@2.1.13/dist/tiptap-extension-text-align.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@tiptap/extension-typography@2.1.13/dist/tiptap-extension-typography.min.css" rel="stylesheet">
 <script type="module">
-    import { Editor } from 'https://unpkg.com/@tiptap/core@2.1.13/dist/tiptap-core.esm.js'
-    import StarterKit from 'https://unpkg.com/@tiptap/starter-kit@2.1.13/dist/tiptap-starter-kit.esm.js'
-    import Markdown from 'https://unpkg.com/@tiptap/extension-markdown@2.1.13/dist/tiptap-extension-markdown.esm.js'
+    import { Editor } from 'https://esm.sh/@tiptap/core'
+    import StarterKit from 'https://esm.sh/@tiptap/starter-kit'
+    import TextAlign from 'https://esm.sh/@tiptap/extension-text-align'
+    import Typography from 'https://esm.sh/@tiptap/extension-typography'
+    import TaskList from 'https://esm.sh/@tiptap/extension-task-list'
+    import TaskItem from 'https://esm.sh/@tiptap/extension-task-item'
 
     document.addEventListener('DOMContentLoaded', function() {
+        const editorElement = document.querySelector('#editor');
         const editor = new Editor({
-            element: document.querySelector('#editor'),
+            element: editorElement,
             extensions: [
                 StarterKit,
-                Markdown
+                TextAlign.configure({
+                    types: ['heading', 'paragraph'],
+                }),
+                Typography,
+                TaskList,
+                TaskItem.configure({
+                    nested: true,
+                }),
             ],
-            content: {{ user_note.content|default:"''"|safe }},
+            content: "{{ user_note.content|default:''|safe }}",
             autofocus: true,
             editable: true,
+        });
+
+        // Add toolbar
+        const toolbar = document.createElement('div');
+        toolbar.className = 'tiptap-toolbar';
+        const toolbarContainer = document.getElementById('editor-toolbar');
+        toolbarContainer.appendChild(toolbar);
+
+        // Add basic formatting buttons with correct command functions
+        const buttons = [
+            { command: () => editor.commands.toggleBold(), icon: 'B' },
+            { command: () => editor.commands.toggleItalic(), icon: 'I' },
+            { command: () => editor.commands.toggleUnderline(), icon: 'U' },
+            { command: () => editor.commands.toggleStrike(), icon: 'S' },
+            { command: () => editor.commands.toggleBulletList(), icon: '•' },
+            { command: () => editor.commands.toggleOrderedList(), icon: '1.' },
+            { command: () => editor.commands.toggleTaskList(), icon: '☐' },
+            { command: () => editor.commands.setTextAlign('left'), icon: '←' },
+            { command: () => editor.commands.setTextAlign('center'), icon: '↔' },
+            { command: () => editor.commands.setTextAlign('right'), icon: '→' },
+        ];
+
+        buttons.forEach(({ command, icon }) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.innerHTML = icon;
+            button.className = 'tiptap-button';
+            button.onclick = command;
+            toolbar.appendChild(button);
         });
 
         const saveButton = document.querySelector('#saveNote');
@@ -32,6 +73,48 @@
         });
     });
 </script>
+<style>
+    .tiptap-toolbar {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .tiptap-button {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.25rem;
+        background: white;
+        cursor: pointer;
+    }
+    .tiptap-button:hover {
+        background: #f3f4f6;
+    }
+    #editor {
+        padding: 1rem;
+        min-height: 200px;
+        max-height: 300px;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.25rem;
+        outline: none;
+        box-shadow: none;
+        overflow: auto;
+    }
+    #editor:focus {
+        outline: none !important;
+        border-color: #e5e7eb !important;
+        box-shadow: none !important;
+    }
+    .ProseMirror-focused {
+        outline: none !important;
+        box-shadow: none !important;
+        border-color: #e5e7eb !important;
+    }
+    .ProseMirror p {
+        margin: 0.5rem 0;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -90,7 +173,27 @@
                 <dl class="mt-4 space-y-4">
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Hull ID Number (HIN)</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.hull_identification_number }}</dd>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if user.is_authenticated %}
+                                {{ vessel.hull_identification_number }}
+                            {% else %}
+                                <a href="{% url 'account_login' %}?next={{ request.path }}" class="text-accent hover:text-primary">
+                                    Log in to see HIN
+                                </a>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">USCG Number</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if user.is_authenticated %}
+                                {{ vessel.uscg_number|default:"Not specified" }}
+                            {% else %}
+                                <a href="{% url 'account_login' %}?next={{ request.path }}" class="text-accent hover:text-primary">
+                                    Log in to see USCG Number
+                                </a>
+                            {% endif %}
+                        </dd>
                     </div>
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Year Built</dt>
@@ -172,27 +275,34 @@
         </div>
     </div>
 
-    <!-- Private Notes Section (only visible to authenticated users) -->
+    <!-- Notes Section -->
     {% if user.is_authenticated %}
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-medium text-gray-900">Private Notes</h2>
-            <button id="saveNote"
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
-                    hx-post="{% url 'vessel_note_update' vessel.pk %}"
-                    hx-trigger="click"
-                    hx-target="#noteStatus"
-                    hx-swap="outerHTML">
-                Save Note
-            </button>
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-medium text-gray-900">Your Notes</h2>
+            <form id="noteForm" method="post" action="{% url 'vessel_note_update' vessel.pk %}" class="mt-4">
+                {% csrf_token %}
+                <input type="hidden" name="content" id="noteContent">
+                <div id="editor-toolbar"></div>
+                <div id="editor"></div>
+                <div class="mt-4">
+                    <button type="button" id="saveNote"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                        Save Note
+                    </button>
+                </div>
+            </form>
         </div>
-        <form id="noteForm" hx-post="{% url 'vessel_note_update' vessel.pk %}" hx-trigger="submit" hx-target="#noteStatus">
-            {% csrf_token %}
-            <input type="hidden" name="content" id="noteContent">
-            <div id="editor" class="prose max-w-none min-h-[200px] border border-gray-300 rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"></div>
-            <div id="noteStatus" class="mt-2"></div>
-        </form>
-    </div>
+    {% else %}
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <h2 class="text-xl font-medium text-gray-900">Want to take notes on this vessel?</h2>
+            <p class="mt-2 text-sm text-gray-500">Sign in to add your personal notes and track information about this vessel.</p>
+            <div class="mt-4">
+                <a href="{% url 'account_login' %}?next={{ request.path }}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                    Sign in to leave notes
+                </a>
+            </div>
+        </div>
     {% endif %}
 </div>
 {% endblock %}
