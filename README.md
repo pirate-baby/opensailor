@@ -1,5 +1,5 @@
 # OpenSailor.org
-![logo](static/assets/images/logo.png | width=200)
+![logo](static/assets/images/logo.png | width="200px")
 Sailing is about freedom. Sailing data should be to.
 _(more to come)_
 
