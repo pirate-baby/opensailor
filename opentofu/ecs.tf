@@ -36,6 +36,16 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
+resource "aws_iam_role_policy_attachment" "ecs_task_basic" {
+  role       = aws_iam_role.ecs_task.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_app_s3_rds" {
+  role       = aws_iam_role.ecs_task.name
+  policy_arn = aws_iam_policy.app_s3_rds.arn
+}
+
 resource "aws_ecs_task_definition" "app" {
   family                   = "${var.app_name}-task"
   network_mode             = "awsvpc"
@@ -113,6 +123,45 @@ resource "aws_ecs_task_definition" "app" {
           awslogs-group         = "/ecs/${var.app_name}"
           awslogs-region        = "us-east-2"
           awslogs-stream-prefix = "db_startup"
+        }
+      }
+    }
+  ])
+}
+
+resource "aws_ecs_task_definition" "db_exec" {
+  family                   = "${var.app_name}-db-exec"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+  container_definitions = jsonencode([
+    {
+      name         = "db_exec"
+      image        = "${aws_ecr_repository.db_startup.repository_url}:latest"
+      entryPoint   = ["tail", "-f", "/dev/null"]
+      essential    = true
+      environment = [
+        { name = "APP_DB_USER", value = "opensailor" },
+        { name = "APP_DB", value = "opensailor" },
+        { name = "POSTGRES_DB", value = "postgres" },
+        { name = "POSTGRES_USER", value = "postgres" },
+        { name = "POSTGRES_PORT", value = "5432" },
+        { name = "POSTGRES_HOST", value = aws_db_instance.main.address },
+      ]
+      secrets = [
+        { name = "APP_DB_PASSWORD", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:APP_DB_PASSWORD::" },
+        { name = "LANGFUSE_DB_PASSWORD", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:LANGFUSE_DB_PASSWORD::" },
+        { name = "POSTGRES_PASSWORD", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:POSTGRES_PASSWORD::" },
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/${var.app_name}"
+          awslogs-region        = "us-east-2"
+          awslogs-stream-prefix = "db_exec"
         }
       }
     }
