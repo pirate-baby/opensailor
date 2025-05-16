@@ -59,6 +59,31 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ecr:CompleteLayerUpload"
         ],
         Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "arn:aws:s3:::opensailor-tfstate",
+          "arn:aws:s3:::opensailor-tfstate/*"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query",
+          "dynamodb:UpdateItem"
+        ],
+        Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
       }
     ]
   })
