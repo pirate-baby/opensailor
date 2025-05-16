@@ -13,7 +13,7 @@ resource "aws_lb_target_group" "app" {
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
   health_check {
-    path                = "/"
+    path                = "/healthz"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2

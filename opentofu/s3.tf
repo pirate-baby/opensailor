@@ -1,7 +1,11 @@
 resource "aws_s3_bucket" "static" {
   bucket        = "${var.app_name}-public-storage"
   force_destroy = true
-  acl           = "public-read"
+}
+
+resource "aws_s3_bucket_acl" "static_acl" {
+  bucket = aws_s3_bucket.static.id
+  acl    = "public-read"
 }
 
 resource "aws_s3_bucket_public_access_block" "static" {
