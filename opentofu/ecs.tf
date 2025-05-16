@@ -36,6 +36,26 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
+resource "aws_iam_role_policy" "ecs_task_ssmmessages" {
+  name = "ecs-task-ssmmessages"
+  role = aws_iam_role.ecs_task.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "ecs_task_basic" {
   role       = aws_iam_role.ecs_task.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
