@@ -2,9 +2,18 @@ from django.contrib import admin
 from django.urls import path, include
 from webapp.api import api
 from webapp.views import (
-    home, sailboats_index, sailboat_create, sailboat_detail,
-    sailboat_update, sailboat_delete, vessels_index, vessel_create,
-    vessel_detail, vessel_update, vessel_delete, vessel_note_update
+    home,
+    sailboats_index,
+    sailboat_create,
+    sailboat_detail,
+    sailboat_update,
+    sailboat_delete,
+    vessels_index,
+    vessel_create,
+    vessel_detail,
+    vessel_update,
+    vessel_delete,
+    vessel_note_update,
 )
 
 
