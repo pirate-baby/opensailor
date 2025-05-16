@@ -1,9 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# Initialize OpenTofu and pull latest state from S3
-cd opentofu
-
 tofu init -input=false
 
 tofu show -json > terraform-state.json
