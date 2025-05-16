@@ -59,7 +59,8 @@ resource "aws_iam_policy" "app_s3_rds" {
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:PutObjectAcl"
         ],
         Resource = [
           "${aws_s3_bucket.static.arn}",
