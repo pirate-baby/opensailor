@@ -31,7 +31,7 @@ resource "random_password" "langfuse_db_password" {
 resource "aws_secretsmanager_secret_version" "env_vars" {
   secret_id = aws_secretsmanager_secret.env_vars.id
   secret_string = jsonencode({
-    DEBUG                = 1
+    DEBUG                = "0"
     DJANGO_SECRET_KEY    = random_password.django_secret_key.result
     APP_DB_PASSWORD      = random_password.app_db_password.result
     LANGFUSE_DB_PASSWORD = random_password.langfuse_db_password.result
