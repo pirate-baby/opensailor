@@ -1,5 +1,7 @@
 #!/bin/bash
 uv sync && \
+uv run python app/manage.py migrate contenttypes && \
+uv run python app/manage.py migrate auth && \
 uv run python app/manage.py migrate && \
 uv run python app/manage.py collectstatic --noinput && \
 uv run python app/manage.py runserver 0.0.0.0:8000
