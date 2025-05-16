@@ -31,11 +31,27 @@ resource "aws_ecs_task_definition" "app" {
       name         = "nginx"
       image        = "${aws_ecr_repository.nginx.repository_url}:latest"
       portMappings = [{ containerPort = 80 }]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/${var.app_name}"
+          awslogs-region        = "us-east-2"
+          awslogs-stream-prefix = "nginx"
+        }
+      }
     },
     {
       name         = "app"
       image        = "${aws_ecr_repository.app.repository_url}:latest"
       portMappings = [{ containerPort = 8000 }]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/${var.app_name}"
+          awslogs-region        = "us-east-2"
+          awslogs-stream-prefix = "app"
+        }
+      }
 
       environment = [
         { name = "DEBUG", value = "False" },
