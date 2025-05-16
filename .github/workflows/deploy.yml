@@ -46,11 +46,9 @@ jobs:
         with:
           tofu-version: 'latest'
 
-      - name: Make export script executable
-        run: chmod +x opentofu/export-ecs-task-def.sh # github doesn't copy the executable bit?
-
       - name: Export ECS task definition from OpenTofu
-        run: opentofu/export-ecs-task-def.sh
+        working-directory: opentofu
+        run: export-ecs-task-def.sh
 
       - name: Show exported ECS task definition
         run: cat opentofu/ecs-task-def.json
