@@ -16,6 +16,7 @@ jq -r '
       cpu: .values.cpu,
       memory: .values.memory,
       executionRoleArn: .values.execution_role_arn,
+      taskRoleArn: .values.task_role_arn,
       containerDefinitions: (.values.container_definitions | fromjson)
     }
 ' terraform-state.json > ecs-task-def.json
