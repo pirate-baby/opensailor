@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "static" {
-  bucket        = "${var.app_name}-static"
+  bucket        = "${var.app_name}-public-storage"
   force_destroy = true
 }
 
