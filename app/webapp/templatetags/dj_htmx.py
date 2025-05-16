@@ -10,10 +10,14 @@ def htmx_script(minified=True):
     For some reason django-storages breaks this tag if the client and server s3 paths are different.
     """
     path = f"django_htmx/htmx{'.min' if minified else ''}.js"
-    return format_html(
-        '<script src="{}" defer></script>\n',
-        settings.STATIC_URL + path,
-    ) + django_htmx_script()
+    return (
+        format_html(
+            '<script src="{}" defer></script>\n',
+            settings.STATIC_URL + path,
+        )
+        + django_htmx_script()
+    )
+
 
 def django_htmx_script():
     if settings.DEBUG:
@@ -22,4 +26,3 @@ def django_htmx_script():
         '<script src="{}" defer></script>',
         settings.STATIC_URL + "django_htmx/htmx.js",
     )
-

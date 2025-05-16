@@ -8,34 +8,35 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
 MEDIA_TYPE_CHOICES = [
-    ('image', 'Image'),
-    ('video', 'Video'),
-    ('audio', 'Audio'),
-    ('document', 'Document'),
+    ("image", "Image"),
+    ("video", "Video"),
+    ("audio", "Audio"),
+    ("document", "Document"),
 ]
+
 
 class Media(models.Model):
     """storing file-like media objects"""
+
     file = models.FileField(null=False, blank=False)
     media_type = models.CharField(max_length=20, choices=MEDIA_TYPE_CHOICES)
-
 
     def save(self, *args, **kwargs):
         if not self.id:
             # Validate file exists
             if not self.file:
-                raise ValueError('File is required')
+                raise ValueError("File is required")
 
             # Get file extension from the filename
             file_extension = os.path.splitext(self.file.name)[1].lower()
 
-            if file_extension in ['.jpg', '.jpeg', '.png']:
-                filename = 'image-' + str(uuid.uuid4()) + file_extension
+            if file_extension in [".jpg", ".jpeg", ".png"]:
+                filename = "image-" + str(uuid.uuid4()) + file_extension
                 self.file.name = filename
-                self.media_type = 'image'  # Set media_type for images
+                self.media_type = "image"  # Set media_type for images
             else:
                 # error
-                raise ValueError('Invalid file type')
+                raise ValueError("Invalid file type")
 
             # Only resize if we have a valid file
             resized_file = self.resize_uploaded_image(self.file, 1024, 1024)
@@ -57,7 +58,7 @@ class Media(models.Model):
                 memory_image = BytesIO(image.read())
                 pil_image = PilImage.open(memory_image)
                 img_format = os.path.splitext(image.name)[1][1:].upper()
-                img_format = 'JPEG' if img_format == 'JPG' else img_format
+                img_format = "JPEG" if img_format == "JPG" else img_format
 
                 if pil_image.width > max_width or pil_image.height > max_height:
                     pil_image.thumbnail(size)
@@ -66,7 +67,9 @@ class Media(models.Model):
                 pil_image.save(new_image, format=img_format)
 
                 new_image = ContentFile(new_image.getvalue())
-                return InMemoryUploadedFile(new_image, None, image.name, image.content_type, None, None)
+                return InMemoryUploadedFile(
+                    new_image, None, image.name, image.content_type, None, None
+                )
 
                 # Make sure we can read from the file again
                 image.seek(0)
@@ -98,4 +101,6 @@ class Media(models.Model):
     def url(self):
         if not self.file:
             return ""
-        return self.file.url.replace(settings.AWS_S3_ENDPOINT_URL, settings.AWS_S3_CLIENT_ENDPOINT_URL)
+        return self.file.url.replace(
+            settings.AWS_S3_ENDPOINT_URL, settings.AWS_S3_CLIENT_ENDPOINT_URL
+        )

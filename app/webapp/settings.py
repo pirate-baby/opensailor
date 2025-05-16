@@ -27,7 +27,7 @@ DEBUG = os.environ["ENVIRONMENT"] == "development"
 ALLOWED_HOSTS = ["localhost", "app.localhost"]
 
 # Custom user model
-AUTH_USER_MODEL = 'webapp.User'
+AUTH_USER_MODEL = "webapp.User"
 
 # Application definition
 
@@ -92,49 +92,49 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1
 
 # Authentication settings
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
 
 # Email settings (you'll need to configure these based on your email provider)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@opensailor.org')
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@opensailor.org")
 
 # Social Account Settings
 SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
-            'secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
-            'key': ''
+    "google": {
+        "APP": {
+            "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
+            "secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
+            "key": "",
         },
-        'SCOPE': [
-            'profile',
-            'email',
+        "SCOPE": [
+            "profile",
+            "email",
         ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        }
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
     },
-    'github': {
-        'APP': {
-            'client_id': os.environ.get('GITHUB_CLIENT_ID'),
-            'secret': os.environ.get('GITHUB_CLIENT_SECRET'),
+    "github": {
+        "APP": {
+            "client_id": os.environ.get("GITHUB_CLIENT_ID"),
+            "secret": os.environ.get("GITHUB_CLIENT_SECRET"),
         },
-        'SCOPE': [
-            'user',
-            'repo',
+        "SCOPE": [
+            "user",
+            "repo",
         ],
-    }
+    },
 }
 
 # Database
@@ -192,20 +192,24 @@ STATICFILES_DIRS = [
 
 
 # Static files configuration
-AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
-AWS_S3_CLIENT_ENDPOINT_URL = os.environ.get('AWS_S3_CLIENT_ENDPOINT_URL')
-base_aws_url = f'{AWS_S3_CLIENT_ENDPOINT_URL}/{os.environ.get("AWS_S3_STORAGE_BUCKET")}/'
-STATIC_URL = base_aws_url + 'static/'
-MEDIA_URL = base_aws_url + 'media/'
+AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
+AWS_S3_CLIENT_ENDPOINT_URL = os.environ.get("AWS_S3_CLIENT_ENDPOINT_URL")
+base_aws_url = (
+    f'{AWS_S3_CLIENT_ENDPOINT_URL}/{os.environ.get("AWS_S3_STORAGE_BUCKET")}/'
+)
+STATIC_URL = base_aws_url + "static/"
+MEDIA_URL = base_aws_url + "media/"
 
 
 s3_storage_options = {
-    "bucket_name": os.environ.get('AWS_S3_STORAGE_BUCKET'),
-    "region_name": os.environ.get('AWS_DEFAULT_REGION_NAME'),
+    "bucket_name": os.environ.get("AWS_S3_STORAGE_BUCKET"),
+    "region_name": os.environ.get("AWS_DEFAULT_REGION_NAME"),
     "endpoint_url": AWS_S3_ENDPOINT_URL,
     "location": "static",
     "querystring_auth": False,
-    "url_protocol": "https:" if os.environ.get('ENVIRONMENT') == 'production' else "http:",
+    "url_protocol": (
+        "https:" if os.environ.get("ENVIRONMENT") == "production" else "http:"
+    ),
     "file_overwrite": True,
     "gzip": True,
     "verify": True,
@@ -216,13 +220,21 @@ s3_storage_options = {
     "custom_domain": None,  # This ensures Django serves the files
 }
 
-media_storage_options, staticfiles_storage_options = [s3_storage_options.copy() for _ in range(2)]
+media_storage_options, staticfiles_storage_options = [
+    s3_storage_options.copy() for _ in range(2)
+]
 media_storage_options["location"] = "media"
 staticfiles_storage_options["location"] = "static"
 
 STORAGES = {
-    "default": {'BACKEND': "storages.backends.s3.S3Storage", 'OPTIONS': media_storage_options},
-    "staticfiles": {'BACKEND': "storages.backends.s3.S3Storage", 'OPTIONS': staticfiles_storage_options},
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": media_storage_options,
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": staticfiles_storage_options,
+    },
 }
 
 
