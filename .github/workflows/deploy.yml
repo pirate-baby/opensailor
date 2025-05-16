@@ -49,6 +49,9 @@ jobs:
       - name: Export ECS task definition from OpenTofu
         run: opentofu/export-ecs-task-def.sh
 
+      - name: Show exported ECS task definition
+        run: cat opentofu/ecs-task-def.json
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
