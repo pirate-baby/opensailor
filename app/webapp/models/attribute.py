@@ -3,34 +3,34 @@ import re
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 
+
 class Attribute(models.Model):
     class InputType(models.TextChoices):
-        STRING = 'string', _('String')
-        FLOAT = 'float', _('Float')
-        OPTIONS = 'options', _('Options')
-        INTEGER = 'integer', _('Integer')
+        STRING = "string", _("String")
+        FLOAT = "float", _("Float")
+        OPTIONS = "options", _("Options")
+        INTEGER = "integer", _("Integer")
+
     name = models.CharField(
-        max_length=100,
-        unique=True,
-        help_text=_('Name of the attribute')
+        max_length=100, unique=True, help_text=_("Name of the attribute")
     )
     description = models.TextField(
-        help_text=_('Description of what this attribute represents')
+        help_text=_("Description of what this attribute represents")
     )
     input_type = models.CharField(
         max_length=20,
         choices=InputType.choices,
-        help_text=_('Type of input for this attribute')
+        help_text=_("Type of input for this attribute"),
     )
     options = models.JSONField(
         null=True,
         blank=True,
-        help_text=_('List of allowed options for OPTIONS type attributes')
+        help_text=_("List of allowed options for OPTIONS type attributes"),
     )
 
     @property
     def snake_case_name(self):
-        return re.sub(r'(?<!^\s)(?=[A-Z])', '_', self.name).lower()
+        return re.sub(r"(?<!^\s)(?=[A-Z])", "_", self.name).lower()
 
     def get_form_field_name(self, prefix="attr_"):
         """
@@ -60,7 +60,7 @@ class Attribute(models.Model):
 
         # Check for array-style fields
         for key in form_data.keys():
-            if key.startswith(array_field_name.replace('[]', '[')):
+            if key.startswith(array_field_name.replace("[]", "[")):
                 return True
 
         return False
@@ -86,18 +86,18 @@ class Attribute(models.Model):
             # For array-style inputs, collect all values with matching prefix
             values = []
             for key in form_data.keys():
-                if key.startswith(array_field_name.replace('[]', '[')):
+                if key.startswith(array_field_name.replace("[]", "[")):
                     values.extend(form_data.getlist(key))
 
         # Filter out empty values
         return [v for v in values if v]
 
     class Meta:
-        verbose_name = _('attribute')
-        verbose_name_plural = _('attributes')
+        verbose_name = _("attribute")
+        verbose_name_plural = _("attributes")
         indexes = [
-            models.Index(fields=['name']),
-            models.Index(fields=['input_type']),
+            models.Index(fields=["name"]),
+            models.Index(fields=["input_type"]),
         ]
 
     def __str__(self):
@@ -111,6 +111,6 @@ class Attribute(models.Model):
     def clean(self):
         super().clean()
         if self.input_type == self.InputType.OPTIONS and not self.options:
-            raise ValidationError({
-                'options': _('Options are required for OPTIONS type attributes')
-            })
+            raise ValidationError(
+                {"options": _("Options are required for OPTIONS type attributes")}
+            )

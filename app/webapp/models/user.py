@@ -1,27 +1,31 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Permission
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
 from guardian.shortcuts import get_objects_for_user
+
+from webapp.models.sailboat import Sailboat
+
 
 class User(AbstractUser):
     class Role(models.TextChoices):
-        USER = 'user', _('User')
-        MODERATOR = 'moderator', _('Moderator')
-        ADMIN = 'admin', _('Admin')
+        USER = "user", _("User")
+        MODERATOR = "moderator", _("Moderator")
+        ADMIN = "admin", _("Admin")
 
     role = models.CharField(
         max_length=20,
         choices=Role.choices,
         default=Role.USER,
-        help_text=_('User role that determines access level')
+        help_text=_("User role that determines access level"),
     )
 
     class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
+        verbose_name = _("user")
+        verbose_name_plural = _("users")
         permissions = [
-            ('can_manage_sailboats', 'Can manage sailboats'),
-            ('can_view_sailboats', 'Can view sailboats'),
+            ("can_manage_sailboats", "Can manage sailboats"),
+            ("can_view_sailboats", "Can view sailboats"),
         ]
 
     def __str__(self):
@@ -53,38 +57,30 @@ class User(AbstractUser):
 
     def get_manageable_sailboats(self):
         """Get all sailboats that the user can manage"""
-        from webapp.models.sailboat import Sailboat
         if self.is_admin:
             return Sailboat.objects.all()
-        return get_objects_for_user(self, 'webapp.can_manage_sailboats', Sailboat)
+        return get_objects_for_user(self, "webapp.can_manage_sailboats", Sailboat)
 
     def get_viewable_sailboats(self):
         """Get all sailboats that the user can view"""
-        from webapp.models.sailboat import Sailboat
         if self.is_admin or self.is_moderator:
             return Sailboat.objects.all()
-        return get_objects_for_user(self, 'webapp.can_view_sailboats', Sailboat)
+        return get_objects_for_user(self, "webapp.can_view_sailboats", Sailboat)
 
     def assign_role_permissions(self):
         """Assign appropriate permissions based on user role"""
-        from django.contrib.auth.models import Permission
-        from django.contrib.contenttypes.models import ContentType
-        from webapp.models.sailboat import Sailboat
 
         # Get content type for Sailboat model
         sailboat_ct = ContentType.objects.get_for_model(Sailboat)
 
         # Get permissions
         manage_perm = Permission.objects.get(
-            content_type=sailboat_ct,
-            codename='can_manage_sailboats'
+            content_type=sailboat_ct, codename="can_manage_sailboats"
         )
         view_perm = Permission.objects.get(
-            content_type=sailboat_ct,
-            codename='can_view_sailboats'
+            content_type=sailboat_ct, codename="can_view_sailboats"
         )
 
-        # Clear existing permissions
         self.user_permissions.remove(manage_perm, view_perm)
 
         # Assign permissions based on role

@@ -20,3 +20,10 @@ app/static/
 
 # tailwind
 node_modules/
+
+# OpenTofu/Terraform
+opentofu/.terraform/
+opentofu/.terraform.lock.hcl
+opentofu/terraform.tfstate*
+opentofu/tofu.tfstate*
+opentofu/*.tfplan
