@@ -47,8 +47,9 @@ jobs:
           tofu-version: 'latest'
 
       - name: Export ECS task definition from OpenTofu
-        working-directory: opentofu
-        run: export-ecs-task-def.sh
+        run: |
+          chmod +x opentofu/export-ecs-task-def.sh
+          ./opentofu/export-ecs-task-def.sh
 
       - name: Show exported ECS task definition
         run: cat opentofu/ecs-task-def.json
