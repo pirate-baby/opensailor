@@ -96,3 +96,8 @@ resource "aws_iam_role_policy_attachment" "ecs_secrets_logs" {
   role       = aws_iam_role.ecs_task_execution.name
   policy_arn = aws_iam_policy.ecs_secrets_logs.arn
 }
+
+resource "aws_cloudwatch_log_group" "ecs" {
+  name              = "/ecs/${var.app_name}"
+  retention_in_days = 14
+}
