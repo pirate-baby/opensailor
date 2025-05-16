@@ -141,3 +141,18 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+
+  opentofu:
+    image: ghcr.io/opentofu/opentofu
+    profiles:
+      - deploy
+    working_dir: /infra
+    volumes:
+      - ./opentofu:/infra
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=us-east-2
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    entrypoint: ["/bin/sh"]
+    tty: true
