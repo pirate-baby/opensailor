@@ -71,7 +71,7 @@ resource "aws_iam_policy" "app_s3_rds" {
         Action = [
           "rds-db:connect"
         ],
-        Resource = "*"
+        Resource = [aws_db_instance.main.arn]
       }
     ]
   })
