@@ -84,6 +84,13 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "dynamodb:UpdateItem"
         ],
         Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "iam:PassRole"
+        ],
+        Resource = "arn:aws:iam::227647310737:role/opensailor-ecs-task-execution"
       }
     ]
   })
