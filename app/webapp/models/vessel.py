@@ -1,9 +1,13 @@
+from typing import TYPE_CHECKING
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from webapp.models.sailboat import Sailboat
 from webapp.models.media import Media
+
+if TYPE_CHECKING:
+    from webapp.models.user import User
 
 
 class VesselImage(models.Model):
@@ -81,7 +85,6 @@ class Vessel(models.Model):
 
     def clean(self):
         super().clean()
-        # Validate that year_built is within the sailboat's manufacturing years
         if (
             self.sailboat.manufactured_start_year
             and self.year_built < self.sailboat.manufactured_start_year
@@ -131,12 +134,3 @@ class Vessel(models.Model):
     def has_images(self):
         """Check if the vessel has any images"""
         return self.images.exists()
-
-    @property
-    def has_user_notes(self):
-        """Check if the current user has any notes on this vessel"""
-        from django.contrib.auth import get_user_model
-        from django.contrib.auth.context_processors import get_user
-
-        User = get_user_model()
-        return self.notes.filter(user=get_user()).exists()

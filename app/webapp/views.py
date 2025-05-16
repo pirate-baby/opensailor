@@ -315,30 +315,28 @@ def vessel_detail(request, pk):
 def vessel_create(request):
     if request.method == "POST":
         try:
-            # Get the sailboat
-            sailboat_id = request.POST.get("sailboat")
-            sailboat = get_object_or_404(Sailboat, pk=sailboat_id)
-
-            # Create vessel
-            vessel = Vessel.objects.create(
-                sailboat=sailboat,
-                hull_identification_number=request.POST.get(
-                    "hull_identification_number"
-                ).upper(),
-                name=request.POST.get("name"),
-                year_built=request.POST.get("year_built") or None,
-            )
-
-            # Handle images
-            images = request.FILES.getlist("images")
-            for index, image in enumerate(images):
-                media = Media.objects.create(file=image)
-                VesselImage.objects.create(vessel=vessel, image=media, order=index)
-
-            messages.success(request, "Vessel created successfully.")
-            return redirect("vessel_detail", pk=vessel.pk)
-        except Exception as e:
+            sailboat = get_object_or_404(Sailboat, pk=request.POST["sailboat"])
+        except KeyError as e:
             messages.error(request, f"Error creating vessel: {str(e)}")
+            return redirect("vessel_create")
+
+        vessel = Vessel.objects.create(
+            sailboat=sailboat,
+            hull_identification_number=request.POST.get(
+                "hull_identification_number"
+            ).upper(),
+            name=request.POST.get("name"),
+            year_built=request.POST.get("year_built") or None,
+        )
+
+        # Handle images
+        images = request.FILES.getlist("images")
+        for index, image in enumerate(images):
+            media = Media.objects.create(file=image)
+            VesselImage.objects.create(vessel=vessel, image=media, order=index)
+
+        messages.success(request, "Vessel created successfully.")
+        return redirect("vessel_detail", pk=vessel.pk)
 
     context = {
         "sailboats": Sailboat.objects.all().order_by("make__name", "name"),
