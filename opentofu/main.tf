@@ -12,20 +12,37 @@ resource "random_password" "db_password" {
   override_special = "!#$%&()*+,-.:;<=>?[]^_{|}~"
 }
 
+resource "random_password" "app_db_password" {
+  length          = 24
+  special         = true
+  override_special = "!#$%&()*+,-.:;<=>?[]^_{|}~"
+}
+
 resource "random_password" "django_secret_key" {
   length  = 50
   special = true
 }
+
+resource "random_password" "langfuse_db_password" {
+  length  = 24
+  special = true
+}
+
 resource "aws_secretsmanager_secret_version" "env_vars" {
   secret_id = aws_secretsmanager_secret.env_vars.id
   secret_string = jsonencode({
     DEBUG                = 1
     DJANGO_SECRET_KEY    = random_password.django_secret_key.result
-    APP_DB_PASSWORD      = random_password.db_password.result
+    APP_DB_PASSWORD      = random_password.app_db_password.result
+    LANGFUSE_DB_PASSWORD = random_password.langfuse_db_password.result
+    POSTGRES_DB          = "postgres"
+    POSTGRES_USER        = "postgres"
+    POSTGRES_PASSWORD    = random_password.db_password.result
     GOOGLE_CLIENT_ID     = "replace-me"
     GOOGLE_CLIENT_SECRET = "replace-me"
     GITHUB_CLIENT_ID     = "replace-me"
     GITHUB_CLIENT_SECRET = "replace-me"
+    POSTGRES_PASSWORD    = aws_db_instance.main.password
   })
 }
 

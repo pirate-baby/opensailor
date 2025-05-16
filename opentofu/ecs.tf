@@ -52,7 +52,6 @@ resource "aws_ecs_task_definition" "app" {
           awslogs-stream-prefix = "app"
         }
       }
-
       environment = [
         { name = "DEBUG", value = "False" },
         { name = "APP_DB_USER", value = "opensailor" },
@@ -61,7 +60,7 @@ resource "aws_ecs_task_definition" "app" {
         { name = "AWS_DEFAULT_REGION_NAME", value = "us-east-2" },
         { name = "AWS_S3_ENDPOINT_URL", value = "https://s3.us-east-2.amazonaws.com" },
         { name = "AWS_S3_CLIENT_ENDPOINT_URL", value = "https://s3.us-east-2.amazonaws.com" },
-        { name = "POSTGRES_HOST", value = aws_db_instance.main.endpoint },
+        { name = "POSTGRES_HOST", value = aws_db_instance.main.address },
         { name = "POSTGRES_PORT", value = "5432" },
       ]
       secrets = [
@@ -72,6 +71,32 @@ resource "aws_ecs_task_definition" "app" {
         { name = "GITHUB_CLIENT_ID", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:GITHUB_CLIENT_ID::" },
         { name = "GITHUB_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:GITHUB_CLIENT_SECRET::" },
       ]
+    },
+    {
+      name  = "db_startup"
+      image = "${aws_ecr_repository.db_startup.repository_url}:latest"
+      essential = false
+      environment = [
+        { name = "APP_DB_USER", value = "opensailor" },
+        { name = "APP_DB", value = "opensailor" },
+        { name = "POSTGRES_DB", value = "postgres" },
+        { name = "POSTGRES_USER", value = "postgres" },
+        { name = "POSTGRES_PORT", value = "5432" },
+        { name = "POSTGRES_HOST", value = aws_db_instance.main.address },
+      ]
+      secrets = [
+        { name = "APP_DB_PASSWORD", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:APP_DB_PASSWORD::" },
+        { name = "LANGFUSE_DB_PASSWORD", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:LANGFUSE_DB_PASSWORD::" },
+        { name = "POSTGRES_PASSWORD", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:POSTGRES_PASSWORD::" },
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/${var.app_name}"
+          awslogs-region        = "us-east-2"
+          awslogs-stream-prefix = "db_startup"
+        }
+      }
     }
   ])
 }
