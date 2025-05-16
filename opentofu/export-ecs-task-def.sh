@@ -1,8 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-# Generate the OpenTofu state as JSON
-tofu show -json > opentofu/terraform-state.json
+# Initialize OpenTofu and pull latest state from S3
+cd opentofu
+
+tofu init -input=false
+tofu pull
+
+tofu show -json > terraform-state.json
 
 # Extract the ECS task definition and write to ecs-task-def.json
 jq -r '
@@ -17,4 +22,4 @@ jq -r '
       executionRoleArn: .values.execution_role_arn,
       containerDefinitions: (.values.container_definitions | fromjson)
     }
-' opentofu/terraform-state.json > opentofu/ecs-task-def.json
+' terraform-state.json > ecs-task-def.json
