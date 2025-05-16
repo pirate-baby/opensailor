@@ -90,7 +90,10 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
         Action = [
           "iam:PassRole"
         ],
-        Resource = "arn:aws:iam::227647310737:role/opensailor-ecs-task-execution"
+        Resource = [
+          "arn:aws:iam::227647310737:role/opensailor-ecs-task-execution",
+          "arn:aws:iam::227647310737:role/opensailor-ecs-task"
+        ]
       }
     ]
   })
