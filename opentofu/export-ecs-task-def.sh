@@ -5,7 +5,6 @@ set -euo pipefail
 cd opentofu
 
 tofu init -input=false
-tofu pull
 
 tofu show -json > terraform-state.json
 
