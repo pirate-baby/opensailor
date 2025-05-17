@@ -70,7 +70,7 @@ Optional context variables:
                       type="number"
                   {% endif %}
             >
-            {% if multiple %}
+            {% if multiple and edit_mode %}
                 <button type="button" class="text-accent add-value">+ Add another value</button>
             {% endif %}
         {% endif %}

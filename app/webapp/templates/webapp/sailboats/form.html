@@ -76,26 +76,42 @@
             {% endif %}
 
             <!-- Attributes -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {% for attr in attributes %}
-                    {% if sailboat %}
-                        {% comment %}Find attribute value for this sailboat{% endcomment %}
-                        {% with attr_value=None %}
-                            {% for sa in sailboat_attributes %}
-                                {% if sa.attribute.id == attr.id %}
-                                    {% include "webapp/sailboats/partials/sailboat_attribute_input.html" with attr=attr current_value=sa.values name_prefix="attr_" multiple=True %}
-                                    {% with attr_value=sa %}{% endwith %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if not attr_value %}
-                                {% include "webapp/sailboats/partials/sailboat_attribute_input.html" with attr=attr current_value="" name_prefix="attr_" multiple=True %}
-                            {% endif %}
-                        {% endwith %}
-                    {% else %}
-                        {% include "webapp/sailboats/partials/sailboat_attribute_input.html" with attr=attr current_value="" name_prefix="attr_" multiple=True %}
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Specifications</h3>
+
+            {% regroup attributes by section as attribute_sections %}
+            {% for section_group in attribute_sections %}
+                {% with section=section_group.grouper section_attributes=section_group.list %}
+                    {% if section_attributes|length > 0 %}
+                        <div class="mb-8">
+                            <div class="flex items-center mb-2">
+                                <span class="material-symbols-outlined text-accent text-3xl mr-3">{{ section.icon }}</span>
+                                <h4 class="text-lg font-semibold text-gray-800">{{ section.name }}</h4>
+                            </div>
+                            <hr class="border-t border-accent/30 mb-4" />
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {% for attr in section_attributes %}
+                                    {% if sailboat %}
+                                        {% comment %}Find attribute value for this sailboat{% endcomment %}
+                                        {% with attr_value=None %}
+                                            {% for sa in sailboat_attributes %}
+                                                {% if sa.attribute.id == attr.id %}
+                                                    {% include "webapp/sailboats/partials/sailboat_attribute_input.html" with attr=attr current_value=sa.values name_prefix="attr_" multiple=True %}
+                                                    {% with attr_value=sa %}{% endwith %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if not attr_value %}
+                                                {% include "webapp/sailboats/partials/sailboat_attribute_input.html" with attr=attr current_value="" name_prefix="attr_" multiple=True %}
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        {% include "webapp/sailboats/partials/sailboat_attribute_input.html" with attr=attr current_value="" name_prefix="attr_" multiple=True %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
                     {% endif %}
-                {% endfor %}
-            </div>
+                {% endwith %}
+            {% endfor %}
 
             <!-- Submit Button -->
             <div class="flex justify-end space-x-4">

@@ -47,30 +47,44 @@
 
         <!-- Details -->
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Designers -->
-                {% if sailboat.designers.exists %}
-                <div>
-                    <p class="text-gray-700"><strong>Designers:</strong> {{ sailboat.designers.all|join:", " }}</p>
-                </div>
-                {% endif %}
-
-                <!-- Attributes -->
-                {% for attr_value in sailboat_attributes %}
-                <div>
-                    <p class="text-gray-700">
-                        <strong>{{ attr_value.attribute.name }}:</strong>
-                        {% if attr_value|is_boolean_attribute %}
-                            {% for value in attr_value.values %}
-                                <span class="ml-2 inline-flex items-center">{{ value|format_boolean }}</span>
-                            {% endfor %}
-                        {% else %}
-                            {{ attr_value.values|join:", " }}
-                        {% endif %}
-                    </p>
-                </div>
-                {% endfor %}
+            {% if sailboat.designers.exists %}
+            <div class="mb-6">
+                <p class="text-gray-700"><strong>Designers:</strong> {{ sailboat.designers.all|join:", " }}</p>
             </div>
+            {% endif %}
+
+            <!-- Attributes by Section -->
+            {% regroup sailboat_attributes by section as attribute_sections %}
+
+            {% for section_group in attribute_sections %}
+                {% with section=section_group.grouper attributes=section_group.list %}
+                    {% if attributes|length > 0 %}
+                        <div class="mb-8">
+                            <div class="flex items-center mb-2">
+                                <span class="material-symbols-outlined text-accent text-3xl mr-3">{{ section.icon }}</span>
+                                <h3 class="text-lg font-semibold text-gray-800">{{ section.name }}</h3>
+                            </div>
+                            <hr class="border-t border-accent/30 mb-4" />
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {% for attr_value in attributes %}
+                                <div>
+                                    <p class="text-gray-700">
+                                        <strong>{{ attr_value.attribute.name }}:</strong>
+                                        {% if attr_value|is_boolean_attribute %}
+                                            {% for value in attr_value.values %}
+                                                <span class="ml-2 inline-flex items-center">{{ value|format_boolean }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            {{ attr_value.values|join:", " }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
         </div>
     </div>
 </div>

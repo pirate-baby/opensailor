@@ -70,7 +70,7 @@ def sailboats_index(request):
         "page_obj": page_obj,
         "makes": makes,
         "designers": designers,
-        "attributes": Attribute.objects.all(),
+        "attributes": Attribute.objects.select_related("section").all(),
         "current_filters": request.GET,
         "order_by": order_by,
     }
@@ -119,7 +119,10 @@ def sailboat_create(request):
                 # Only create the attribute if there are values
                 if values:
                     SailboatAttribute.objects.create(
-                        sailboat=sailboat, attribute=attr, values=values
+                        sailboat=sailboat,
+                        attribute=attr,
+                        section=attr.section,
+                        values=values
                     )
 
             # Handle images
@@ -139,7 +142,7 @@ def sailboat_create(request):
     context = {
         "makes": Make.objects.all().order_by("name"),
         "designers": Designer.objects.all().order_by("name"),
-        "attributes": Attribute.objects.all(),
+        "attributes": Attribute.objects.select_related("section").all(),
     }
     return render(request, "webapp/sailboats/create.html", context)
 
@@ -148,7 +151,7 @@ def sailboat_detail(request, pk):
     sailboat = get_object_or_404(Sailboat, pk=pk)
 
     # Load all sailboat attributes for display
-    sailboat_attributes = sailboat.attribute_values.select_related("attribute").all()
+    sailboat_attributes = sailboat.attribute_values.select_related("attribute", "section").all()
 
     context = {
         "sailboat": sailboat,
@@ -236,13 +239,13 @@ def sailboat_update(request, pk):
             messages.error(request, f"Error updating sailboat: {str(e)}")
 
     # Get the sailboat's attributes for the form
-    sailboat_attributes = sailboat.attribute_values.select_related("attribute").all()
+    sailboat_attributes = sailboat.attribute_values.select_related("attribute", "section").all()
 
     context = {
         "sailboat": sailboat,
         "makes": Make.objects.all().order_by("name"),
         "designers": Designer.objects.all().order_by("name"),
-        "attributes": Attribute.objects.all(),
+        "attributes": Attribute.objects.select_related("section").all(),
         "sailboat_attributes": sailboat_attributes,
     }
     return render(request, "webapp/sailboats/update.html", context)
@@ -300,13 +303,21 @@ def vessels_index(request):
 
 
 def vessel_detail(request, pk):
-    vessel = get_object_or_404(Vessel, pk=pk)
+    vessel = get_object_or_404(
+        Vessel.objects.select_related('sailboat'),
+        pk=pk
+    )
     user_note = None
     if request.user.is_authenticated:
         user_note = VesselNote.objects.filter(vessel=vessel, user=request.user).first()
+
+    # Prefetch sailboat attributes with their attributes and sections
+    sailboat_attributes = vessel.sailboat.attribute_values.select_related("attribute", "section").all()
+
     context = {
         "vessel": vessel,
         "user_note": user_note,
+        "sailboat_attributes": sailboat_attributes,
     }
     return render(request, "webapp/vessels/detail.html", context)
 
