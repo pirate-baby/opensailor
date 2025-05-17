@@ -4,6 +4,22 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 
 
+
+class AttributeSection(models.Model):
+    name = models.CharField(max_length=100, unique=True, help_text=_("Section name"))
+    icon = models.CharField(max_length=100, help_text=_("Icon name or identifier"))
+
+    class Meta:
+        verbose_name = _("attribute section")
+        verbose_name_plural = _("attribute sections")
+        indexes = [
+            models.Index(fields=["name"]),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 class Attribute(models.Model):
     class InputType(models.TextChoices):
         STRING = "string", _("String")
@@ -26,6 +42,13 @@ class Attribute(models.Model):
         null=True,
         blank=True,
         help_text=_("List of allowed options for OPTIONS type attributes"),
+    )
+    section = models.ForeignKey(
+        AttributeSection,
+        on_delete=models.PROTECT,
+        related_name="attributes",
+        help_text=_("Section this attribute belongs to"),
+        default=1,
     )
 
     @property

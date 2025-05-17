@@ -244,29 +244,43 @@
         <h2 class="text-xl font-medium text-gray-900">Sailboat Specifications</h2>
         <p class="mt-2 text-sm text-gray-500">These are the specifications for the {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }} model.</p>
 
-        {% with sailboat_attributes=vessel.sailboat.attribute_values.all %}
-            {% if sailboat_attributes %}
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {% for attr_value in sailboat_attributes %}
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500">{{ attr_value.attribute.display_name }}</dt>
-                            <dd class="mt-1 text-sm text-gray-900">
-                                {% if attr_value.values|is_list %}
-                                    {{ attr_value.values|join:", " }}
-                                {% else %}
-                                    {{ attr_value.values }}
-                                {% endif %}
-                                {% if attr_value.attribute.unit %}
-                                    {{ attr_value.attribute.unit }}
-                                {% endif %}
-                            </dd>
+        {% if sailboat_attributes %}
+            <!-- Attributes by Section -->
+            {% regroup sailboat_attributes by section as attribute_sections %}
+
+            {% for section_group in attribute_sections %}
+                {% with section=section_group.grouper attributes=section_group.list %}
+                    {% if attributes|length > 0 %}
+                        <div class="mt-6 mb-6">
+                            <div class="flex items-center mb-2">
+                                <span class="material-symbols-outlined text-accent text-3xl mr-3">{{ section.icon }}</span>
+                                <h3 class="text-lg font-semibold text-gray-800">{{ section.name }}</h3>
+                            </div>
+                            <hr class="border-t border-accent/30 mb-4" />
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {% for attr_value in attributes %}
+                                    <div>
+                                        <dt class="text-sm font-medium text-gray-500">{{ attr_value.attribute.name }}</dt>
+                                        <dd class="mt-1 text-sm text-gray-900">
+                                            {% if attr_value.values|is_list %}
+                                                {{ attr_value.values|join:", " }}
+                                            {% else %}
+                                                {{ attr_value.values }}
+                                            {% endif %}
+                                            {% if attr_value.attribute.unit %}
+                                                {{ attr_value.attribute.unit }}
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="mt-4 text-sm text-gray-500">No specifications available for this sailboat model.</p>
-            {% endif %}
-        {% endwith %}
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <p class="mt-4 text-sm text-gray-500">No specifications available for this sailboat model.</p>
+        {% endif %}
 
         <div class="mt-6">
             <a href="{% url 'sailboat_detail' vessel.sailboat.pk %}" class="text-accent hover:text-primary">

@@ -16,6 +16,7 @@ from webapp.models import (
     Sailboat,
     SailboatAttribute,
     Media,
+    AttributeSection,
 )
 from webapp.models.vessel import Vessel, VesselImage
 from webapp.models.sailboat import SailboatImage
@@ -159,10 +160,16 @@ class DesignerAdmin(CSVImportMixin, admin.ModelAdmin):
         for row in reader:
             Designer.objects.get_or_create(name=row["name"].lower())
 
+@admin.register(AttributeSection)
+class AttributeSectionAdmin(CSVImportMixin, admin.ModelAdmin):
+    list_display = ("name", "icon")
+    search_fields = ("name",)
+    ordering = ("name",)
+
 
 @admin.register(Attribute)
 class AttributeAdmin(CSVImportMixin, admin.ModelAdmin):
-    list_display = ("name", "input_type", "description")
+    list_display = ("name", "input_type", "description",)
     list_filter = ("input_type",)
     search_fields = ("name", "description")
     ordering = ("name",)
