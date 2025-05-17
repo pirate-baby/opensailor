@@ -25,6 +25,7 @@ SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 DEBUG = os.environ["ENVIRONMENT"] == "development"
 
 ALLOWED_HOSTS = ["localhost", "app.localhost", "opensailor.org", "127.0.0.1", "www.opensailor.org"]
+CSRF_TRUSTED_ORIGINS = ["https://app.localhost", "https://opensailor.org", "https://www.opensailor.org", "http://127.0.0.1", "http://opensailor.org", "http://www.opensailor.org"]
 
 # Custom user model
 AUTH_USER_MODEL = "webapp.User"
