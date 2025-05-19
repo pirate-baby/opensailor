@@ -17,6 +17,7 @@ from webapp.models import (
     SailboatAttribute,
     Media,
     AttributeSection,
+    Moderation,
 )
 from webapp.models.vessel import Vessel, VesselImage
 from webapp.models.sailboat import SailboatImage
@@ -305,3 +306,26 @@ class SailboatImageAdmin(admin.ModelAdmin):
     list_filter = ("sailboat",)
     search_fields = ("sailboat__name", "image__file")
     ordering = ("sailboat__name", "order")
+
+
+@admin.register(Moderation)
+class ModerationAdmin(admin.ModelAdmin):
+    list_display = ("content_type", "object_id", "requested_by", "state", "created_at", "moderator")
+    list_filter = ("state", "content_type")
+    search_fields = ("requested_by__username", "moderator__username")
+    readonly_fields = ("content_type", "object_id", "data", "requested_by", "created_at", "updated_at")
+    fieldsets = (
+        (_("Moderation Request"), {
+            "fields": ("content_type", "object_id", "data", "requested_by", "request_note")
+        }),
+        (_("Moderation Status"), {
+            "fields": ("state", "moderator", "response_note")
+        }),
+        (_("Timestamps"), {
+            "fields": ("created_at", "updated_at")
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Moderations should only be created programmatically
+        return False
