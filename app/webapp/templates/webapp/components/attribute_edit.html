@@ -166,6 +166,25 @@
                 });
             }
         }
+        // Pre-fill value if present
+        const existingSection = vesselAttributesBySection[attr.section__name];
+        let existingValue = null;
+        if (existingSection) {
+            const found = existingSection.attributes.find(a => a.id == attr.id);
+            if (found) existingValue = found.value;
+        }
+        // For select
+        if (attr.input_type === 'options' && Array.isArray(attr.options) && attr.options.length > 0) {
+            const select = document.getElementById('attribute-value-select');
+            if (select && existingValue !== null) {
+                select.value = existingValue;
+            }
+        }
+        // For input
+        const valueInput = document.querySelector('#attribute-dialog [name="value"]');
+        if (valueInput && existingValue !== null) {
+            valueInput.value = existingValue;
+        }
     }
 
     // Attach a delegated click handler to the main form
@@ -214,4 +233,17 @@
     document.querySelector('form').addEventListener('submit', function() {
         updateAttributesJson();
     });
+
+    // Pre-populate attributes if editing, after DOM and attributes are ready
+    function prepopulateVesselAttributes() {
+        if (window.vesselAttributes) {
+            for (const [attrId, value] of Object.entries(window.vesselAttributes)) {
+                const attrMeta = attributes.find(a => a.id == attrId);
+                if (attrMeta) {
+                    setVesselAttribute(attrMeta, value);
+                }
+            }
+        }
+    }
+    document.addEventListener('DOMContentLoaded', prepopulateVesselAttributes);
 </script>
