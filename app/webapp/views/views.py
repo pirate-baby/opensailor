@@ -10,9 +10,14 @@ from webapp.models.vessel import Vessel, VesselImage
 from webapp.decorators import admin_or_moderator_required
 from webapp.models.sailboat_attribute import SailboatAttribute
 from webapp.models.vessel_note import VesselNote
+from webapp.schemas.attributes import AttributeAssignment
 import logging
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from webapp.schemas.vessels import VesselCreateRequest
+from webapp.controllers.vessels import create_vessel
+from django.utils.safestring import mark_safe
+import json
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
@@ -151,7 +156,7 @@ def sailboat_detail(request, pk):
     sailboat = get_object_or_404(Sailboat, pk=pk)
 
     # Load all sailboat attributes for display
-    sailboat_attributes = sailboat.attribute_values.select_related("attribute", "section").all()
+    sailboat_attributes = sailboat.attribute_values.select_related("attribute", "attribute__section").all()
 
     context = {
         "sailboat": sailboat,
@@ -239,7 +244,7 @@ def sailboat_update(request, pk):
             messages.error(request, f"Error updating sailboat: {str(e)}")
 
     # Get the sailboat's attributes for the form
-    sailboat_attributes = sailboat.attribute_values.select_related("attribute", "section").all()
+    sailboat_attributes = sailboat.attribute_values.select_related("attribute", "attribute__section").all()
 
     context = {
         "sailboat": sailboat,
@@ -312,47 +317,63 @@ def vessel_detail(request, pk):
         user_note = VesselNote.objects.filter(vessel=vessel, user=request.user).first()
 
     # Prefetch sailboat attributes with their attributes and sections
-    sailboat_attributes = vessel.sailboat.attribute_values.select_related("attribute", "section").all()
+    sailboat_attributes = vessel.vesselattribute_set.select_related("attribute", "attribute__section").all()
+
+    # Preprocess for template grouping
+    sailboat_attributes_for_template = [
+        {
+            "info": attr.attribute.description,
+            "section": attr.attribute.section,
+            "attribute": attr.attribute,
+            "value": attr.value,
+        }
+        for attr in sailboat_attributes
+    ]
 
     context = {
         "vessel": vessel,
         "user_note": user_note,
-        "sailboat_attributes": sailboat_attributes,
+        "sailboat_attributes": sailboat_attributes_for_template,
     }
     return render(request, "webapp/vessels/detail.html", context)
 
 
-@admin_or_moderator_required
+@login_required
 def vessel_create(request):
-    if request.method == "POST":
-        try:
-            sailboat = get_object_or_404(Sailboat, pk=request.POST["sailboat"])
-        except KeyError as e:
-            messages.error(request, f"Error creating vessel: {str(e)}")
-            return redirect("vessel_create")
+    """creates a new vessel"""
+    if not request.method == "POST":
+        attributes = Attribute.objects.all().select_related('section').values('id', 'name', 'input_type', 'data_type', 'options', 'description', 'section__name', 'section__icon', 'accepts_contributions')
+        attributes_json = json.dumps(list(attributes))
+        context = {
+            "sailboats": Sailboat.objects.all().order_by("make__name", "name"),
+            "attributes_json": mark_safe(attributes_json),
+        }
+        return render(request, "webapp/vessels/create.html", context)
 
-        vessel = Vessel.objects.create(
-            sailboat=sailboat,
-            hull_identification_number=request.POST.get(
-                "hull_identification_number"
-            ).upper(),
-            name=request.POST.get("name"),
-            year_built=request.POST.get("year_built") or None,
+    raw_attributes = json.loads(request.POST.get("attributes") or "[]")
+    mapped_attributes = []
+    for attribute in raw_attributes:
+        sql_attribute = Attribute.objects.get(id=attribute["id"])
+        mapped_attributes.append(
+            AttributeAssignment(
+                name=sql_attribute.name,
+                value=attribute["value"],
+            )
         )
-
-        # Handle images
-        images = request.FILES.getlist("images")
-        for index, image in enumerate(images):
-            media = Media.objects.create(file=image)
-            VesselImage.objects.create(vessel=vessel, image=media, order=index)
-
-        messages.success(request, "Vessel created successfully.")
-        return redirect("vessel_detail", pk=vessel.pk)
-
-    context = {
-        "sailboats": Sailboat.objects.all().order_by("make__name", "name"),
-    }
-    return render(request, "webapp/vessels/create.html", context)
+    request_schema = VesselCreateRequest(
+        user=request.user,
+        sailboat=request.POST.get("sailboat"),
+        make=request.POST.get("manual_make"),
+        images=request.FILES.getlist("images"),
+        sailboat_name=request.POST.get("manual_model"),
+        hull_identification_number=request.POST.get("hull_identification_number"),
+        year_built=request.POST.get("year_built"),
+        name=request.POST.get("name"),
+        attributes=mapped_attributes,
+    )
+    vessel_id = create_vessel(request_schema)
+    messages.success(request, "Vessel created successfully.")
+    return redirect("vessel_detail", pk=vessel_id)
 
 
 @admin_or_moderator_required
@@ -361,40 +382,75 @@ def vessel_update(request, pk):
 
     if request.method == "POST":
         try:
-            # Get the sailboat
+            # Handle manual make/model or selected sailboat
             sailboat_id = request.POST.get("sailboat")
-            sailboat = get_object_or_404(Sailboat, pk=sailboat_id)
+            manual_make = request.POST.get("manual_make")
+            manual_model = request.POST.get("manual_model")
+            year_built = request.POST.get("year_built")
+            year_built = int(year_built) if year_built else None
 
-            # Update vessel
+            if sailboat_id:
+                sailboat = get_object_or_404(Sailboat, pk=sailboat_id)
+            elif manual_make and manual_model:
+                make = Make.get_or_create_moderated(name=manual_make, user=request.user)
+                sailboat = Sailboat.get_or_create_moderated(
+                    make=make,
+                    name=manual_model,
+                    year_built=year_built or vessel.year_built or 2000,  # fallback
+                    user=request.user,
+                )
+            else:
+                raise Exception("You must select a sailboat or enter a make and model.")
+
+            # Update vessel fields
             vessel.sailboat = sailboat
-            for field in [
-                "hull_identification_number",
-                "name",
-                "home_port",
-                "year_built",
-            ]:
-                setattr(vessel, field, request.POST.get(field))
+            vessel.hull_identification_number = request.POST.get("hull_identification_number")
+            vessel.USCG_number = request.POST.get("uscg_number")
+            vessel.name = request.POST.get("name")
+            vessel.year_built = year_built
+            vessel.home_port = request.POST.get("home_port")
             vessel.save()
+
+            # Handle attributes
+            raw_attributes = json.loads(request.POST.get("attributes") or "[]")
+            mapped_attributes = []
+            for attribute in raw_attributes:
+                sql_attribute = Attribute.objects.get(id=attribute["id"])
+                mapped_attributes.append(
+                    AttributeAssignment(
+                        name=sql_attribute.name,
+                        value=attribute["value"],
+                    )
+                )
+            # Remove all old attributes and re-add (or update)
+            vessel.vesselattribute_set.all().delete()
+            for attr_assignment in mapped_attributes:
+                vessel.create_or_update_attribute(attr_assignment)
 
             # Handle new images
             images = request.FILES.getlist("images")
-            for index, image in enumerate(images):
-                media = Media.objects.create(file=image)
-                # Get the highest order value
-                highest_order = vessel.vesselimage_set.order_by("-order").first()
-                next_order = (highest_order.order + 1) if highest_order else 0
-                VesselImage.objects.create(
-                    vessel=vessel, image=media, order=next_order + index
-                )
+            for image in images:
+                vessel.add_image(image)
 
             messages.success(request, "Vessel updated successfully.")
             return redirect("vessel_detail", pk=vessel.pk)
         except Exception as e:
             messages.error(request, f"Error updating vessel: {str(e)}")
 
+    # Prepopulate attributes for the attribute edit component
+    attributes = Attribute.objects.all().select_related('section').values('id', 'name', 'input_type', 'data_type', 'options', 'description', 'section__name', 'section__icon', 'accepts_contributions')
+    attributes_json = json.dumps(list(attributes))
+    # Get vessel's current attributes as {id: value}
+    vessel_attributes = {
+        va.attribute.id: va.value
+        for va in vessel.vesselattribute_set.select_related("attribute").all()
+    }
+    vessel_attributes_json = json.dumps(vessel_attributes)
     context = {
         "vessel": vessel,
         "sailboats": Sailboat.objects.all().order_by("make__name", "name"),
+        "attributes_json": mark_safe(attributes_json),
+        "vessel_attributes_json": mark_safe(vessel_attributes_json),
     }
     return render(request, "webapp/vessels/update.html", context)
 
