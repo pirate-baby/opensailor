@@ -1,0 +1,249 @@
+<div class="bg-white shadow rounded-lg p-6 mt-8">
+    <h2 class="text-2xl font-bold mb-4 text-gray-900 flex items-center gap-2">
+        <span class="material-symbols-outlined text-accent text-3xl">search</span>
+        Ship Details
+    </h2>
+    <div class="relative w-full max-w-md mb-4">
+        <!-- Search Input -->
+        <input
+            type="text"
+            id="attribute-search"
+            class="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Search for an attribute..."
+            autocomplete="off"
+            oninput="filterAttributes()"
+        />
+        <div id="attribute-dropdown" class="absolute z-10 w-full bg-white border border-gray-200 rounded shadow mt-1 max-h-60 overflow-y-auto"></div>
+    </div>
+
+    <div id="attribute-dialog" class="mb-6"></div>
+
+    <!-- Grouped attributes display -->
+    <div id="attributes-by-section" class="mt-6"></div>
+</div>
+
+<script>
+    const attributes = JSON.parse('{{ attributes_json|escapejs }}');
+    let vesselAttributesBySection = {};
+    // Store the current attribute being edited in the dialog
+    window.currentDialogAttr = null;
+
+    function getAttributeMeta(attrId) {
+        return attributes.find(a => a.id === attrId);
+    }
+
+    function setVesselAttribute(attr, value) {
+        const section = attr.section__name;
+        if (!vesselAttributesBySection[section]) {
+            vesselAttributesBySection[section] = {
+                icon: attr.section__icon,
+                attributes: []
+            };
+        }
+        vesselAttributesBySection[section].attributes = vesselAttributesBySection[section].attributes.filter(a => a.id !== attr.id);
+        vesselAttributesBySection[section].attributes.push({ ...attr, value });
+        renderAttributesBySection();
+        updateAttributesJson();
+    }
+
+    function removeVesselAttribute(attrId) {
+        for (const section in vesselAttributesBySection) {
+            vesselAttributesBySection[section].attributes = vesselAttributesBySection[section].attributes.filter(a => a.id !== attrId);
+        }
+        for (const section in vesselAttributesBySection) {
+            if (vesselAttributesBySection[section].attributes.length === 0) {
+                delete vesselAttributesBySection[section];
+            }
+        }
+        renderAttributesBySection();
+        updateAttributesJson();
+    }
+
+    function renderAttributesBySection() {
+        const container = document.getElementById('attributes-by-section');
+        let html = '';
+        for (const [section, data] of Object.entries(vesselAttributesBySection)) {
+            if (!data.attributes.length) continue;
+            html += `
+                <div class="mb-8">
+                    <div class="flex items-center mb-2">
+                        <span class="material-symbols-outlined text-accent text-3xl mr-3">${data.icon || ''}</span>
+                        <h3 class="text-lg font-semibold text-gray-800">${section}</h3>
+                    </div>
+                    <hr class="border-t border-accent/30 mb-4" />
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        ${data.attributes.map(attr => `
+                            <div>
+                                <p class="text-gray-700">
+                                    <strong>${attr.name}:</strong>
+                                    <span>${attr.value}</span>
+                                    <button type="button" class="ml-2 text-red-500" onclick="removeVesselAttribute(${attr.id})">&times;</button>
+                                </p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html || '<div class="text-gray-400">No attributes set yet.</div>';
+    }
+
+    function filterAttributes() {
+        const query = document.getElementById('attribute-search').value.toLowerCase();
+        const dropdown = document.getElementById('attribute-dropdown');
+        dropdown.innerHTML = '';
+        if (!query) return;
+        const matches = attributes.filter(attr => attr.name.toLowerCase().includes(query));
+        if (matches.length === 0) {
+            dropdown.innerHTML = '<div class="px-4 py-2 text-gray-400">No attributes found.</div>';
+            return;
+        }
+        matches.forEach(attr => {
+            const div = document.createElement('div');
+            div.className = 'px-4 py-2 hover:bg-accent cursor-pointer';
+            div.textContent = attr.name;
+            div.onclick = () => showAttributeDialog(attr);
+            dropdown.appendChild(div);
+        });
+    }
+
+    function acceptsContributions(attr) {
+        return attr.accepts_contributions === true ||
+               attr.accepts_contributions === 1 ||
+               attr.accepts_contributions === 'true';
+    }
+
+    function showAttributeDialog(attr) {
+        window.currentDialogAttr = attr;
+        document.getElementById('attribute-dropdown').innerHTML = '';
+        document.getElementById('attribute-search').value = attr.name;
+        let inputHtml = '';
+        let addValueLinkHtml = '';
+        let contributedInputHtml = '';
+        if (attr.input_type === 'options' && Array.isArray(attr.options) && attr.options.length > 0) {
+            inputHtml = `<select name="value" class="w-full border border-gray-300 rounded px-3 py-2 mb-4" required id="attribute-value-select">` +
+                attr.options.map(opt => `<option value="${opt}">${opt}</option>`).join('') +
+                `</select>`;
+            if (acceptsContributions(attr)) {
+                addValueLinkHtml = `<a href="#" id="add-new-value-link" class="text-accent hover:underline text-sm block mb-2">add a new value</a>`;
+                contributedInputHtml = `<div id="contributed-value-container" style="display:none;">
+                    <input type="${attr.data_type === 'float' ? 'number' : attr.data_type === 'int' ? 'number' : 'text'}"
+                        name="contributed_value"
+                        class="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+                        ${attr.data_type === 'float' ? 'step=any' : attr.data_type === 'int' ? 'step=1' : ''}
+                        placeholder="Enter a new value..." />
+                </div>`;
+            }
+        } else if (attr.input_type === 'string') {
+            inputHtml = `<input type="text" name="value" class="w-full border border-gray-300 rounded px-3 py-2 mb-4" required />`;
+        } else if (attr.input_type === 'integer') {
+            inputHtml = `<input type="number" name="value" class="w-full border border-gray-300 rounded px-3 py-2 mb-4" required pattern="\\d+" step="1" />`;
+        } else if (attr.input_type === 'float') {
+            inputHtml = `<input type="number" name="value" class="w-full border border-gray-300 rounded px-3 py-2 mb-4" required pattern="[0-9]*[.,]?[0-9]+" step="any" />`;
+        } else {
+            inputHtml = `<input type="text" name="value" class="w-full border border-gray-300 rounded px-3 py-2 mb-4" required />`;
+        }
+        const descriptionHtml = attr.description ? `<div class="mb-2 text-gray-500 text-sm">${attr.description}</div>` : '';
+        document.getElementById('attribute-dialog').innerHTML = `
+            <div class="bg-white p-4 rounded shadow" id="attribute-dialog-content">
+                <label class="block mb-2 font-semibold">${attr.name}</label>
+                ${descriptionHtml}
+                <div id="attribute-value-select-container">${inputHtml}${addValueLinkHtml}${contributedInputHtml}</div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" class="bg-primary text-white px-4 py-2 rounded" id="add-attribute-btn">Add</button>
+                    <button type="button" class="bg-gray-200 text-gray-700 px-4 py-2 rounded" id="cancel-attribute-btn">Cancel</button>
+                </div>
+            </div>
+        `;
+        // Add event for add-new-value-link if present
+        if (attr.input_type === 'options' && acceptsContributions(attr)) {
+            const link = document.getElementById('add-new-value-link');
+            if (link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('attribute-value-select').style.display = 'none';
+                    document.getElementById('contributed-value-container').style.display = 'block';
+                });
+            }
+        }
+        // Pre-fill value if present
+        const existingSection = vesselAttributesBySection[attr.section__name];
+        let existingValue = null;
+        if (existingSection) {
+            const found = existingSection.attributes.find(a => a.id == attr.id);
+            if (found) existingValue = found.value;
+        }
+        // For select
+        if (attr.input_type === 'options' && Array.isArray(attr.options) && attr.options.length > 0) {
+            const select = document.getElementById('attribute-value-select');
+            if (select && existingValue !== null) {
+                select.value = existingValue;
+            }
+        }
+        // For input
+        const valueInput = document.querySelector('#attribute-dialog [name="value"]');
+        if (valueInput && existingValue !== null) {
+            valueInput.value = existingValue;
+        }
+    }
+
+    // Attach a delegated click handler to the main form
+    const mainForm = document.querySelector('form');
+    mainForm.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'add-attribute-btn') {
+            e.preventDefault();
+            let value = '';
+            const attr = window.currentDialogAttr;
+            if (attr.input_type === 'options' && acceptsContributions(attr)) {
+                const contributedInput = document.querySelector('#contributed-value-container input[name="contributed_value"]');
+                if (contributedInput && contributedInput.offsetParent !== null && contributedInput.value) {
+                    value = contributedInput.value;
+                } else {
+                    const select = document.getElementById('attribute-value-select');
+                    if (select && select.style.display !== 'none') {
+                        value = select.value;
+                    }
+                }
+            } else {
+                const valueInput = document.querySelector('#attribute-dialog [name="value"]');
+                if (valueInput) value = valueInput.value;
+            }
+            if (!value) return;
+            setVesselAttribute(attr, value);
+            document.getElementById('attribute-dialog').innerHTML = '';
+        }
+        if (e.target && e.target.id === 'cancel-attribute-btn') {
+            e.preventDefault();
+            document.getElementById('attribute-dialog').innerHTML = '';
+        }
+    });
+
+    function updateAttributesJson() {
+        const data = [];
+        for (const section in vesselAttributesBySection) {
+            for (const attr of vesselAttributesBySection[section].attributes) {
+                data.push({ id: attr.id, value: attr.value });
+            }
+        }
+        const hidden = document.getElementById('attributes-json');
+        if (hidden) hidden.value = JSON.stringify(data);
+    }
+
+    renderAttributesBySection();
+    document.querySelector('form').addEventListener('submit', function() {
+        updateAttributesJson();
+    });
+
+    // Pre-populate attributes if editing, after DOM and attributes are ready
+    function prepopulateVesselAttributes() {
+        if (window.vesselAttributes) {
+            for (const [attrId, value] of Object.entries(window.vesselAttributes)) {
+                const attrMeta = attributes.find(a => a.id == attrId);
+                if (attrMeta) {
+                    setVesselAttribute(attrMeta, value);
+                }
+            }
+        }
+    }
+    document.addEventListener('DOMContentLoaded', prepopulateVesselAttributes);
+</script>
