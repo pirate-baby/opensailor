@@ -15,21 +15,33 @@
         <form method="post" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
 
-            <!-- Sailboat Model -->
+            <!-- Sailboat Model OR Manual Entry -->
             <div>
-                <label for="sailboat" class="block text-sm font-medium text-gray-700">Sailboat Model *</label>
-                <select id="sailboat" name="sailboat" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
-                    <option value="">Select a sailboat model</option>
-                    {% for sailboat in sailboats %}
-                        <option value="{{ sailboat.id }}">{{ sailboat.make.name }} {{ sailboat.name }}</option>
-                    {% endfor %}
-                </select>
+                <label class="block text-sm font-medium text-gray-700">Sailboat Model *</label>
+                <div class="flex space-x-4">
+                    <div class="flex-1">
+                        <select id="sailboat" name="sailboat"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent"
+                                onchange="toggleManualSailboat(this)">
+                            <option value="">Select a sailboat model</option>
+                            {% for sailboat in sailboats %}
+                                <option value="{{ sailboat.id }}">{{ sailboat.make.name }} {{ sailboat.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="mt-2">
+                            <a href="#" id="show-manual-entry" class="text-accent hover:underline text-sm">my sailboat isn't listed here</a>
+                        </div>
+                    </div>
+                    <div class="flex-1" id="manual-entry-fields" style="display: none;">
+                        <div class="mb-2 text-lg font-semibold text-accent">Add your sailboat to the open database!</div>
+                        <input type="text" id="manual_make" name="manual_make" placeholder="Make"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
+                        <input type="text" id="manual_model" name="manual_model" placeholder="Model"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
+                    </div>
+                </div>
                 <p class="mt-1 text-sm text-gray-500">
-                    Can't find your model?
-                    <a href="{% url 'sailboat_create' %}" class="text-accent hover:text-primary" target="_blank">
-                        Add a new sailboat model first
-                    </a>
+                    Select a model <b>or</b> enter a make and model if yours is not listed.
                 </p>
             </div>
 
@@ -83,6 +95,12 @@
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
             </div>
 
+            <!-- Attribute Edit Component -->
+            {% include "webapp/components/attribute_edit.html" %}
+
+            <!-- Hidden input for attributes -->
+            <input type="hidden" name="attributes" id="attributes-json">
+
             <!-- Images -->
             <div>
                 <label for="images" class="block text-sm font-medium text-gray-700">Vessel Images</label>
@@ -117,4 +135,38 @@
         </form>
     </div>
 </div>
+
+<script>
+function toggleManualSailboat(select) {
+    if (select.value) {
+        document.getElementById('manual_make').disabled = true;
+        document.getElementById('manual_model').disabled = true;
+    } else {
+        document.getElementById('manual_make').disabled = false;
+        document.getElementById('manual_model').disabled = false;
+    }
+}
+function toggleDropdownSailboat(input) {
+    if (input.value || document.getElementById('manual_make').value || document.getElementById('manual_model').value) {
+        document.getElementById('sailboat').disabled = true;
+    } else {
+        document.getElementById('sailboat').disabled = false;
+    }
+}
+// Ensure the attributes are serialized before submit
+// (attribute_edit.html will define attributeValues and updateAttributesJson)
+document.querySelector('form').addEventListener('submit', function() {
+    if (typeof updateAttributesJson === 'function') {
+        updateAttributesJson();
+    }
+});
+
+document.getElementById('show-manual-entry').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('manual-entry-fields').style.display = 'block';
+    document.getElementById('manual_make').disabled = false;
+    document.getElementById('manual_model').disabled = false;
+    document.getElementById('sailboat').disabled = true;
+});
+</script>
 {% endblock %}
