@@ -1,14 +1,85 @@
 from typing import TYPE_CHECKING
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from webapp.models.sailboat import Sailboat
 from webapp.models.media import Media
+from webapp.models.attribute import Attribute
+from webapp.models.sailboat_attribute import SailboatAttribute
+from webapp.models.moderation import Moderation
+from webapp.schemas.attributes import AttributeAssignment
+
 
 if TYPE_CHECKING:
     from webapp.models.user import User
+    from django.core.files.uploadedfile import UploadedFile
 
+class VesselAttribute(models.Model):
+    vessel = models.ForeignKey("Vessel", on_delete=models.CASCADE)
+    attribute = models.ForeignKey("Attribute", on_delete=models.CASCADE)
+    value = models.CharField(max_length=255)
+    class Meta:
+        verbose_name = _("vessel attribute")
+        verbose_name_plural = _("vessel attributes")
+        unique_together = [["vessel", "attribute"]]
+        indexes = [
+            models.Index(fields=["vessel", "attribute"]),
+        ]
+
+    def __str__(self):
+        return f"{self.vessel} - {self.attribute.name}"
+
+    def clean(self):
+        super().clean()
+        match self.attribute.data_type:
+            case Attribute.DataType.FLOAT:
+                try:
+                    self.value = float(self.value)
+                except ValueError:
+                    raise ValidationError({"value": _("Value must be a number")})
+            case Attribute.DataType.INTEGER:
+                try:
+                    self.value = int(self.value)
+                except ValueError:
+                    raise ValidationError({"value": _("Value must be an integer")})
+            case _:
+                self.value = str(self.value)
+        # if the attribute has options, make sure the value is in that list
+        if self.attribute.options and self.value not in self.attribute.options:
+                raise ValidationError({"value": _("Value must be in the allowed options list")})
+
+        current_sailboat_attribute = SailboatAttribute.objects.filter(
+            sailboat=self.sailboat,
+            attribute=self.attribute,
+        ).first()
+        # if the sailboat already has this attribute
+        # and the attribute does not accept contributions,
+        # then we need to make sure the value is in the list of allowed value
+        if not self.attribute.accepts_contributions:
+            if current_sailboat_attribute and self.value not in current_sailboat_attribute.values:
+                raise ValidationError({"value": _("Value is not allowed for this sailboat")})
+        # add the value to the sailboat attribute or create a new one
+        if current_sailboat_attribute:
+            current_sailboat_attribute.values.append(self.value)
+            current_sailboat_attribute.save()
+            verb = Moderation.Verb.UPDATE
+        else:
+            SailboatAttribute.objects.create(
+                sailboat=self.sailboat,
+                attribute=self.attribute,
+                values=[self.value],
+            )
+            verb = Moderation.Verb.CREATE
+        Moderation.objects.create(
+            object_id=self.id,
+            data={
+                "attribute": self.attribute.id,
+                "value": self.value,
+            },
+            verb=verb,
+            triggered_by=self,
+        )
 
 class VesselImage(models.Model):
     vessel = models.ForeignKey("Vessel", on_delete=models.CASCADE)
@@ -83,31 +154,6 @@ class Vessel(models.Model):
     def __str__(self):
         return f"{self.sailboat} - {self.hull_identification_number}"
 
-    def clean(self):
-        super().clean()
-        if (
-            self.sailboat.manufactured_start_year
-            and self.year_built < self.sailboat.manufactured_start_year
-        ):
-            raise ValidationError(
-                {
-                    "year_built": _(
-                        "Year built cannot be before the sailboat model's manufacturing start year"
-                    )
-                }
-            )
-        if (
-            self.sailboat.manufactured_end_year
-            and self.year_built > self.sailboat.manufactured_end_year
-        ):
-            raise ValidationError(
-                {
-                    "year_built": _(
-                        "Year built cannot be after the sailboat model's manufacturing end year"
-                    )
-                }
-            )
-
     @property
     def images_queryset(self):
         """Get the queryset of vessel images ordered by the 'order' field"""
@@ -134,3 +180,25 @@ class Vessel(models.Model):
     def has_images(self):
         """Check if the vessel has any images"""
         return self.images.exists()
+
+    def add_image(self, image:"UploadedFile"):
+        """add an image to the vessel"""
+        media = Media.objects.create(file=image)
+        VesselImage.objects.create(vessel=self, image=media, order=self.images.count() + 1)
+        self.save()
+
+    def create_or_update_attribute(self, attribute_assignment:AttributeAssignment) -> VesselAttribute:
+        """create or update an attribute for the vessel, and create a moderation request
+        for the parent sailboat if the data is new"""
+        attribute = Attribute.objects.get(name=attribute_assignment.name)
+        if existing_attribute := VesselAttribute.objects.filter(
+            vessel=self,
+            attribute=attribute,
+        ).first():
+            existing_attribute.value = attribute_assignment.value
+            existing_attribute.save()
+            return existing_attribute
+        return VesselAttribute.objects.create(
+            vessel=self,
+            attribute=attribute,
+            value=attribute_assignment.value)

@@ -27,6 +27,11 @@ class Attribute(models.Model):
         OPTIONS = "options", _("Options")
         INTEGER = "integer", _("Integer")
 
+    class DataType(models.TextChoices):
+        STRING = "string", _("String")
+        FLOAT = "float", _("Float")
+        INTEGER = "integer", _("Integer")
+
     name = models.CharField(
         max_length=100, unique=True, help_text=_("Name of the attribute")
     )
@@ -49,6 +54,16 @@ class Attribute(models.Model):
         related_name="attributes",
         help_text=_("Section this attribute belongs to"),
         default=1,
+    )
+    data_type = models.CharField(
+        max_length=20,
+        choices=DataType.choices,
+        help_text=_("Type of data to cast the attribute value to"),
+        default=DataType.STRING,
+    )
+    accepts_contributions = models.BooleanField(
+        default=True,
+        help_text=_("Whether this attribute accepts contributions from users, or is fixed"),
     )
 
     @property
@@ -129,6 +144,15 @@ class Attribute(models.Model):
     def save(self, *args, **kwargs):
         # Convert name to lowercase for case-insensitive uniqueness
         self.name = self.name.lower()
+        if not self.data_type:
+            match self.input_type:
+                case self.InputType.FLOAT:
+                    self.data_type = self.DataType.FLOAT
+                case self.InputType.INTEGER:
+                    self.data_type = self.DataType.INTEGER
+                case _:
+                    self.data_type = self.DataType.STRING
+
         super().save(*args, **kwargs)
 
     def clean(self):

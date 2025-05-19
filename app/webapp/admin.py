@@ -19,7 +19,7 @@ from webapp.models import (
     AttributeSection,
     Moderation,
 )
-from webapp.models.vessel import Vessel, VesselImage
+from webapp.models.vessel import Vessel, VesselImage, VesselAttribute
 from webapp.models.sailboat import SailboatImage
 
 
@@ -329,3 +329,11 @@ class ModerationAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # Moderations should only be created programmatically
         return False
+
+
+@admin.register(VesselAttribute)
+class VesselAttributeAdmin(admin.ModelAdmin):
+    list_display = ("vessel", "attribute", "value")
+    list_filter = ("attribute", "vessel")
+    search_fields = ("vessel__name", "attribute__name", "value")
+    ordering = ("vessel__name", "attribute__name")

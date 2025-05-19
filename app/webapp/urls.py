@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from webapp.api import api
-from webapp.views import (
+from app.webapp.views.views import (
     home,
     sailboats_index,
     sailboat_create,

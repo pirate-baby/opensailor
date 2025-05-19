@@ -123,7 +123,7 @@
     <div class="flex justify-between items-center">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">{{ vessel.name }}</h1>
-            <p class="mt-1 text-lg text-gray-500">{{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }}</p>
+            <p class="mt-1 text-lg text-gray-500">{{ vessel.sailboat.make.name|title }} {{ vessel.sailboat.name|title }}</p>
         </div>
         {% if user.is_admin or user.is_moderator %}
         <div class="flex space-x-4">
@@ -241,8 +241,7 @@
 
     <!-- Sailboat Specifications -->
     <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-medium text-gray-900">Sailboat Specifications</h2>
-        <p class="mt-2 text-sm text-gray-500">These are the specifications for the {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }} model.</p>
+        <h2 class="text-xl font-medium text-gray-900">Vessel Details</h2>
 
         {% if sailboat_attributes %}
             <!-- Attributes by Section -->
@@ -258,19 +257,13 @@
                             </div>
                             <hr class="border-t border-accent/30 mb-4" />
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {% for attr_value in attributes %}
+                                {% for attr in attributes %}
                                     <div>
-                                        <dt class="text-sm font-medium text-gray-500">{{ attr_value.attribute.name }}</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">
-                                            {% if attr_value.values|is_list %}
-                                                {{ attr_value.values|join:", " }}
-                                            {% else %}
-                                                {{ attr_value.values }}
-                                            {% endif %}
-                                            {% if attr_value.attribute.unit %}
-                                                {{ attr_value.attribute.unit }}
-                                            {% endif %}
-                                        </dd>
+                                        <span class="text-sm font-medium text-gray-500">{{ attr.attribute.name }}:</span>
+                                        <span class="text-sm text-gray-900">{{ attr.value|default:"Not specified" }}</span>
+                                        <sup>
+                                            <span class="material-symbols-outlined align-super text-accent cursor-help" title="{{ attr.info }}" style="font-size: 1em; vertical-align: super;">info</span>
+                                        </sup>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -284,7 +277,7 @@
 
         <div class="mt-6">
             <a href="{% url 'sailboat_detail' vessel.sailboat.pk %}" class="text-accent hover:text-primary">
-                View full details for {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }} →
+                View factory specs for the {{ vessel.sailboat.make.name|title }} {{ vessel.sailboat.name|title }} →
             </a>
         </div>
     </div>

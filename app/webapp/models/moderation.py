@@ -1,8 +1,11 @@
+from typing import TYPE_CHECKING, Type
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
-from webapp.models.user import User
+
+if TYPE_CHECKING:
+    from webapp.models.user import User
 
 
 class Moderation(models.Model):
@@ -11,6 +14,11 @@ class Moderation(models.Model):
         APPROVED = "approved", _("Approved")
         DECLINED = "declined", _("Declined")
         MODIFIED = "modified", _("Modified")
+
+    class Verb(models.TextChoices):
+        CREATE = "create", _("Create")
+        UPDATE = "update", _("Update")
+        DELETE = "delete", _("Delete")
 
     # Content type and object id for the generic foreign key
     content_type = models.ForeignKey(
@@ -32,11 +40,29 @@ class Moderation(models.Model):
 
     # User who requested the change
     requested_by = models.ForeignKey(
-        User,
+        "User",
         on_delete=models.CASCADE,
+        blank=True,
+        null=True,
         related_name="requested_moderations",
         help_text=_("The user who requested this moderation"),
     )
+
+    # Object that triggered this moderation as a side effect (generic)
+    triggered_by_content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="triggered_moderations",
+        help_text=_("The type of object that triggered this moderation as a side effect"),
+    )
+    triggered_by_object_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=_("The primary key of the object that triggered this moderation"),
+    )
+    triggered_by = GenericForeignKey("triggered_by_content_type", "triggered_by_object_id")
 
     # Optional note from the requester
     request_note = models.TextField(
@@ -47,7 +73,7 @@ class Moderation(models.Model):
 
     # Moderator who handled this moderation (if any)
     moderator = models.ForeignKey(
-        User,
+        "User",
         on_delete=models.SET_NULL,
         related_name="handled_moderations",
         null=True,
@@ -63,6 +89,13 @@ class Moderation(models.Model):
         help_text=_("The current state of this moderation"),
     )
 
+    # Verb of the moderation
+    verb = models.CharField(
+        max_length=20,
+        choices=Verb.choices,
+        default=Verb.CREATE,
+        help_text=_("What type of action is being moderation"),
+    )
     # Optional response note from the moderator
     response_note = models.TextField(
         blank=True,
@@ -106,3 +139,13 @@ class Moderation(models.Model):
     @property
     def is_modified(self):
         return self.state == self.State.MODIFIED
+
+    @classmethod
+    def moderation_for(cls,
+                       class_: Type[models.Model],
+                       **kwargs):
+        content_type = ContentType.objects.get_for_model(class_)
+        return Moderation.objects.create(
+            content_type=content_type,
+            **kwargs
+        )

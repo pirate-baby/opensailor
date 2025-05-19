@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, TYPE_CHECKING
+from guardian.shortcuts import assign_perm
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
@@ -9,7 +10,10 @@ from webapp.models.make import Make
 from webapp.models.designer import Designer
 from webapp.models.sailboat_attribute import SailboatAttribute
 from webapp.models.media import Media
+from webapp.models.moderation import Moderation
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
 
 class SailboatImage(models.Model):
     sailboat = models.ForeignKey("Sailboat", on_delete=models.CASCADE)
@@ -102,30 +106,26 @@ class Sailboat(models.Model):
     def __str__(self):
         return f"{self.make.name} {self.name}"
 
+    def add_year_built(self, year_built: int) -> bool:
+        """add/adjust based on a new year built, returns True if changes we made"""
+        if not self.manufactured_start_year or year_built < self.manufactured_start_year:
+            self.manufactured_start_year = year_built
+            self.save()
+            return True
+        if not self.manufactured_end_year or year_built > self.manufactured_end_year:
+            self.manufactured_end_year = year_built
+            self.save()
+            return True
+        return False
+
+
     def save(self, *args, **kwargs):
-        # Convert name to lowercase for case-insensitive uniqueness
         self.name = self.name.lower()
         is_new = self.pk is None
         super().save(*args, **kwargs)
-
         if is_new and self.created_by:
-            # Assign object-level permissions to creator
-            from guardian.shortcuts import assign_perm
-
             assign_perm("can_manage_sailboats", self.created_by, self)
             assign_perm("can_view_sailboats", self.created_by, self)
-
-    def clean(self):
-        super().clean()
-        # Validate that end year is not before start year if both are provided
-        if (
-            self.manufactured_start_year
-            and self.manufactured_end_year
-            and self.manufactured_end_year < self.manufactured_start_year
-        ):
-            raise ValidationError(
-                {"manufactured_end_year": _("End year cannot be before start year")}
-            )
 
     @property
     def attributes(self):
@@ -135,3 +135,34 @@ class Sailboat(models.Model):
                     self.__dict__[attribute.name] = attribute
 
         return AttributeProxy(self.attribute_values.all())
+
+    @classmethod
+    def get_or_create_moderated(cls,
+                                make: Make,
+                                name: str,
+                                year_built: int,
+                                user: "User"):
+        """get or create a sailboat, moderating it if it's new"""
+        sailboat, created = cls.objects.get_or_create(make=make, name=name)
+        if created:
+            Moderation.moderation_for(cls,
+                object_id=sailboat.id,
+                requested_by=user,
+                request_note="This sailboat was created to support a new vessel",
+                verb=Moderation.Verb.CREATE,
+                data={
+                    "name": name,
+                },
+            )
+        if sailboat.add_year_built(year_built):
+            Moderation.moderation_for(cls,
+                object_id=sailboat.id,
+                requested_by=user,
+                request_note=f"{year_built} was added as the year built range for this model" ,
+                verb=Moderation.Verb.UPDATE,
+                data={
+                    "year_built": year_built,
+                },
+            )
+
+        return sailboat
