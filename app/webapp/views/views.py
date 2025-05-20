@@ -133,7 +133,7 @@ def sailboat_create(request):
                         sailboat=sailboat,
                         attribute=attr,
                         section=attr.section,
-                        values=values
+                        values=values,
                     )
 
             # Handle images
@@ -162,7 +162,9 @@ def sailboat_detail(request, pk):
     sailboat = get_object_or_404(Sailboat, pk=pk)
 
     # Load all sailboat attributes for display
-    sailboat_attributes = sailboat.attribute_values.select_related("attribute", "attribute__section").all()
+    sailboat_attributes = sailboat.attribute_values.select_related(
+        "attribute", "attribute__section"
+    ).all()
 
     context = {
         "sailboat": sailboat,
@@ -250,7 +252,9 @@ def sailboat_update(request, pk):
             messages.error(request, f"Error updating sailboat: {str(e)}")
 
     # Get the sailboat's attributes for the form
-    sailboat_attributes = sailboat.attribute_values.select_related("attribute", "attribute__section").all()
+    sailboat_attributes = sailboat.attribute_values.select_related(
+        "attribute", "attribute__section"
+    ).all()
 
     context = {
         "sailboat": sailboat,
@@ -314,23 +318,23 @@ def vessels_index(request):
 
 
 def vessel_detail(request, pk):
-    vessel = get_object_or_404(
-        Vessel.objects.select_related('sailboat'),
-        pk=pk
-    )
+    vessel = get_object_or_404(Vessel.objects.select_related("sailboat"), pk=pk)
     user_note = None
     accessible_notes = []
     if request.user.is_authenticated:
         # Notes where the user is the owner or is in shared_with
-        accessible_notes = VesselNote.objects.filter(
-            vessel=vessel
-        ).filter(
-            models.Q(user=request.user) | models.Q(shared_with=request.user)
-        ).distinct().prefetch_related('shared_with', 'messages__user')
+        accessible_notes = (
+            VesselNote.objects.filter(vessel=vessel)
+            .filter(models.Q(user=request.user) | models.Q(shared_with=request.user))
+            .distinct()
+            .prefetch_related("shared_with", "messages__user")
+        )
         user_note = accessible_notes.filter(user=request.user).first()
 
     # Prefetch sailboat attributes with their attributes and sections
-    sailboat_attributes = vessel.vesselattribute_set.select_related("attribute", "attribute__section").all()
+    sailboat_attributes = vessel.vesselattribute_set.select_related(
+        "attribute", "attribute__section"
+    ).all()
 
     # Preprocess for template grouping
     sailboat_attributes_for_template = [
@@ -356,7 +360,21 @@ def vessel_detail(request, pk):
 def vessel_create(request):
     """creates a new vessel"""
     if not request.method == "POST":
-        attributes = Attribute.objects.all().select_related('section').values('id', 'name', 'input_type', 'data_type', 'options', 'description', 'section__name', 'section__icon', 'accepts_contributions')
+        attributes = (
+            Attribute.objects.all()
+            .select_related("section")
+            .values(
+                "id",
+                "name",
+                "input_type",
+                "data_type",
+                "options",
+                "description",
+                "section__name",
+                "section__icon",
+                "accepts_contributions",
+            )
+        )
         attributes_json = json.dumps(list(attributes))
         context = {
             "sailboats": Sailboat.objects.all().order_by("make__name", "name"),
@@ -418,7 +436,9 @@ def vessel_update(request, pk):
 
             # Update vessel fields
             vessel.sailboat = sailboat
-            vessel.hull_identification_number = request.POST.get("hull_identification_number")
+            vessel.hull_identification_number = request.POST.get(
+                "hull_identification_number"
+            )
             vessel.USCG_number = request.POST.get("uscg_number")
             vessel.name = request.POST.get("name")
             vessel.year_built = year_built
@@ -452,7 +472,21 @@ def vessel_update(request, pk):
             messages.error(request, f"Error updating vessel: {str(e)}")
 
     # Prepopulate attributes for the attribute edit component
-    attributes = Attribute.objects.all().select_related('section').values('id', 'name', 'input_type', 'data_type', 'options', 'description', 'section__name', 'section__icon', 'accepts_contributions')
+    attributes = (
+        Attribute.objects.all()
+        .select_related("section")
+        .values(
+            "id",
+            "name",
+            "input_type",
+            "data_type",
+            "options",
+            "description",
+            "section__name",
+            "section__icon",
+            "accepts_contributions",
+        )
+    )
     attributes_json = json.dumps(list(attributes))
     # Get vessel's current attributes as {id: value}
     vessel_attributes = {
@@ -509,7 +543,11 @@ def vessel_note_update(request, pk):
 
 
 class VesselNoteCreateForm(forms.Form):
-    content = forms.CharField(widget=forms.Textarea(attrs={"rows": 4, "class": "form-textarea"}), label="First message")
+    content = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": 4, "class": "form-textarea"}),
+        label="First message",
+    )
+
 
 @login_required
 def vessel_note_create(request, pk):
@@ -519,16 +557,26 @@ def vessel_note_create(request, pk):
         if form.is_valid():
             note = VesselNote.objects.create(vessel=vessel, user=request.user)
             note.save()
-            NoteMessage.objects.create(vessel_note=note, user=request.user, content=form.cleaned_data['content'])
+            NoteMessage.objects.create(
+                vessel_note=note,
+                user=request.user,
+                content=form.cleaned_data["content"],
+            )
             messages.success(request, "Note created!")
-            return redirect('vessel_detail', pk=vessel.pk)
+            return redirect("vessel_detail", pk=vessel.pk)
     else:
         form = VesselNoteCreateForm()
-    return render(request, "webapp/vessels/note_create.html", {"form": form, "vessel": vessel})
+    return render(
+        request, "webapp/vessels/note_create.html", {"form": form, "vessel": vessel}
+    )
 
 
 class NoteMessageForm(forms.Form):
-    content = forms.CharField(widget=forms.Textarea(attrs={"rows": 3, "class": "form-textarea"}), label="Add message")
+    content = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": 3, "class": "form-textarea"}),
+        label="Add message",
+    )
+
 
 @login_required
 def vessel_note_message_add(request, note_id):
@@ -537,12 +585,20 @@ def vessel_note_message_add(request, note_id):
     if request.method == "POST":
         form = NoteMessageForm(request.POST)
         if form.is_valid():
-            NoteMessage.objects.create(vessel_note=note, user=request.user, content=form.cleaned_data['content'])
+            NoteMessage.objects.create(
+                vessel_note=note,
+                user=request.user,
+                content=form.cleaned_data["content"],
+            )
             messages.success(request, "Message added!")
-            return redirect('vessel_detail', pk=vessel.pk)
+            return redirect("vessel_detail", pk=vessel.pk)
     else:
         form = NoteMessageForm()
-    return render(request, "webapp/vessels/note_message_add.html", {"form": form, "note": note, "vessel": vessel})
+    return render(
+        request,
+        "webapp/vessels/note_message_add.html",
+        {"form": form, "note": note, "vessel": vessel},
+    )
 
 
 @login_required
@@ -550,35 +606,39 @@ def vessel_note_share(request, note_id):
     note = get_object_or_404(VesselNote, pk=note_id)
     if note.owner != request.user:
         messages.error(request, "You do not have permission to share this note.")
-        return redirect('vessel_detail', pk=note.vessel.pk)
+        return redirect("vessel_detail", pk=note.vessel.pk)
     if request.method != "POST":
         messages.error(request, "Invalid request method.")
-        return redirect('vessel_detail', pk=note.vessel.pk)
+        return redirect("vessel_detail", pk=note.vessel.pk)
     email = request.POST.get("email", "").strip().lower()
     if not email:
         messages.error(request, "Please provide an email address.")
-        return redirect('vessel_detail', pk=note.vessel.pk)
+        return redirect("vessel_detail", pk=note.vessel.pk)
     User = get_user_model()
     try:
         user_to_share = User.objects.get(email=email)
     except User.DoesNotExist:
         messages.error(request, f"No user found with email {email}.")
-        return redirect('vessel_detail', pk=note.vessel.pk)
+        return redirect("vessel_detail", pk=note.vessel.pk)
     if user_to_share == request.user:
         messages.error(request, "You already own this note.")
-        return redirect('vessel_detail', pk=note.vessel.pk)
+        return redirect("vessel_detail", pk=note.vessel.pk)
     if note.shared_with.filter(pk=user_to_share.pk).exists():
-        messages.info(request, f"{user_to_share.email} already has access to this note.")
-        return redirect('vessel_detail', pk=note.vessel.pk)
+        messages.info(
+            request, f"{user_to_share.email} already has access to this note."
+        )
+        return redirect("vessel_detail", pk=note.vessel.pk)
     note.shared_with.add(user_to_share)
     note.save()
     # Send email with link to the note
-    vessel_url = request.build_absolute_uri(reverse('vessel_detail', args=[note.vessel.pk]))
+    vessel_url = request.build_absolute_uri(
+        reverse("vessel_detail", args=[note.vessel.pk])
+    )
     subject = f"A note has been shared with you on {settings.APP_NAME}"
     message = f"You have been given access to a note for vessel '{note.vessel.name}'.\n\nView the vessel and note here: {vessel_url}"
     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_to_share.email])
     messages.success(request, f"Shared note with {user_to_share.email}!")
-    return redirect('vessel_detail', pk=note.vessel.pk)
+    return redirect("vessel_detail", pk=note.vessel.pk)
 
 
 def terms_of_service(request):

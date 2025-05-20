@@ -42,6 +42,7 @@ class VesselNote(models.Model):
     def owner(self):
         return self.user
 
+
 class NoteMessage(models.Model):
     vessel_note = models.ForeignKey(
         VesselNote,

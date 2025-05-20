@@ -34,9 +34,17 @@ urlpatterns = [
     path("vessels/<int:pk>/update/", vessel_update, name="vessel_update"),
     path("vessels/<int:pk>/delete/", vessel_delete, name="vessel_delete"),
     path("vessels/<int:pk>/note/", vessel_note_update, name="vessel_note_update"),
-    path("vessels/<int:pk>/note/create/", vessel_note_create, name="vessel_note_create"),
-    path("vessels/note/<int:note_id>/add_message/", vessel_note_message_add, name="vessel_note_message_add"),
-    path("vessels/note/<int:note_id>/share/", vessel_note_share, name="vessel_note_share"),
+    path(
+        "vessels/<int:pk>/note/create/", vessel_note_create, name="vessel_note_create"
+    ),
+    path(
+        "vessels/note/<int:note_id>/add_message/",
+        vessel_note_message_add,
+        name="vessel_note_message_add",
+    ),
+    path(
+        "vessels/note/<int:note_id>/share/", vessel_note_share, name="vessel_note_share"
+    ),
     path("admin/", admin.site.urls),
     path("api/", api.urls),
     path("accounts/", include("allauth.urls")),

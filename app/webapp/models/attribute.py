@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 
 
-
 class AttributeSection(models.Model):
     name = models.CharField(max_length=100, unique=True, help_text=_("Section name"))
     icon = models.CharField(max_length=100, help_text=_("Icon name or identifier"))
@@ -63,7 +62,9 @@ class Attribute(models.Model):
     )
     accepts_contributions = models.BooleanField(
         default=True,
-        help_text=_("Whether this attribute accepts contributions from users, or is fixed"),
+        help_text=_(
+            "Whether this attribute accepts contributions from users, or is fixed"
+        ),
     )
 
     @property
