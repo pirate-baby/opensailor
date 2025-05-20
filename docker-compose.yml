@@ -48,12 +48,14 @@ services:
       - utils
     entrypoint: ["uv", "run", "black", "/src/app/webapp"]
     ports: []
+    depends_on: []
   lint:
     <<: *app
     profiles:
       - utils
     entrypoint: ["uv", "run", "prospector", "--profile", ".prospector.yaml"]
     ports: []
+    depends_on: []
   makemigrations:
     <<: *app
     profiles:
