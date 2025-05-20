@@ -118,6 +118,7 @@ resource "aws_ecs_task_definition" "app" {
         { name = "GOOGLE_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:GOOGLE_CLIENT_SECRET::" },
         { name = "GITHUB_CLIENT_ID", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:GITHUB_CLIENT_ID::" },
         { name = "GITHUB_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:GITHUB_CLIENT_SECRET::" },
+        { name = "EMAIL_HOST_PASSWORD", valueFrom = "${aws_secretsmanager_secret.env_vars.arn}:EMAIL_HOST_PASSWORD::" },
       ]
     },
     {

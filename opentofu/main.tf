@@ -4,6 +4,17 @@ provider "aws" {
 
 resource "aws_secretsmanager_secret" "env_vars" {
   name = var.env_secrets_name
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      name,
+      description,
+      tags,
+      policy,
+      recovery_window_in_days,
+      kms_key_id
+    ]
+  }
 }
 
 resource "random_password" "db_password" {

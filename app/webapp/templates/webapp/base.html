@@ -83,6 +83,15 @@
     {% block hero %}{% endblock %}
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {% if messages %}
+          <div class="space-y-2 mb-4">
+            {% for message in messages %}
+              <div class="px-4 py-2 rounded {{ message.tags }} bg-green-100 text-green-800" style="margin-bottom: 1em;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 

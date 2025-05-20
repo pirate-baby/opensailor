@@ -1,121 +1,10 @@
 {% extends "webapp/base.html" %}
 {% load custom_filters %}
+{% load static %}
+
+<script src="{% static 'libraries/assets/main.js' %}"></script>
 
 {% block title %}{{ vessel.name }} - {{ APP_NAME }}{% endblock %}
-
-{% block extra_head %}
-<link href="https://cdn.jsdelivr.net/npm/@tiptap/extension-text-align@2.1.13/dist/tiptap-extension-text-align.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@tiptap/extension-typography@2.1.13/dist/tiptap-extension-typography.min.css" rel="stylesheet">
-<script type="module">
-    import { Editor } from 'https://esm.sh/@tiptap/core'
-    import StarterKit from 'https://esm.sh/@tiptap/starter-kit'
-    import TextAlign from 'https://esm.sh/@tiptap/extension-text-align'
-    import Typography from 'https://esm.sh/@tiptap/extension-typography'
-    import TaskList from 'https://esm.sh/@tiptap/extension-task-list'
-    import TaskItem from 'https://esm.sh/@tiptap/extension-task-item'
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const editorElement = document.querySelector('#editor');
-        const editor = new Editor({
-            element: editorElement,
-            extensions: [
-                StarterKit,
-                TextAlign.configure({
-                    types: ['heading', 'paragraph'],
-                }),
-                Typography,
-                TaskList,
-                TaskItem.configure({
-                    nested: true,
-                }),
-            ],
-            content: "{{ user_note.content|default:''|safe }}",
-            autofocus: true,
-            editable: true,
-        });
-
-        // Add toolbar
-        const toolbar = document.createElement('div');
-        toolbar.className = 'tiptap-toolbar';
-        const toolbarContainer = document.getElementById('editor-toolbar');
-        toolbarContainer.appendChild(toolbar);
-
-        // Add basic formatting buttons with correct command functions
-        const buttons = [
-            { command: () => editor.commands.toggleBold(), icon: 'B' },
-            { command: () => editor.commands.toggleItalic(), icon: 'I' },
-            { command: () => editor.commands.toggleUnderline(), icon: 'U' },
-            { command: () => editor.commands.toggleStrike(), icon: 'S' },
-            { command: () => editor.commands.toggleBulletList(), icon: '•' },
-            { command: () => editor.commands.toggleOrderedList(), icon: '1.' },
-            { command: () => editor.commands.toggleTaskList(), icon: '☐' },
-            { command: () => editor.commands.setTextAlign('left'), icon: '←' },
-            { command: () => editor.commands.setTextAlign('center'), icon: '↔' },
-            { command: () => editor.commands.setTextAlign('right'), icon: '→' },
-        ];
-
-        buttons.forEach(({ command, icon }) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.innerHTML = icon;
-            button.className = 'tiptap-button';
-            button.onclick = command;
-            toolbar.appendChild(button);
-        });
-
-        const saveButton = document.querySelector('#saveNote');
-        const noteForm = document.querySelector('#noteForm');
-        const noteContent = document.querySelector('#noteContent');
-
-        saveButton.addEventListener('click', function() {
-            noteContent.value = editor.getHTML();
-            noteForm.dispatchEvent(new Event('submit'));
-        });
-    });
-</script>
-<style>
-    .tiptap-toolbar {
-        display: flex;
-        gap: 0.5rem;
-        padding: 0.5rem;
-        border-bottom: 1px solid #e5e7eb;
-        background: #f9fafb;
-    }
-    .tiptap-button {
-        padding: 0.25rem 0.5rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.25rem;
-        background: white;
-        cursor: pointer;
-    }
-    .tiptap-button:hover {
-        background: #f3f4f6;
-    }
-    #editor {
-        padding: 1rem;
-        min-height: 200px;
-        max-height: 300px;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.25rem;
-        outline: none;
-        box-shadow: none;
-        overflow: auto;
-    }
-    #editor:focus {
-        outline: none !important;
-        border-color: #e5e7eb !important;
-        box-shadow: none !important;
-    }
-    .ProseMirror-focused {
-        outline: none !important;
-        box-shadow: none !important;
-        border-color: #e5e7eb !important;
-    }
-    .ProseMirror p {
-        margin: 0.5rem 0;
-    }
-</style>
-{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
@@ -285,19 +174,74 @@
     <!-- Notes Section -->
     {% if user.is_authenticated %}
         <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-medium text-gray-900">Your Notes</h2>
-            <form id="noteForm" method="post" action="{% url 'vessel_note_update' vessel.pk %}" class="mt-4">
-                {% csrf_token %}
-                <input type="hidden" name="content" id="noteContent">
-                <div id="editor-toolbar"></div>
-                <div id="editor"></div>
-                <div class="mt-4">
-                    <button type="button" id="saveNote"
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
-                        Save Note
-                    </button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-medium text-gray-900">Notes</h2>
+                {% if not user_note %}
+                <a href="{% url 'vessel_note_create' vessel.pk %}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                    + Create New Note
+                </a>
+                {% endif %}
+            </div>
+            {% if accessible_notes %}
+                <div class="space-y-8 mt-4">
+                    {% for note in accessible_notes %}
+                        <div class="border rounded-lg p-4 mb-2" x-data="{ open: true, shareOpen: false }">
+                            <div class="flex items-center justify-between cursor-pointer select-none" @click="open = !open">
+                                <div class="flex items-start">
+                                    <button type="button" class="mr-2 text-accent focus:outline-none" style="font-size: 2rem; line-height: 1; margin-top: -0.15em;" @click.stop="open = !open">
+                                        <span x-show="open">&#9650;</span>
+                                        <span x-show="!open">&#9660;</span>
+                                    </button>
+                                    <div>
+                                        {% if note.owner == user %}
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-0">Your notes{% if note.shared_with.all %} (shared with {% for u in note.shared_with.all %}{{ u.username }}{% if not forloop.last %}, {% endif %}{% endfor %}){% endif %}</h3>
+                                        {% else %}
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-0">Notes with {{ note.owner.username }}</h3>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if note.owner == user %}
+                                    <div class="mt-1 -ml-2">
+                                        <a href="#" class="text-accent text-sm hover:underline" @click.prevent="shareOpen = true">Share this note</a>
+                                    </div>
+                                    <div x-show="shareOpen" x-effect="document.body.classList.toggle('overflow-hidden', shareOpen)" class="fixed inset-0 z-50 flex items-center justify-center">
+                                        <div class="fixed inset-0 bg-black bg-opacity-30" @click="shareOpen = false"></div>
+                                        <div class="bg-white rounded-lg shadow-lg p-6 w-80 border border-gray-200 relative z-10">
+                                            <form method="post" action="{% url 'vessel_note_share' note.id %}" class="space-y-4">
+                                                {% csrf_token %}
+                                                <label for="share-email-{{ note.id }}" class="block text-sm font-medium text-gray-700">Share with email:</label>
+                                                <input type="email" name="email" id="share-email-{{ note.id }}" class="w-full border rounded px-2 py-1" required>
+                                                <div class="flex justify-end space-x-2">
+                                                    <button type="button" class="px-3 py-1 text-gray-500 hover:text-gray-700" @click.prevent="shareOpen = false">Cancel</button>
+                                                    <button type="submit" class="px-3 py-1 bg-accent text-white rounded hover:bg-primary">Share</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="space-y-2 mt-2" x-show="open" x-transition>
+                                {% for message in note.messages.all|dictsortreversed:"created_at" %}
+                                    <div class="border-b pb-2 mb-2 {% if message.user == user %}note-message-own{% else %}note-message-other{% endif %}">
+                                        <div class="flex items-center text-sm text-gray-500 mb-1">
+                                            <span class="font-medium text-gray-700" title="{{ message.created_at }}">{{ message.user.username }}</span>
+                                        </div>
+                                        <div class="text-gray-900 note-message-content">{{ message.content|markdown_no_headings }}</div>
+                                    </div>
+                                {% empty %}
+                                    <div class="text-gray-400 italic">No messages yet.</div>
+                                {% endfor %}
+                                <div class="mt-2 flex justify-end">
+                                    <a href="{% url 'vessel_note_message_add' note.id %}" class="px-3 py-1 border border-accent rounded-md text-accent hover:bg-accent hover:text-white text-xs font-medium">Add Message</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
-            </form>
+            {% else %}
+                <div class="text-gray-500 italic mt-4">You do not have access to any notes for this vessel.</div>
+            {% endif %}
         </div>
     {% else %}
         <div class="bg-white rounded-lg shadow p-6 text-center">
@@ -312,4 +256,44 @@
         </div>
     {% endif %}
 </div>
+
+<style>
+.note-message-content blockquote {
+    border-left: 4px solid #4CA6CF; /* accent color */
+    background: #f3f8fa;
+    color: #374151;
+    margin: 0.5em 0;
+    padding: 0.5em 1em;
+    border-radius: 0.25em;
+    font-style: italic;
+}
+.note-message-content ul,
+.note-message-content ol {
+    margin-left: 1.5em;
+    margin-bottom: 1em;
+    padding-left: 1.2em;
+}
+.note-message-content ul {
+    list-style-type: disc;
+}
+.note-message-content ol {
+    list-style-type: decimal;
+}
+.note-message-content li {
+    margin-bottom: 0.3em;
+}
+
+/* Message border color by user */
+.note-message-own,
+.note-message-other {
+    padding-left: 1em;
+}
+.note-message-own {
+    border-left: 4px solid #4CA6CF !important; /* accent (now for own messages) */
+}
+.note-message-other {
+    border-left: 4px solid #3FE0D0 !important; /* new aqua for others */
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 {% endblock %}
