@@ -42,7 +42,8 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ecs:ListTaskDefinitions",
           "ecs:ListTasks",
           "ecs:RegisterTaskDefinition",
-          "ecs:UpdateService"
+          "ecs:UpdateService",
+          "ec2:DescribeAvailabilityZones"
         ],
         Resource = "*"
       },
