@@ -186,7 +186,11 @@
             {% if accessible_notes %}
                 <div class="space-y-8 mt-4">
                     {% for note in accessible_notes %}
-                        <div class="border rounded-lg p-4 mb-2" x-data="{ open: true, shareOpen: false }">
+                        {% if note.owner == user %}
+                            <div class="border rounded-lg p-4 mb-2" x-data="{ open: true, shareOpen: false }">
+                        {% else %}
+                            <div class="border rounded-lg p-4 mb-2" x-data="{ open: false, shareOpen: false }">
+                        {% endif %}
                             <div class="flex items-center justify-between cursor-pointer select-none" @click="open = !open">
                                 <div class="flex items-start">
                                     <button type="button" class="mr-2 text-accent focus:outline-none" style="font-size: 2rem; line-height: 1; margin-top: -0.15em;" @click.stop="open = !open">

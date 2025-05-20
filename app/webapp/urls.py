@@ -17,6 +17,7 @@ from app.webapp.views.views import (
     vessel_note_create,
     vessel_note_message_add,
     vessel_note_share,
+    terms_of_service,
 )
 
 
@@ -39,4 +40,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", api.urls),
     path("accounts/", include("allauth.urls")),
+    path("terms/", terms_of_service, name="terms_of_service"),
 ]
