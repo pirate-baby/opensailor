@@ -117,7 +117,6 @@ class Vessel(models.Model):
     )
     USCG_number = models.CharField(
         max_length=14,
-        unique=True,
         null=True,
         blank=True,
         help_text=_("Number issued by the USCG for this vessel"),

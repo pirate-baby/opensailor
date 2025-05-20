@@ -15,10 +15,10 @@ def create_vessel(request: VesselCreateRequest) -> int:
     (so the view layer can create a template or a data object)
     """
     if not (sailboat := Sailboat.objects.filter(id=request.sailboat).first()):
-        make = Make.get_or_create_moderated(name=request.make,
+        make = Make.get_or_create_moderated(name=request.make.lower(),
                                             user=request.user)
         sailboat = Sailboat.get_or_create_moderated(make=make,
-                                                    name=request.sailboat_name,
+                                                    name=request.sailboat_name.lower(),
                                                     year_built=request.year_built,
                                                     user=request.user)
     vessel = Vessel.objects.create(
