@@ -52,10 +52,14 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ec2:DescribeRouteTables",
           "ec2:DescribeNetworkInterfaces",
           "ec2:DescribeVpcAttribute",
+          "ec2:DescribeVpcEndpoints",
           "acm:DescribeCertificate",
           "acm:ListTagsForCertificate",
           "logs:DescribeLogGroups",
-          "logs:ListTagsForResource"
+          "logs:ListTagsForResource",
+          "elasticloadbalancing:DescribeLoadBalancers",
+          "elasticloadbalancing:DescribeTargetGroups",
+          "rds:DescribeDBSubnetGroups"
         ],
         Resource = "*"
       },
@@ -86,7 +90,9 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "iam:GetOpenIDConnectProvider",
           "iam:GetPolicy",
           "iam:ListRolePolicies",
-          "iam:GetPolicyVersion"
+          "iam:GetPolicyVersion",
+          "iam:ListAttachedRolePolicies",
+          "iam:GetRolePolicy"
         ],
         Resource = "*"
       },
@@ -107,7 +113,8 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "s3:ListBucket",
           "s3:GetBucketPolicy",
           "s3:GetBucketAcl",
-          "s3:GetBucketCORS"
+          "s3:GetBucketCORS",
+          "s3:GetBucketWebsite"
         ],
         Resource = [
           "arn:aws:s3:::opensailor-tfstate",
@@ -126,7 +133,8 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "dynamodb:Query",
           "dynamodb:UpdateItem",
           "dynamodb:DescribeTable",
-          "dynamodb:DescribeContinuousBackups"
+          "dynamodb:DescribeContinuousBackups",
+          "dynamodb:DescribeTimeToLive"
         ],
         Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
       },
