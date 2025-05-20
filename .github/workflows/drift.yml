@@ -32,14 +32,14 @@ jobs:
           tofu-version: 'latest'
 
       - name: Initialize OpenTofu
-        run: opentofu init
+        run: tofu init -input=false
         working-directory: opentofu
 
       - name: Check for drift
         id: plan
         run: |
           set -e
-          opentofu plan -detailed-exitcode -no-color
+          tofu plan -detailed-exitcode -no-color
         working-directory: opentofu
         continue-on-error: true
 
