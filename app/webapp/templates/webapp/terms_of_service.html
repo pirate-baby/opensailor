@@ -1,0 +1,57 @@
+{% extends "webapp/base.html" %}
+{% block title %}Terms of Service | {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="prose max-w-2xl mx-auto">
+    <h1 class="text-4xl font-bold mb-8 text-center">Terms of Service</h1>
+    <div class="space-y-10">
+        <section>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-accent text-3xl">collections</span>
+                <h2 class="text-2xl font-semibold">Content and Copyright</h2>
+            </div>
+            <p>All content you upload, especially images and videos, must be free and open licensed (like <a href="https://creativecommons.org/" class="text-accent underline hover:text-blue-600" target="_blank" rel="noopener">Creative Commons</a>). <b>By uploading content to this site, you are assigning that content a Creative Commons license and entering it into the public domain.</b></p>
+            <p>If you took the images you are uploading, you are putting them in the public domain by uploading them here.</p>
+            <p>If you did not take the images, you must make sure they are Creative Commons licensed. Please do not upload anything you do not own or cannot speak for the rights to.</p>
+        </section>
+        <section>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-accent text-3xl">database</span>
+                <h2 class="text-2xl font-semibold">Data Sharing</h2>
+            </div>
+            <p>All information you contribute will be used to improve our open source database, which anyone can download and use for any legal purpose. It is all free and open source.</p>
+            <p>Do not input any data you do not want to share with the world.</p>
+        </section>
+        <section>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-accent text-3xl">gavel</span>
+                <h2 class="text-2xl font-semibold">Respect Other Services</h2>
+            </div>
+            <p>Do not violate anyone else's terms of service to add data to our open source dataset. We appreciate your effort, but that is both unethical and often illegal. Please, please don't do it.</p>
+        </section>
+        <section>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-accent text-3xl">cloud_off</span>
+                <h2 class="text-2xl font-semibold">No Scraping Needed</h2>
+            </div>
+            <p>Please do not attempt to scrape this website. We will be uploading our entire dataset to Kaggle every week shortly, and will also offer an API for legitimate programmatic access. Scraping the human-facing site increases our costs and makes it harder to keep this volunteer project running.</p>
+        </section>
+        <section>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-accent text-3xl">warning</span>
+                <h2 class="text-2xl font-semibold">No Warranty & Limitation of Liability</h2>
+            </div>
+            <p>This site and its data are provided "as is," without any warranty. We do not guarantee that the information is accurate, complete, or up to date.</p>
+            <p>We are not responsible for any damages or losses that may result from using this site or its data, to the fullest extent allowed by law.</p>
+            <p>By using this site, you accept that you use it at your own risk.</p>
+        </section>
+        <section>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-accent text-3xl">diversity_3</span>
+                <h2 class="text-2xl font-semibold">Open Source Spirit</h2>
+            </div>
+            <p>Everything here is open source and meant to be shared and improved by the community. Please respect the spirit of openness and collaboration.</p>
+        </section>
+    </div>
+    <p class="mt-10 text-center text-gray-500">If you have any questions about these terms, please contact us. Thank you for being part of OpenSailor!</p>
+</div>
+{% endblock %}
