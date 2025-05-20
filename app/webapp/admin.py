@@ -161,6 +161,7 @@ class DesignerAdmin(CSVImportMixin, admin.ModelAdmin):
         for row in reader:
             Designer.objects.get_or_create(name=row["name"].lower())
 
+
 @admin.register(AttributeSection)
 class AttributeSectionAdmin(CSVImportMixin, admin.ModelAdmin):
     list_display = ("name", "icon")
@@ -170,7 +171,11 @@ class AttributeSectionAdmin(CSVImportMixin, admin.ModelAdmin):
 
 @admin.register(Attribute)
 class AttributeAdmin(CSVImportMixin, admin.ModelAdmin):
-    list_display = ("name", "input_type", "description",)
+    list_display = (
+        "name",
+        "input_type",
+        "description",
+    )
     list_filter = ("input_type",)
     search_fields = ("name", "description")
     ordering = ("name",)
@@ -310,20 +315,39 @@ class SailboatImageAdmin(admin.ModelAdmin):
 
 @admin.register(Moderation)
 class ModerationAdmin(admin.ModelAdmin):
-    list_display = ("content_type", "object_id", "requested_by", "state", "created_at", "moderator")
+    list_display = (
+        "content_type",
+        "object_id",
+        "requested_by",
+        "state",
+        "created_at",
+        "moderator",
+    )
     list_filter = ("state", "content_type")
     search_fields = ("requested_by__username", "moderator__username")
-    readonly_fields = ("content_type", "object_id", "data", "requested_by", "created_at", "updated_at")
+    readonly_fields = (
+        "content_type",
+        "object_id",
+        "data",
+        "requested_by",
+        "created_at",
+        "updated_at",
+    )
     fieldsets = (
-        (_("Moderation Request"), {
-            "fields": ("content_type", "object_id", "data", "requested_by", "request_note")
-        }),
-        (_("Moderation Status"), {
-            "fields": ("state", "moderator", "response_note")
-        }),
-        (_("Timestamps"), {
-            "fields": ("created_at", "updated_at")
-        }),
+        (
+            _("Moderation Request"),
+            {
+                "fields": (
+                    "content_type",
+                    "object_id",
+                    "data",
+                    "requested_by",
+                    "request_note",
+                )
+            },
+        ),
+        (_("Moderation Status"), {"fields": ("state", "moderator", "response_note")}),
+        (_("Timestamps"), {"fields": ("created_at", "updated_at")}),
     )
 
     def has_add_permission(self, request):

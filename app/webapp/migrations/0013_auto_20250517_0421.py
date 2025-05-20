@@ -10,6 +10,7 @@ def add_misc_attribute_section(apps, schema_editor):
         icon="sailing",
     )
 
+
 class Migration(migrations.Migration):
 
     dependencies = [

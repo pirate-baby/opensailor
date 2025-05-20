@@ -36,7 +36,7 @@ def is_list(value):
 def get_attr(sailboat, attr_name):
     """Get attribute values from a sailboat's attributes"""
     attr = sailboat.attribute_values.get(attribute__snake_case_name=attr_name)
-    return getattr(attr, 'values', None)
+    return getattr(attr, "values", None)
 
 
 @register.filter(is_safe=True)
