@@ -1,0 +1,25 @@
+{% extends "webapp/base.html" %}
+
+{% block title %}Create Note for {{ vessel.name }} - {{ APP_NAME }}{% endblock %}
+
+{% block extra_head %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'libraries/main.css' %}">
+<script src="{% static 'libraries/main.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold mb-4">Create Note for {{ vessel.name }}</h1>
+        <form method="post" id="note-create-form">
+            {% csrf_token %}
+            {% include "webapp/components/milkdown_editor.html" with field_name="content" field_id="note-content" label="First message" initial_value="" errors=form.content.errors form_id="note-create-form" %}
+            <div class="flex justify-end">
+                <a href="{% url 'vessel_detail' vessel.pk %}" class="mr-4 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Cancel</a>
+                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary">Create Note</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
