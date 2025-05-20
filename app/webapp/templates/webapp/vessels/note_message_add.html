@@ -5,7 +5,13 @@
 {% block content %}
 <div class="max-w-2xl mx-auto mt-10">
     <div class="bg-white rounded-lg shadow p-6">
-        <h1 class="text-2xl font-bold mb-4">Add Message to Note for {{ vessel.name }}</h1>
+        <h1 class="text-2xl font-bold mb-4">
+            {% if note.owner == user %}
+                Note for {{ vessel.name }}{% if note.shared_with.all %} with {% for u in note.shared_with.all %}{{ u.username }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
+            {% else %}
+                Note for {{ vessel.name }} with {{ note.owner.username }}
+            {% endif %}
+        </h1>
         <form method="post" id="note-message-form">
             {% csrf_token %}
             {% include "webapp/components/milkdown_editor.html" with field_name="content" field_id="note-message-content" label="Message" initial_value="" errors=form.content.errors form_id="note-message-form" %}
