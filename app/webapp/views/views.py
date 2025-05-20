@@ -579,3 +579,8 @@ def vessel_note_share(request, note_id):
     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_to_share.email])
     messages.success(request, f"Shared note with {user_to_share.email}!")
     return redirect('vessel_detail', pk=note.vessel.pk)
+
+
+def terms_of_service(request):
+    """Display the Terms of Service page."""
+    return render(request, "webapp/terms_of_service.html")
