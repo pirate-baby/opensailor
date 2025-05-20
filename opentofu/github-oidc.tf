@@ -51,8 +51,11 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ec2:DescribeInternetGateways",
           "ec2:DescribeRouteTables",
           "ec2:DescribeNetworkInterfaces",
+          "ec2:DescribeVpcAttribute",
           "acm:DescribeCertificate",
-          "logs:DescribeLogGroups"
+          "acm:ListTagsForCertificate",
+          "logs:DescribeLogGroups",
+          "logs:ListTagsForResource"
         ],
         Resource = "*"
       },
@@ -71,7 +74,8 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ecr:ListImages",
           "ecr:DescribeImages",
           "ecr:DescribeRepositoryPolicy",
-          "ecr:GetRepositoryPolicy"
+          "ecr:GetRepositoryPolicy",
+          "ecr:ListTagsForResource"
         ],
         Resource = "*"
       },
@@ -80,14 +84,17 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
         Action = [
           "iam:GetRole",
           "iam:GetOpenIDConnectProvider",
-          "iam:GetPolicy"
+          "iam:GetPolicy",
+          "iam:ListRolePolicies",
+          "iam:GetPolicyVersion"
         ],
         Resource = "*"
       },
       {
         Effect = "Allow",
         Action = [
-          "secretsmanager:DescribeSecret"
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetResourcePolicy"
         ],
         Resource = "*"
       },
@@ -98,7 +105,9 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "s3:PutObject",
           "s3:DeleteObject",
           "s3:ListBucket",
-          "s3:GetBucketPolicy"
+          "s3:GetBucketPolicy",
+          "s3:GetBucketAcl",
+          "s3:GetBucketCORS"
         ],
         Resource = [
           "arn:aws:s3:::opensailor-tfstate",
@@ -116,7 +125,8 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "dynamodb:Scan",
           "dynamodb:Query",
           "dynamodb:UpdateItem",
-          "dynamodb:DescribeTable"
+          "dynamodb:DescribeTable",
+          "dynamodb:DescribeContinuousBackups"
         ],
         Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
       },
