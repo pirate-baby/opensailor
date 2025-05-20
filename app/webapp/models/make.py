@@ -29,14 +29,13 @@ class Make(models.Model):
         super().save(*args, **kwargs)
 
     @classmethod
-    def get_or_create_moderated(cls,
-                                name: str,
-                                user: "User"):
+    def get_or_create_moderated(cls, name: str, user: "User"):
         """get or create a make, moderating it if it's new"""
         make, created = cls.objects.get_or_create(name=name)
         make.save()
         if created:
-            Moderation.moderation_for(cls,
+            Moderation.moderation_for(
+                cls,
                 object_id=make.id,
                 request_note="This make was created to support a new vessel",
                 requested_by=user,
