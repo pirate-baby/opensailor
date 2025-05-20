@@ -53,13 +53,17 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ec2:DescribeNetworkInterfaces",
           "ec2:DescribeVpcAttribute",
           "ec2:DescribeVpcEndpoints",
+          "ec2:DescribePrefixLists",
           "acm:DescribeCertificate",
           "acm:ListTagsForCertificate",
           "logs:DescribeLogGroups",
           "logs:ListTagsForResource",
           "elasticloadbalancing:DescribeLoadBalancers",
           "elasticloadbalancing:DescribeTargetGroups",
-          "rds:DescribeDBSubnetGroups"
+          "elasticloadbalancing:DescribeLoadBalancerAttributes",
+          "elasticloadbalancing:DescribeTargetGroupAttributes",
+          "rds:DescribeDBSubnetGroups",
+          "rds:ListTagsForResource"
         ],
         Resource = "*"
       },
@@ -114,7 +118,8 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "s3:GetBucketPolicy",
           "s3:GetBucketAcl",
           "s3:GetBucketCORS",
-          "s3:GetBucketWebsite"
+          "s3:GetBucketWebsite",
+          "s3:GetBucketVersioning"
         ],
         Resource = [
           "arn:aws:s3:::opensailor-tfstate",
@@ -134,7 +139,8 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "dynamodb:UpdateItem",
           "dynamodb:DescribeTable",
           "dynamodb:DescribeContinuousBackups",
-          "dynamodb:DescribeTimeToLive"
+          "dynamodb:DescribeTimeToLive",
+          "dynamodb:ListTagsOfResource"
         ],
         Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
       },
