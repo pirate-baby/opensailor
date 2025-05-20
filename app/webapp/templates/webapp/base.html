@@ -40,11 +40,15 @@
             }
         }
     </style>
+    <style>
+    [x-cloak] { display: none !important; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-white text-gray-900 min-h-screen">
     <header class="bg-white shadow-sm">
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" x-data="{ open: false }">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex-shrink-0 flex items-center">
                     <a href="/" class="flex items-center space-x-2">
@@ -52,28 +56,59 @@
                         <span class="text-3xl font-script text-primary">{{ APP_NAME }}</span>
                     </a>
                 </div>
+                <!-- Desktop nav links -->
                 <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                     <a href="/" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-accent">Home</a>
                     <a href="{% url 'sailboats_index' %}" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-accent">Sailing Models</a>
                     <a href="{% url 'vessels_index' %}" class="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-accent">Vessels</a>
                     <!-- Add more navigation items here -->
                 </div>
-                <div class="flex items-center">
-                    {% if user.is_authenticated %}
-                        <div class="relative group">
-                            <div class="flex items-center text-gray-700 hover:text-accent cursor-pointer">
-                                <span>{{ user.email|split_first:"@" }}</span>
-                            </div>
-                            <!-- Invisible bridge to prevent menu from disappearing -->
-                            <div class="absolute top-full left-0 right-0 h-2"></div>
-                            <div class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50">
-                                <div class="py-1" role="menu" aria-orientation="vertical">
-                                    <a href="{% url 'account_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Log out</a>
+                <div class="flex items-center flex-1 justify-end">
+                    <!-- Hamburger button for mobile, now floated right -->
+                    <button @click="open = !open" class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-accent focus:outline-none" aria-label="Toggle navigation">
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path :class="{'hidden': open, 'inline-flex': !open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path :class="{'hidden': !open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <!-- User menu for desktop -->
+                    <div class="hidden sm:block ml-4">
+                        {% if user.is_authenticated %}
+                            <div class="relative group">
+                                <div class="flex items-center text-gray-700 hover:text-accent cursor-pointer">
+                                    <span>{{ user.email|split_first:"@" }}</span>
+                                </div>
+                                <!-- Invisible bridge to prevent menu from disappearing -->
+                                <div class="absolute top-full left-0 right-0 h-2"></div>
+                                <div class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50">
+                                    <div class="py-1" role="menu" aria-orientation="vertical">
+                                        <a href="{% url 'account_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Log out</a>
+                                    </div>
                                 </div>
                             </div>
+                        {% else %}
+                            <a href="{% url 'account_login' %}" class="text-gray-900 hover:text-accent">Log in</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- Mobile menu, show/hide based on menu state. Sibling to the flex container, shares Alpine state -->
+            <div class="sm:hidden" x-show="open" x-cloak x-transition>
+                <div class="pt-2 pb-3 space-y-1">
+                    <a href="/" class="block pl-3 pr-4 py-2 border-l-4 border-accent text-base font-medium text-primary bg-gray-50">Home</a>
+                    <a href="{% url 'sailboats_index' %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-700 hover:border-accent hover:bg-gray-50">Sailing Models</a>
+                    <a href="{% url 'vessels_index' %}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-700 hover:border-accent hover:bg-gray-50">Vessels</a>
+                    <!-- Add more navigation items here -->
+                </div>
+                <div class="border-t border-gray-200 mt-2 pt-2 pb-3">
+                    {% if user.is_authenticated %}
+                        <div class="px-4 py-2 text-base font-medium text-gray-700 flex items-center space-x-2">
+                            <span class="material-symbols-outlined text-lg">account_circle</span>
+                            <span>{{ user.email|split_first:"@" }}</span>
                         </div>
+                        <a href="{% url 'account_logout' %}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Log out</a>
                     {% else %}
-                        <a href="{% url 'account_login' %}" class="text-gray-900 hover:text-accent">Log in</a>
+                        <a href="{% url 'account_login' %}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Log in</a>
                     {% endif %}
                 </div>
             </div>
