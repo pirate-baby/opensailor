@@ -15,10 +15,12 @@ if TYPE_CHECKING:
     from webapp.models.user import User
     from django.core.files.uploadedfile import UploadedFile
 
+
 class VesselAttribute(models.Model):
     vessel = models.ForeignKey("Vessel", on_delete=models.CASCADE)
     attribute = models.ForeignKey("Attribute", on_delete=models.CASCADE)
     value = models.CharField(max_length=255)
+
     class Meta:
         verbose_name = _("vessel attribute")
         verbose_name_plural = _("vessel attributes")
@@ -47,7 +49,9 @@ class VesselAttribute(models.Model):
                 self.value = str(self.value)
         # if the attribute has options, make sure the value is in that list
         if self.attribute.options and self.value not in self.attribute.options:
-                raise ValidationError({"value": _("Value must be in the allowed options list")})
+            raise ValidationError(
+                {"value": _("Value must be in the allowed options list")}
+            )
 
         current_sailboat_attribute = SailboatAttribute.objects.filter(
             sailboat=self.sailboat,
@@ -57,8 +61,13 @@ class VesselAttribute(models.Model):
         # and the attribute does not accept contributions,
         # then we need to make sure the value is in the list of allowed value
         if not self.attribute.accepts_contributions:
-            if current_sailboat_attribute and self.value not in current_sailboat_attribute.values:
-                raise ValidationError({"value": _("Value is not allowed for this sailboat")})
+            if (
+                current_sailboat_attribute
+                and self.value not in current_sailboat_attribute.values
+            ):
+                raise ValidationError(
+                    {"value": _("Value is not allowed for this sailboat")}
+                )
         # add the value to the sailboat attribute or create a new one
         if current_sailboat_attribute:
             current_sailboat_attribute.values.append(self.value)
@@ -80,6 +89,7 @@ class VesselAttribute(models.Model):
             verb=verb,
             triggered_by=self,
         )
+
 
 class VesselImage(models.Model):
     vessel = models.ForeignKey("Vessel", on_delete=models.CASCADE)
@@ -180,13 +190,17 @@ class Vessel(models.Model):
         """Check if the vessel has any images"""
         return self.images.exists()
 
-    def add_image(self, image:"UploadedFile"):
+    def add_image(self, image: "UploadedFile"):
         """add an image to the vessel"""
         media = Media.objects.create(file=image)
-        VesselImage.objects.create(vessel=self, image=media, order=self.images.count() + 1)
+        VesselImage.objects.create(
+            vessel=self, image=media, order=self.images.count() + 1
+        )
         self.save()
 
-    def create_or_update_attribute(self, attribute_assignment:AttributeAssignment) -> VesselAttribute:
+    def create_or_update_attribute(
+        self, attribute_assignment: AttributeAssignment
+    ) -> VesselAttribute:
         """create or update an attribute for the vessel, and create a moderation request
         for the parent sailboat if the data is new"""
         attribute = Attribute.objects.get(name=attribute_assignment.name)
@@ -198,6 +212,5 @@ class Vessel(models.Model):
             existing_attribute.save()
             return existing_attribute
         return VesselAttribute.objects.create(
-            vessel=self,
-            attribute=attribute,
-            value=attribute_assignment.value)
+            vessel=self, attribute=attribute, value=attribute_assignment.value
+        )

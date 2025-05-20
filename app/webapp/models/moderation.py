@@ -29,7 +29,9 @@ class Moderation(models.Model):
     object_id = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text=_("The primary key of the existing object being moderated (if updating)"),
+        help_text=_(
+            "The primary key of the existing object being moderated (if updating)"
+        ),
     )
     content_object = GenericForeignKey("content_type", "object_id")
 
@@ -55,14 +57,18 @@ class Moderation(models.Model):
         null=True,
         blank=True,
         related_name="triggered_moderations",
-        help_text=_("The type of object that triggered this moderation as a side effect"),
+        help_text=_(
+            "The type of object that triggered this moderation as a side effect"
+        ),
     )
     triggered_by_object_id = models.PositiveIntegerField(
         null=True,
         blank=True,
         help_text=_("The primary key of the object that triggered this moderation"),
     )
-    triggered_by = GenericForeignKey("triggered_by_content_type", "triggered_by_object_id")
+    triggered_by = GenericForeignKey(
+        "triggered_by_content_type", "triggered_by_object_id"
+    )
 
     # Optional note from the requester
     request_note = models.TextField(
@@ -141,11 +147,6 @@ class Moderation(models.Model):
         return self.state == self.State.MODIFIED
 
     @classmethod
-    def moderation_for(cls,
-                       class_: Type[models.Model],
-                       **kwargs):
+    def moderation_for(cls, class_: Type[models.Model], **kwargs):
         content_type = ContentType.objects.get_for_model(class_)
-        return Moderation.objects.create(
-            content_type=content_type,
-            **kwargs
-        )
+        return Moderation.objects.create(content_type=content_type, **kwargs)

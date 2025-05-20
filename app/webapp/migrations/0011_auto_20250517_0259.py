@@ -4,7 +4,11 @@ from django.db import migrations
 
 
 def find_ethan(user_model):
-    for possible_email in ["ethan.m.knox@gmail.com", "norton120@gmail.com", "ethan@knox.dev"]:
+    for possible_email in [
+        "ethan.m.knox@gmail.com",
+        "norton120@gmail.com",
+        "ethan@knox.dev",
+    ]:
         try:
             return user_model.objects.get(email=possible_email)
         except user_model.DoesNotExist:
@@ -20,6 +24,7 @@ def add_bootstrap_admin_user(apps, schema_editor):
     ethan.is_staff = True
     ethan.role = "admin"
     ethan.save()
+
 
 class Migration(migrations.Migration):
 

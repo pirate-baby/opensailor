@@ -24,8 +24,21 @@ SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ["ENVIRONMENT"] == "development"
 
-ALLOWED_HOSTS = ["localhost", "app.localhost", "opensailor.org", "127.0.0.1", "www.opensailor.org"]
-CSRF_TRUSTED_ORIGINS = ["https://app.localhost", "https://opensailor.org", "https://www.opensailor.org", "http://127.0.0.1", "http://opensailor.org", "http://www.opensailor.org"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "app.localhost",
+    "opensailor.org",
+    "127.0.0.1",
+    "www.opensailor.org",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://app.localhost",
+    "https://opensailor.org",
+    "https://www.opensailor.org",
+    "http://127.0.0.1",
+    "http://opensailor.org",
+    "http://www.opensailor.org",
+]
 
 # Custom user model
 AUTH_USER_MODEL = "webapp.User"
@@ -103,7 +116,7 @@ ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
 
 # Email settings (you'll need to configure these based on your email provider)
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "wednesday.mxrouting.net"
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
 EMAIL_PORT = 465
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True

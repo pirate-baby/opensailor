@@ -29,6 +29,7 @@ services:
       - AWS_S3_STORAGE_BUCKET=${AWS_S3_STORAGE_BUCKET}
 
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - EMAIL_HOST=${EMAIL_HOST}
     depends_on:
       database_startup:
         condition: service_completed_successfully
@@ -48,12 +49,14 @@ services:
       - utils
     entrypoint: ["uv", "run", "black", "/src/app/webapp"]
     ports: []
+    depends_on: []
   lint:
     <<: *app
     profiles:
       - utils
     entrypoint: ["uv", "run", "prospector", "--profile", ".prospector.yaml"]
     ports: []
+    depends_on: []
   makemigrations:
     <<: *app
     profiles:

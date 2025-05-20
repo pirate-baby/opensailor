@@ -104,7 +104,87 @@ resource "aws_iam_role_policy_attachment" "github_actions_ecs_ecr" {
   policy_arn = aws_iam_policy.github_actions_ecs_ecr.arn
 }
 
+resource "aws_iam_role" "github_actions_drift" {
+  name = "${var.app_name}-github-actions-drift"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Federated = aws_iam_openid_connect_provider.github.arn
+      },
+      Action = "sts:AssumeRoleWithWebIdentity",
+      Condition = {
+        StringLike = {
+          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_drift_readonly" {
+  role       = aws_iam_role.github_actions_drift.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
+resource "aws_iam_policy" "github_actions_drift_tfstate_lock" {
+  name        = "${var.app_name}-github-actions-drift-tfstate-lock"
+  description = "Allow GitHub Actions drift role to access DynamoDB state lock table"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query",
+          "dynamodb:UpdateItem"
+        ],
+        Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_drift_tfstate_lock" {
+  role       = aws_iam_role.github_actions_drift.name
+  policy_arn = aws_iam_policy.github_actions_drift_tfstate_lock.arn
+}
+
+resource "aws_iam_policy" "github_actions_drift_secretsmanager" {
+  name        = "${var.app_name}-github-actions-drift-secretsmanager"
+  description = "Allow GitHub Actions drift role to read secrets for drift detection"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource = [
+          "arn:aws:secretsmanager:us-east-2:*:secret:opensailor*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_drift_secretsmanager" {
+  role       = aws_iam_role.github_actions_drift.name
+  policy_arn = aws_iam_policy.github_actions_drift_secretsmanager.arn
+}
+
 output "github_actions_role_arn" {
   value = aws_iam_role.github_actions_deploy.arn
   description = "IAM Role ARN for GitHub Actions OIDC deploys. Use this in your GitHub Actions workflow as role-to-assume."
+}
+
+output "github_actions_drift_role_arn" {
+  value = aws_iam_role.github_actions_drift.arn
+  description = "IAM Role ARN for GitHub Actions OIDC drift detection. Use this in your GitHub Actions workflow as role-to-assume."
 }

@@ -15,6 +15,7 @@ from webapp.models.moderation import Moderation
 if TYPE_CHECKING:
     from django.contrib.auth.models import User
 
+
 class SailboatImage(models.Model):
     sailboat = models.ForeignKey("Sailboat", on_delete=models.CASCADE)
     image = models.ForeignKey(Media, on_delete=models.CASCADE)
@@ -108,7 +109,10 @@ class Sailboat(models.Model):
 
     def add_year_built(self, year_built: int) -> bool:
         """add/adjust based on a new year built, returns True if changes we made"""
-        if not self.manufactured_start_year or year_built < self.manufactured_start_year:
+        if (
+            not self.manufactured_start_year
+            or year_built < self.manufactured_start_year
+        ):
             self.manufactured_start_year = year_built
             self.save()
             return True
@@ -117,7 +121,6 @@ class Sailboat(models.Model):
             self.save()
             return True
         return False
-
 
     def save(self, *args, **kwargs):
         self.name = self.name.lower()
@@ -137,15 +140,14 @@ class Sailboat(models.Model):
         return AttributeProxy(self.attribute_values.all())
 
     @classmethod
-    def get_or_create_moderated(cls,
-                                make: Make,
-                                name: str,
-                                year_built: int,
-                                user: "User"):
+    def get_or_create_moderated(
+        cls, make: Make, name: str, year_built: int, user: "User"
+    ):
         """get or create a sailboat, moderating it if it's new"""
         sailboat, created = cls.objects.get_or_create(make=make, name=name)
         if created:
-            Moderation.moderation_for(cls,
+            Moderation.moderation_for(
+                cls,
                 object_id=sailboat.id,
                 requested_by=user,
                 request_note="This sailboat was created to support a new vessel",
@@ -155,10 +157,11 @@ class Sailboat(models.Model):
                 },
             )
         if sailboat.add_year_built(year_built):
-            Moderation.moderation_for(cls,
+            Moderation.moderation_for(
+                cls,
                 object_id=sailboat.id,
                 requested_by=user,
-                request_note=f"{year_built} was added as the year built range for this model" ,
+                request_note=f"{year_built} was added as the year built range for this model",
                 verb=Moderation.Verb.UPDATE,
                 data={
                     "year_built": year_built,

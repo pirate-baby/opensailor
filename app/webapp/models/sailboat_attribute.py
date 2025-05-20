@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from webapp.models.attribute import Attribute
 
+
 class SailboatAttribute(models.Model):
     sailboat = models.ForeignKey(
         "Sailboat", on_delete=models.CASCADE, related_name="attribute_values"
