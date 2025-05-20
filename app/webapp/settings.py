@@ -103,7 +103,7 @@ ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
 
 # Email settings (you'll need to configure these based on your email provider)
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "wednesday.mxrouting.net"
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
 EMAIL_PORT = 465
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
