@@ -1,5 +1,7 @@
 from django import template
 from django.utils.safestring import mark_safe
+import re
+import markdown
 
 register = template.Library()
 
@@ -57,3 +59,14 @@ def is_boolean_attribute(attr_value):
 
     boolean_values = ("true", "false", "yes", "no", "1", "0")
     return all(str(v).lower() in boolean_values for v in attr_value.values)
+
+
+@register.filter(is_safe=True)
+def markdown_no_headings(value):
+    """Render markdown, but strip headings (lines starting with #)."""
+    if not value:
+        return ""
+    # Remove markdown headings (lines starting with one or more #)
+    no_headings = re.sub(r"^#+[ ].*$", "", value, flags=re.MULTILINE)
+    html = markdown.markdown(no_headings)
+    return mark_safe(html)
