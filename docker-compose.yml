@@ -158,3 +158,13 @@ services:
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     entrypoint: ["/bin/sh"]
     tty: true
+
+  frontend:
+    image: node:20
+    working_dir: /client_side_js
+    volumes:
+      - ./client_side_js:/client_side_js
+      - ./static/libraries:/client_side_js/dist
+    command: sh -c "npm install vite @milkdown/crepe && npx vite build"
+    profiles:
+      - build
