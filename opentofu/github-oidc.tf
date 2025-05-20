@@ -42,28 +42,7 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ecs:ListTaskDefinitions",
           "ecs:ListTasks",
           "ecs:RegisterTaskDefinition",
-          "ecs:UpdateService",
-          "ecs:DescribeClusters",
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeVpcs",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeSecurityGroups",
-          "ec2:DescribeInternetGateways",
-          "ec2:DescribeRouteTables",
-          "ec2:DescribeNetworkInterfaces",
-          "ec2:DescribeVpcAttribute",
-          "ec2:DescribeVpcEndpoints",
-          "ec2:DescribePrefixLists",
-          "acm:DescribeCertificate",
-          "acm:ListTagsForCertificate",
-          "logs:DescribeLogGroups",
-          "logs:ListTagsForResource",
-          "elasticloadbalancing:DescribeLoadBalancers",
-          "elasticloadbalancing:DescribeTargetGroups",
-          "elasticloadbalancing:DescribeLoadBalancerAttributes",
-          "elasticloadbalancing:DescribeTargetGroupAttributes",
-          "rds:DescribeDBSubnetGroups",
-          "rds:ListTagsForResource"
+          "ecs:UpdateService"
         ],
         Resource = "*"
       },
@@ -77,34 +56,7 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ecr:PutImage",
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:DescribeRepositories",
-          "ecr:ListImages",
-          "ecr:DescribeImages",
-          "ecr:DescribeRepositoryPolicy",
-          "ecr:GetRepositoryPolicy",
-          "ecr:ListTagsForResource"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "iam:GetRole",
-          "iam:GetOpenIDConnectProvider",
-          "iam:GetPolicy",
-          "iam:ListRolePolicies",
-          "iam:GetPolicyVersion",
-          "iam:ListAttachedRolePolicies",
-          "iam:GetRolePolicy"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "secretsmanager:DescribeSecret",
-          "secretsmanager:GetResourcePolicy"
+          "ecr:CompleteLayerUpload"
         ],
         Resource = "*"
       },
@@ -114,18 +66,11 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:GetBucketPolicy",
-          "s3:GetBucketAcl",
-          "s3:GetBucketCORS",
-          "s3:GetBucketWebsite",
-          "s3:GetBucketVersioning"
+          "s3:ListBucket"
         ],
         Resource = [
           "arn:aws:s3:::opensailor-tfstate",
-          "arn:aws:s3:::opensailor-tfstate/*",
-          "arn:aws:s3:::opensailor-public-storage",
-          "arn:aws:s3:::opensailor-public-storage/*"
+          "arn:aws:s3:::opensailor-tfstate/*"
         ]
       },
       {
@@ -136,11 +81,7 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "dynamodb:DeleteItem",
           "dynamodb:Scan",
           "dynamodb:Query",
-          "dynamodb:UpdateItem",
-          "dynamodb:DescribeTable",
-          "dynamodb:DescribeContinuousBackups",
-          "dynamodb:DescribeTimeToLive",
-          "dynamodb:ListTagsOfResource"
+          "dynamodb:UpdateItem"
         ],
         Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
       },
@@ -163,7 +104,36 @@ resource "aws_iam_role_policy_attachment" "github_actions_ecs_ecr" {
   policy_arn = aws_iam_policy.github_actions_ecs_ecr.arn
 }
 
+resource "aws_iam_role" "github_actions_drift" {
+  name = "${var.app_name}-github-actions-drift"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Federated = aws_iam_openid_connect_provider.github.arn
+      },
+      Action = "sts:AssumeRoleWithWebIdentity",
+      Condition = {
+        StringLike = {
+          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_drift_readonly" {
+  role       = aws_iam_role.github_actions_drift.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
 output "github_actions_role_arn" {
   value = aws_iam_role.github_actions_deploy.arn
   description = "IAM Role ARN for GitHub Actions OIDC deploys. Use this in your GitHub Actions workflow as role-to-assume."
+}
+
+output "github_actions_drift_role_arn" {
+  value = aws_iam_role.github_actions_drift.arn
+  description = "IAM Role ARN for GitHub Actions OIDC drift detection. Use this in your GitHub Actions workflow as role-to-assume."
 }
