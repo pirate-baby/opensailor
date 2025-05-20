@@ -128,6 +128,33 @@ resource "aws_iam_role_policy_attachment" "github_actions_drift_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
+resource "aws_iam_policy" "github_actions_drift_tfstate_lock" {
+  name        = "${var.app_name}-github-actions-drift-tfstate-lock"
+  description = "Allow GitHub Actions drift role to access DynamoDB state lock table"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query",
+          "dynamodb:UpdateItem"
+        ],
+        Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_drift_tfstate_lock" {
+  role       = aws_iam_role.github_actions_drift.name
+  policy_arn = aws_iam_policy.github_actions_drift_tfstate_lock.arn
+}
+
 output "github_actions_role_arn" {
   value = aws_iam_role.github_actions_deploy.arn
   description = "IAM Role ARN for GitHub Actions OIDC deploys. Use this in your GitHub Actions workflow as role-to-assume."
