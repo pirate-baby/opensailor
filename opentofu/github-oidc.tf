@@ -43,7 +43,16 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ecs:ListTasks",
           "ecs:RegisterTaskDefinition",
           "ecs:UpdateService",
-          "ec2:DescribeAvailabilityZones"
+          "ecs:DescribeClusters",
+          "ec2:DescribeAvailabilityZones",
+          "ec2:DescribeVpcs",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeInternetGateways",
+          "ec2:DescribeRouteTables",
+          "ec2:DescribeNetworkInterfaces",
+          "acm:DescribeCertificate",
+          "logs:DescribeLogGroups"
         ],
         Resource = "*"
       },
@@ -57,7 +66,28 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "ecr:PutImage",
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload"
+          "ecr:CompleteLayerUpload",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages",
+          "ecr:DescribeImages",
+          "ecr:DescribeRepositoryPolicy",
+          "ecr:GetRepositoryPolicy"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "iam:GetRole",
+          "iam:GetOpenIDConnectProvider",
+          "iam:GetPolicy"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:DescribeSecret"
         ],
         Resource = "*"
       },
@@ -67,11 +97,14 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:GetBucketPolicy"
         ],
         Resource = [
           "arn:aws:s3:::opensailor-tfstate",
-          "arn:aws:s3:::opensailor-tfstate/*"
+          "arn:aws:s3:::opensailor-tfstate/*",
+          "arn:aws:s3:::opensailor-public-storage",
+          "arn:aws:s3:::opensailor-public-storage/*"
         ]
       },
       {
@@ -82,7 +115,8 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
           "dynamodb:DeleteItem",
           "dynamodb:Scan",
           "dynamodb:Query",
-          "dynamodb:UpdateItem"
+          "dynamodb:UpdateItem",
+          "dynamodb:DescribeTable"
         ],
         Resource = "arn:aws:dynamodb:us-east-2:*:table/opensailor-tfstate-lock"
       },
