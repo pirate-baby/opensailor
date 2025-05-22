@@ -1,0 +1,33 @@
+{% load humanize %}
+
+<div id="vessel-note-message-{{ message.id }}" class="message-item mb-3 p-2" style="border-bottom: 1px solid #e0e0e0; margin-bottom: 1rem; padding: 0.5rem;">
+  <div style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+    <span style="font-weight: bold; margin-right: 0.5rem;">{{ message.user.username }}</span>
+    <span style="color: #888; font-size: 0.9em;" title="{{ message.created_at|date:'c' }}">
+      {{ message.created_at|naturaltime }}
+    </span>
+  </div>
+  <div class="message-body" id="message-body-{{ message.id }}"
+       data-raw="{{ message.content|escapejs }}"
+  >
+    {% if message.content|length > 500 %}
+      <span class="truncated">{{ message.content|slice:':500' }}&hellip;</span>
+      <a href="#" class="expand-link" data-message-id="{{ message.id }}" onclick="expandMessage({{ message.id|addslashes }}); return false;">Expand ▼</a>
+      <span class="full-content" style="display: none;">{{ message.content|linebreaksbr }}</span>
+      <a href="#" class="collapse-link" data-message-id="{{ message.id }}" style="display: none;" onclick="collapseMessage({{ message.id|addslashes }}); return false;">Collapse ▲</a>
+    {% else %}
+      <span class="rendered-markdown"></span>
+    {% endif %}
+  </div>
+  <div style="margin-top: 0.25rem;">
+    <button class="note-action-btn" style="background: none; border: none; color: #007bff; font-size: 0.95em; margin-right: 0.5rem; cursor: pointer; padding: 0;"
+            hx-get="{% url 'vessel_note_message_reply_form' message.id %}"
+            hx-target="#vessel-note-message-{{ message.id }}"
+            hx-swap="afterend">
+      <span class="action-label">Reply</span>
+    </button>
+    {% if message.user == request.user %}
+      <button class="note-action-btn" style="background: none; border: none; color: #007bff; font-size: 0.95em; cursor: pointer; padding: 0;" onclick="startInlineEdit({{ message.id|addslashes }})"><span class="action-label">Edit</span></button>
+    {% endif %}
+  </div>
+</div>
