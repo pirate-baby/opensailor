@@ -2,8 +2,36 @@
 {% load custom_filters %}
 {% load static %}
 
-<script src="{% static 'libraries/assets/main.js' %}"></script>
-
+{% block extra_head %}
+  <script src="{% static 'libraries/assets/main.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    .rendered-markdown ul,
+    .rendered-markdown ol {
+      list-style-type: disc;
+      margin-left: 1.5em;
+      padding-left: 1.5em;
+    }
+    .rendered-markdown ol {
+      list-style-type: decimal;
+    }
+  </style>
+<script>
+  const unaltered = (token, level) => {
+    return token.raw;
+  }
+  const renderer = {
+    heading: unaltered,
+    html: unaltered,
+    hr: unaltered,
+  }
+  if (window.marked) {
+    marked.use(
+      { renderer, breaks: true, gfm: true }
+    );
+  }
+</script>
+{% endblock %}
 {% block title %}{{ vessel.name }} - {{ APP_NAME }}{% endblock %}
 
 {% block content %}
@@ -186,61 +214,7 @@
             {% if accessible_notes %}
                 <div class="space-y-8 mt-4">
                     {% for note in accessible_notes %}
-                        {% if note.owner == user %}
-                            <div class="border rounded-lg p-4 mb-2" x-data="{ open: true, shareOpen: false }">
-                        {% else %}
-                            <div class="border rounded-lg p-4 mb-2" x-data="{ open: false, shareOpen: false }">
-                        {% endif %}
-                            <div class="flex items-center justify-between cursor-pointer select-none" @click="open = !open">
-                                <div class="flex items-start">
-                                    <button type="button" class="mr-2 text-accent focus:outline-none" style="font-size: 2rem; line-height: 1; margin-top: -0.15em;" @click.stop="open = !open">
-                                        <span x-show="open">&#9650;</span>
-                                        <span x-show="!open">&#9660;</span>
-                                    </button>
-                                    <div>
-                                        {% if note.owner == user %}
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-0">Your notes{% if note.shared_with.all %} (shared with {% for u in note.shared_with.all %}{{ u.username }}{% if not forloop.last %}, {% endif %}{% endfor %}){% endif %}</h3>
-                                        {% else %}
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-0">Notes with {{ note.owner.username }}</h3>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% if note.owner == user %}
-                                    <div class="mt-1 -ml-2">
-                                        <a href="#" class="text-accent text-sm hover:underline" @click.prevent="shareOpen = true">Share this note</a>
-                                    </div>
-                                    <div x-show="shareOpen" x-effect="document.body.classList.toggle('overflow-hidden', shareOpen)" class="fixed inset-0 z-50 flex items-center justify-center">
-                                        <div class="fixed inset-0 bg-black bg-opacity-30" @click="shareOpen = false"></div>
-                                        <div class="bg-white rounded-lg shadow-lg p-6 w-80 border border-gray-200 relative z-10">
-                                            <form method="post" action="{% url 'vessel_note_share' note.id %}" class="space-y-4">
-                                                {% csrf_token %}
-                                                <label for="share-email-{{ note.id }}" class="block text-sm font-medium text-gray-700">Share with email:</label>
-                                                <input type="email" name="email" id="share-email-{{ note.id }}" class="w-full border rounded px-2 py-1" required>
-                                                <div class="flex justify-end space-x-2">
-                                                    <button type="button" class="px-3 py-1 text-gray-500 hover:text-gray-700" @click.prevent="shareOpen = false">Cancel</button>
-                                                    <button type="submit" class="px-3 py-1 bg-accent text-white rounded hover:bg-primary">Share</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="space-y-2 mt-2" x-show="open" x-transition>
-                                {% for message in note.messages.all|dictsortreversed:"created_at" %}
-                                    <div class="border-b pb-2 mb-2 {% if message.user == user %}note-message-own{% else %}note-message-other{% endif %}">
-                                        <div class="flex items-center text-sm text-gray-500 mb-1">
-                                            <span class="font-medium text-gray-700" title="{{ message.created_at }}">{{ message.user.username }}</span>
-                                        </div>
-                                        <div class="text-gray-900 note-message-content">{{ message.content|markdown_no_headings }}</div>
-                                    </div>
-                                {% empty %}
-                                    <div class="text-gray-400 italic">No messages yet.</div>
-                                {% endfor %}
-                                <div class="mt-2 flex justify-end">
-                                    <a href="{% url 'vessel_note_message_add' note.id %}" class="px-3 py-1 border border-accent rounded-md text-accent hover:bg-accent hover:text-white text-xs font-medium">Add Message</a>
-                                </div>
-                            </div>
-                        </div>
+                        {% include "webapp/components/editable_note.html" with note=note request=request %}
                     {% endfor %}
                 </div>
             {% else %}
@@ -261,43 +235,5 @@
     {% endif %}
 </div>
 
-<style>
-.note-message-content blockquote {
-    border-left: 4px solid #4CA6CF; /* accent color */
-    background: #f3f8fa;
-    color: #374151;
-    margin: 0.5em 0;
-    padding: 0.5em 1em;
-    border-radius: 0.25em;
-    font-style: italic;
-}
-.note-message-content ul,
-.note-message-content ol {
-    margin-left: 1.5em;
-    margin-bottom: 1em;
-    padding-left: 1.2em;
-}
-.note-message-content ul {
-    list-style-type: disc;
-}
-.note-message-content ol {
-    list-style-type: decimal;
-}
-.note-message-content li {
-    margin-bottom: 0.3em;
-}
-
-/* Message border color by user */
-.note-message-own,
-.note-message-other {
-    padding-left: 1em;
-}
-.note-message-own {
-    border-left: 4px solid #4CA6CF !important; /* accent (now for own messages) */
-}
-.note-message-other {
-    border-left: 4px solid #3FE0D0 !important; /* new aqua for others */
-}
-</style>
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 {% endblock %}
