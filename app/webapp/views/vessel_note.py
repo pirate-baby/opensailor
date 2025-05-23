@@ -28,6 +28,7 @@ class VesselNoteCreateForm(forms.Form):
         label="First message",
     )
 
+
 @login_required
 def vessel_note_create(request, pk):
     vessel = get_object_or_404(Vessel, pk=pk)
@@ -56,12 +57,18 @@ class NoteMessageForm(forms.Form):
         label="Add message",
     )
 
+
 @login_required
 @require_http_methods(["GET"])
 def vessel_note_message_add_form(request, note_id):
     note = get_object_or_404(VesselNote, pk=note_id)
     form = NoteMessageForm()
-    return render(request, "webapp/components/note_message_form.html", {"form": form, "note": note, "action_url": request.path})
+    return render(
+        request,
+        "webapp/components/note_message_form.html",
+        {"form": form, "note": note, "action_url": request.path},
+    )
+
 
 @login_required
 @require_http_methods(["POST"])
@@ -74,8 +81,17 @@ def vessel_note_message_add_save(request, note_id):
             user=request.user,
             content=form.cleaned_data["content"],
         )
-        return render(request, "webapp/components/note_message_item.html", {"message": message, "request": request})
-    return render(request, "webapp/components/note_message_form.html", {"form": form, "note": note, "action_url": request.path})
+        return render(
+            request,
+            "webapp/components/note_message_item.html",
+            {"message": message, "request": request},
+        )
+    return render(
+        request,
+        "webapp/components/note_message_form.html",
+        {"form": form, "note": note, "action_url": request.path},
+    )
+
 
 @login_required
 @require_http_methods(["GET"])
@@ -84,7 +100,18 @@ def vessel_note_message_edit_form(request, message_id):
     if message.user != request.user:
         return JsonResponse({"error": "Permission denied."}, status=403)
     form = NoteMessageForm(initial={"content": message.content})
-    return render(request, "webapp/components/note_message_form.html", {"form": form, "note": message.vessel_note, "action_url": request.path, "edit_mode": True, "message_id": message.id})
+    return render(
+        request,
+        "webapp/components/note_message_form.html",
+        {
+            "form": form,
+            "note": message.vessel_note,
+            "action_url": request.path,
+            "edit_mode": True,
+            "message_id": message.id,
+        },
+    )
+
 
 @login_required
 @require_http_methods(["POST"])
@@ -97,7 +124,12 @@ def vessel_note_message_update(request, message_id):
         return JsonResponse({"error": "Content cannot be empty."}, status=400)
     message.content = content
     message.save()
-    return render(request, "webapp/components/note_message_item.html", {"message": message, "request": request})
+    return render(
+        request,
+        "webapp/components/note_message_item.html",
+        {"message": message, "request": request},
+    )
+
 
 @login_required
 @require_http_methods(["GET"])
@@ -105,7 +137,17 @@ def vessel_note_message_reply_form(request, message_id):
     parent_message = get_object_or_404(NoteMessage, pk=message_id)
     note = parent_message.vessel_note
     form = NoteMessageForm()
-    return render(request, "webapp/components/note_message_form.html", {"form": form, "note": note, "action_url": request.path, "reply_to": parent_message.id})
+    return render(
+        request,
+        "webapp/components/note_message_form.html",
+        {
+            "form": form,
+            "note": note,
+            "action_url": request.path,
+            "reply_to": parent_message.id,
+        },
+    )
+
 
 @login_required
 @require_http_methods(["POST"])
@@ -120,8 +162,22 @@ def vessel_note_message_reply_save(request, message_id):
             content=form.cleaned_data["content"],
         )
         # Optionally, you could add a parent/child relationship for threading
-        return render(request, "webapp/components/note_message_item.html", {"message": message, "request": request})
-    return render(request, "webapp/components/note_message_form.html", {"form": form, "note": note, "action_url": request.path, "reply_to": parent_message.id})
+        return render(
+            request,
+            "webapp/components/note_message_item.html",
+            {"message": message, "request": request},
+        )
+    return render(
+        request,
+        "webapp/components/note_message_form.html",
+        {
+            "form": form,
+            "note": note,
+            "action_url": request.path,
+            "reply_to": parent_message.id,
+        },
+    )
+
 
 @login_required
 def vessel_note_share(request, note_id):

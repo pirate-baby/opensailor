@@ -38,7 +38,7 @@ urlpatterns = [
     path("vessels/<int:pk>/", vessel_detail, name="vessel_detail"),
     path("vessels/<int:pk>/update/", vessel_update, name="vessel_update"),
     path("vessels/<int:pk>/delete/", vessel_delete, name="vessel_delete"),
-    #path("vessels/<int:pk>/note/", vessel_note_update, name="vessel_note_update"),
+    # path("vessels/<int:pk>/note/", vessel_note_update, name="vessel_note_update"),
     path(
         "vessels/<int:pk>/note/create/", vessel_note_create, name="vessel_note_create"
     ),

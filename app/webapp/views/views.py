@@ -511,5 +511,3 @@ def vessel_delete(request, pk):
             messages.error(request, f"Error deleting vessel: {str(e)}")
 
     return render(request, "webapp/vessels/delete.html", {"vessel": vessel})
-
-
