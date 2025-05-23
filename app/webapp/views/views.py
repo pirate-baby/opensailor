@@ -18,7 +18,6 @@ from webapp.controllers.vessels import create_vessel
 from django.utils.safestring import mark_safe
 import json
 from django.db import models
-from collections import defaultdict
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
@@ -161,10 +160,25 @@ def sailboat_detail(request, pk):
         "attribute", "attribute__section"
     ).all()
 
+    # Group attributes by section in the view
+    grouped = {}
+    for attr in sailboat_attributes:
+        section = attr.attribute.section
+        in_grouped = grouped.get(section.id,
+                                 {"section": section, "attributes": []})
+        in_grouped["attributes"].append({
+            "info": attr.attribute.description,
+            "attribute": attr.attribute,
+            "value": attr.value,
+        })
+        grouped[section.id] = in_grouped
+    sailboat_attributes_grouped = list(grouped.values())
+
     context = {
         "sailboat": sailboat,
         "attributes": Attribute.objects.all(),
         "sailboat_attributes": sailboat_attributes,
+        "sailboat_attributes_grouped": sailboat_attributes_grouped,
     }
     return render(request, "webapp/sailboats/detail.html", context)
 
@@ -251,12 +265,27 @@ def sailboat_update(request, pk):
         "attribute", "attribute__section"
     ).all()
 
+    # Group attributes by section in the view
+    grouped = {}
+    for attr in sailboat_attributes:
+        section = attr.attribute.section
+        section_id = section.id
+        if section_id not in grouped:
+            grouped[section_id] = {"section": section, "attributes": []}
+        grouped[section_id]["attributes"].append({
+            "info": attr.attribute.description,
+            "attribute": attr.attribute,
+            "value": attr.value,
+        })
+    sailboat_attributes_grouped = list(grouped.values())
+
     context = {
         "sailboat": sailboat,
         "makes": Make.objects.all().order_by("name"),
         "designers": Designer.objects.all().order_by("name"),
         "attributes": Attribute.objects.select_related("section").all(),
         "sailboat_attributes": sailboat_attributes,
+        "sailboat_attributes_grouped": sailboat_attributes_grouped,
     }
     return render(request, "webapp/sailboats/update.html", context)
 
@@ -332,22 +361,18 @@ def vessel_detail(request, pk):
     ).all()
 
     # Group attributes by section in the view
-    grouped = defaultdict(list)
+    grouped = {}
     for attr in sailboat_attributes:
         section = attr.attribute.section
         section_id = section.id
-        grouped[section_id].append({
+        if section_id not in grouped:
+            grouped[section_id] = {"section": section, "attributes": []}
+        grouped[section_id]["attributes"].append({
             "info": attr.attribute.description,
             "attribute": attr.attribute,
             "value": attr.value,
         })
-    sailboat_attributes_grouped = [
-        {
-            "section": section,
-            "attributes": attrs
-        }
-        for section, attrs in grouped.items()
-    ]
+    sailboat_attributes_grouped = list(grouped.values())
 
     context = {
         "vessel": vessel,
