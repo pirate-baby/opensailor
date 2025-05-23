@@ -214,7 +214,7 @@
             {% if accessible_notes %}
                 <div class="space-y-8 mt-4">
                     {% for note in accessible_notes %}
-                        {% include "webapp/components/editable_note.html" with note=note request=request %}
+                        {% include "webapp/components/editable_note.html" with note=note request=request user_note=user_note %}
                     {% endfor %}
                 </div>
             {% else %}
