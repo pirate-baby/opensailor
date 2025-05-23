@@ -1,0 +1,466 @@
+{% load static %}
+{% load dj_htmx %}
+{% load custom_filters %}
+{% load humanize %}
+
+
+{# Slack-style vessel note messages component #}
+<div class="note-messages-component" style="border: 1.5px solid #d1d5db; border-radius: 10px; background: #fafbfc; padding: 1.5rem; margin-bottom: 2rem;">
+  <!-- Note Title -->
+  <div class="note-title" style="display: flex; align-items: center; font-size: 1.1em; font-weight: 600; color: #374151; margin-bottom: 1rem;">
+    <button id="toggle-note-{{ note.id }}" class="collapse-expand-btn" aria-label="Expand/collapse note" onclick="toggleNoteCollapse('{{ note.id }}'); return false;">
+      <span id="collapse-icon-{{ note.id }}">{% if open_note_id and note.id|stringformat:'s' == open_note_id %}▼{% else %}►{% endif %}</span>
+    </button>
+    <span>
+      {# Show 'your private notes' if this note is the user's own note #}
+      {% if user_note and note.id == user_note.id %}
+        your private notes
+      {% else %}
+        {% with shared_users=note.shared_with.all %}
+          {% if shared_users|length == 0 %}
+            your private notes
+          {% else %}
+            notes shared with
+            {% for user in shared_users %}
+              {{ user.username }}{% if not forloop.last and forloop.revcounter == 2 %} & {% elif not forloop.last %}, {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      {% endif %}
+    </span>
+    {% if note.user == request.user %}
+      <button class="note-action-btn" style="margin-left: 1em; font-size: 0.95em;" onclick="openShareDialog({{ note.id }}); return false;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em;">share</span> Share
+      </button>
+    {% endif %}
+  </div>
+  <!-- Messages Scroll -->
+  <div class="messages-scroll" id="messages-scroll-{{ note.id }}" style="max-height: 400px; overflow-y: auto; border: none !important; border-radius: 8px 8px 0 0 !important; margin-bottom: 0;{% if not open_note_id or note.id|stringformat:'s' != open_note_id %}display:none;{% endif %}">
+    {% for message in note.messages.all %}
+      <div id="vessel-note-message-{{ message.id }}" class="message-item mb-3 p-2" style="border-bottom: 1px solid #e0e0e0; margin-bottom: 1rem; padding: 0.5rem;">
+        <div style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+          <span class="{% if message.user == request.user %}username-current-user{% else %}username-other-user{% endif %}" style="font-weight: bold; margin-right: 0.5rem;">{{ message.user.username }}</span>
+          <span style="color: #888; font-size: 0.9em;" title="{{ message.created_at|date:'c' }}">
+            {{ message.created_at|naturaltime }}
+          </span>
+        </div>
+        <div class="message-body" id="message-body-{{ message.id }}"
+             data-raw="{{ message.content|safe }}"
+        >
+          {% if message.content|length > 500 %}
+            <span class="truncated">{{ message.content|slice:':500' }}&hellip;</span>
+            <a href="#" class="expand-link" data-message-id="{{ message.id }}" onclick="expandMessage({{ message.id }}); return false;">Expand ▼</a>
+            <span class="full-content" style="display: none;">{{ message.content|linebreaksbr }}</span>
+            <a href="#" class="collapse-link" data-message-id="{{ message.id }}" style="display: none;" onclick="collapseMessage({{ message.id }}); return false;">Collapse ▲</a>
+          {% else %}
+            <span class="rendered-markdown"></span>
+          {% endif %}
+        </div>
+        <div class="message-actions">
+          <button class="note-action-btn message-action-btn" data-message-id="{{ message.id }}"
+                  >
+            <span class="action-label">Reply</span>
+          </button>
+          {% if message.user == request.user %}
+            <button class="note-action-btn message-action-btn" onclick="startInlineEdit({{ message.id }})"><span class="action-label">Edit</span></button>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="text-muted">No messages yet.</div>
+    {% endfor %}
+  </div>
+  <!-- Add Message Form (always visible) -->
+  <div id="add-message-form-container-{{ note.id }}" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 0;{% if not open_note_id or note.id|stringformat:'s' != open_note_id %}display:none;{% endif %}">
+    <form id="add-message-form-{{ note.id }}" onsubmit="submitAddMessage(event, {{ note.id }})">
+      <textarea id="add-message-content-{{ note.id }}" class="form-control" style="width: 100%; min-height: 4em; resize: vertical; margin-bottom: 0.5em;" rows="4" placeholder="Write a message..."></textarea>
+      <div style="display: flex; justify-content: flex-end; align-items: center;">
+        <button type="submit" class="note-action-btn" style="background: #007bff; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); font-size: 1.2em; transition: background 0.2s;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Share Note Modal -->
+<div id="share-note-modal-{{ note.id }}" class="share-note-modal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 8px; max-width: 95vw; width: 350px; margin: 10vh auto; padding: 2em; box-shadow: 0 2px 16px rgba(0,0,0,0.18); position: relative;">
+    <button onclick="closeShareDialog({{ note.id }})" style="position: absolute; top: 0.7em; right: 0.7em; background: none; border: none; font-size: 1.3em; color: #888; cursor: pointer;">&times;</button>
+    <h3 style="font-size: 1.1em; font-weight: 600; margin-bottom: 1em;">Share this note</h3>
+    <form method="post" action="/vessels/note/{{ note.id }}/share/" onsubmit="return submitShareNote(event, {{ note.id }});">
+      {% csrf_token %}
+      <label for="share-email-{{ note.id }}" style="font-size: 0.97em;">User email to share with:</label>
+      <input type="email" id="share-email-{{ note.id }}" name="email" class="form-control" style="width: 100%; margin: 0.7em 0 1.2em 0; padding: 0.5em; border: 1px solid #ccc; border-radius: 4px;" required placeholder="user@email.com">
+      <div style="display: flex; justify-content: flex-end; gap: 0.5em;">
+        <button type="button" onclick="closeShareDialog({{ note.id }})" class="note-action-btn" style="background: #f3f4f6; color: #374151;">Cancel</button>
+        <button type="submit" class="note-action-btn" style="background: #007bff; color: white;">Share</button>
+      </div>
+    </form>
+    <div id="share-note-status-{{ note.id }}" style="margin-top: 1em; font-size: 0.95em;"></div>
+  </div>
+</div>
+
+<script>
+function expandMessage(id) {
+  const msg = document.getElementById('message-body-' + id);
+  msg.querySelector('.truncated').style.display = 'none';
+  msg.querySelector('.expand-link').style.display = 'none';
+  msg.querySelector('.full-content').style.display = '';
+  msg.querySelector('.collapse-link').style.display = '';
+}
+function collapseMessage(id) {
+  const msg = document.getElementById('message-body-' + id);
+  msg.querySelector('.truncated').style.display = '';
+  msg.querySelector('.expand-link').style.display = '';
+  msg.querySelector('.full-content').style.display = 'none';
+  msg.querySelector('.collapse-link').style.display = 'none';
+}
+
+// Markdown rendering for messages
+function renderAllMarkdownMessages() {
+  document.querySelectorAll('.message-body').forEach(function(el) {
+    // Only render if not in edit mode and not a truncated message
+    if (el.querySelector('.truncated')) return;
+    const raw = el.getAttribute('data-raw');
+    if (raw !== null) {
+      const rendered = marked.parse(raw);
+      const target = el.querySelector('.rendered-markdown');
+      if (target) target.innerHTML = rendered;
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderAllMarkdownMessages();
+  scrollMessagesToBottom();
+});
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+  renderAllMarkdownMessages();
+  scrollMessagesToBottom();
+});
+
+function scrollMessagesToBottom() {
+  document.querySelectorAll('.messages-scroll').forEach(function(scroll) {
+    scroll.scrollTop = scroll.scrollHeight;
+  });
+}
+
+function startInlineEdit(id) {
+  const msgDiv = document.getElementById('message-body-' + id);
+  const raw = msgDiv.getAttribute('data-raw');
+  // Save original HTML to restore on cancel
+  msgDiv.dataset.originalHtml = msgDiv.innerHTML;
+  // Add editing class to parent message item
+  const msgItem = document.getElementById(`vessel-note-message-${id}`);
+  if (msgItem) msgItem.classList.add('editing');
+  // Add editing-active to the main container
+  const mainContainer = document.querySelector('.note-messages-component');
+  if (mainContainer) mainContainer.classList.add('editing-active');
+  msgDiv.innerHTML = `
+    <textarea id="edit-input-${id}" class="form-control" style="width: 100%; min-height: 5em; resize: vertical; margin-bottom: 0.5em;" rows="4">${raw.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')}</textarea>
+    <div class="edit-controls">
+      <button onclick="saveInlineEdit(${id})" class="note-action-btn" style="margin-right: 0.5em;">Save</button>
+      <button onclick="cancelInlineEdit(${id})" class="note-action-btn">Cancel</button>
+    </div>
+  `;
+  document.getElementById(`edit-input-${id}`).focus();
+}
+
+function cancelInlineEdit(id) {
+  const msgDiv = document.getElementById('message-body-' + id);
+  if (msgDiv.dataset.originalHtml) {
+    msgDiv.innerHTML = msgDiv.dataset.originalHtml;
+    delete msgDiv.dataset.originalHtml;
+    // Remove editing class from parent message item
+    const msgItem = document.getElementById(`vessel-note-message-${id}`);
+    if (msgItem) msgItem.classList.remove('editing');
+    // Remove editing-active from the main container
+    const mainContainer = document.querySelector('.note-messages-component');
+    if (mainContainer) mainContainer.classList.remove('editing-active');
+  }
+}
+
+function saveInlineEdit(id) {
+  const msgDiv = document.getElementById('message-body-' + id);
+  const input = document.getElementById(`edit-input-${id}`);
+  let newValue = input.value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  newValue = newValue.replace(/>/g, '&gt;');
+  // Use HTMX to POST the new value and swap the message
+  const formData = new FormData();
+  formData.append('content', newValue);
+  fetch(`/vessels/note/message/${id}/update/`, {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'HX-Request': 'true',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: formData
+  })
+  .then(response => response.text())
+  .then(html => {
+    // Replace the whole message item
+    const msgItem = document.getElementById(`vessel-note-message-${id}`);
+    if (msgItem) {
+      msgItem.outerHTML = html;
+    }
+    // Re-render markdown if needed
+    renderAllMarkdownMessages();
+    scrollMessagesToBottom();
+  });
+}
+
+// Helper to get CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function generateReplyPrefill(messageId) {
+  const msgDiv = document.getElementById('message-body-' + messageId);
+  const raw = msgDiv ? (msgDiv.getAttribute('data-raw') || '') : '';
+  let quote = raw.slice(0, 100);
+  if (raw.length > 100) quote += '...';
+  // Escape > in quote
+  quote = quote.replace(/^/gm, '> ');
+  return `[View original message](#vessel-note-message-${messageId})\n\n${quote}\n\n\n`;
+}
+
+function submitAddMessage(event, noteId) {
+  event.preventDefault();
+  var textarea = document.getElementById('add-message-content-' + noteId);
+  var content = textarea.value.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!content) return;
+  fetch(`/vessels/note/${noteId}/add_message/save/`, {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: new URLSearchParams({ content: content })
+  })
+  .then(function(response) { return response.text(); })
+  .then(function(html) {
+    // Insert new message at the end
+    var scroll = document.getElementById('messages-scroll-' + noteId);
+    scroll.insertAdjacentHTML('beforeend', html);
+    textarea.value = '';
+    renderAllMarkdownMessages();
+    scrollMessagesToBottom();
+  });
+}
+
+function toggleNoteCollapse(noteId) {
+  const scroll = document.getElementById('messages-scroll-' + noteId);
+  const form = document.getElementById('add-message-form-container-' + noteId);
+  const icon = document.getElementById('collapse-icon-' + noteId);
+  if (!scroll || !form || !icon) return;
+  const isCollapsed = scroll.style.display === 'none';
+  if (isCollapsed) {
+    scroll.style.display = '';
+    form.style.display = '';
+    icon.textContent = '▼';
+    scrollMessagesToBottom();
+  } else {
+    scroll.style.display = 'none';
+    form.style.display = 'none';
+    icon.textContent = '►';
+  }
+}
+
+function openShareDialog(noteId) {
+  document.getElementById('share-note-modal-' + noteId).style.display = 'flex';
+  document.getElementById('share-email-' + noteId).focus();
+}
+function closeShareDialog(noteId) {
+  document.getElementById('share-note-modal-' + noteId).style.display = 'none';
+  document.getElementById('share-note-status-' + noteId).textContent = '';
+}
+function submitShareNote(event, noteId) {
+  event.preventDefault();
+  var email = document.getElementById('share-email-' + noteId).value.trim();
+  if (!email) return false;
+  var statusDiv = document.getElementById('share-note-status-' + noteId);
+  statusDiv.textContent = 'Sharing...';
+  var formData = new FormData();
+  formData.append('email', email);
+  fetch(`/vessels/note/${noteId}/share/`, {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: formData
+  })
+  .then(response => response.json().catch(() => null))
+  .then(data => {
+    if (data && data.error) {
+      statusDiv.textContent = data.error;
+      statusDiv.style.color = 'red';
+    } else {
+      statusDiv.textContent = 'Note shared!';
+      statusDiv.style.color = 'green';
+      setTimeout(() => closeShareDialog(noteId), 1200);
+    }
+  })
+  .catch(() => {
+    statusDiv.textContent = 'An error occurred.';
+    statusDiv.style.color = 'red';
+  });
+  return false;
+}
+
+</script>
+
+<style>
+.form-control:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: #ccc;
+}
+
+/* Hide action buttons when editing */
+.message-item.editing .note-action-btn:not(.edit-controls .note-action-btn) {
+  display: none;
+}
+
+/* Shared style for all note action buttons */
+.note-action-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 0.95em;
+  cursor: pointer;
+  padding: 0.2em 0.7em;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+  margin-right: 0.5em;
+}
+.note-action-btn:last-child {
+  margin-right: 0;
+}
+.note-action-btn:hover, .note-action-btn:focus {
+  background: #e6f0ff;
+  color: #0056b3;
+  outline: none;
+}
+
+.note-messages-component.editing-active #add-message-btn {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .note-messages-component {
+    width: 100vw !important;
+    left: 50%;
+    right: 0;
+    margin-left: -50vw;
+    border-radius: 0 !important;
+    max-width: 100vw !important;
+    position: relative;
+    box-sizing: border-box;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .messages-scroll {
+    width: 100vw !important;
+    left: 50%;
+    right: 0;
+    margin-left: -50vw;
+    border-radius: 0 !important;
+    max-width: 100vw !important;
+    position: relative;
+    box-sizing: border-box;
+  }
+}
+
+/* Username color coding */
+.username-current-user {
+  color: #0056b3; /* Project dark blue */
+}
+.username-other-user {
+  color: #00bcd4; /* Project aqua */
+}
+
+/* Visually connect message history and add form */
+.note-messages-component {
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  background: #fafbfc;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.messages-scroll {
+  border: none !important;
+  border-radius: 8px 8px 0 0 !important;
+  margin-bottom: 0;
+}
+#add-message-form-container {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+  margin-top: 0;
+}
+
+.message-actions {
+  display: flex;
+  gap: 0.25em;
+  justify-content: flex-end;
+  align-items: flex-end;
+  margin-top: 0.5em;
+  font-size: 0.78em;
+  opacity: 0.7;
+}
+.message-action-btn {
+  background: none !important;
+  border: none !important;
+  color: #007bff !important;
+  font-size: 0.78em !important;
+  padding: 0 0.3em !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.message-action-btn:hover, .message-action-btn:focus {
+  color: #0056b3 !important;
+  background: none !important;
+  text-decoration: underline;
+}
+
+.message-body blockquote {
+  border-left: 3px solid #bcdff1;
+  background: #f4fafd;
+  color: #555;
+  margin: 0.5em 0;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  font-style: italic;
+}
+
+.collapse-expand-btn {
+  margin-right: 0.7em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.collapse-expand-btn:hover, .collapse-expand-btn:focus {
+  background: #e6f0ff;
+}
+</style>

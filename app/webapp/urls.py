@@ -1,6 +1,16 @@
 from django.contrib import admin
 from django.urls import path, include
 from webapp.api import api
+from webapp.views.terms_of_service import terms_of_service
+from webapp.views.vessel_note import (
+    vessel_note_create,
+    vessel_note_message_add_form,
+    vessel_note_message_add_save,
+    vessel_note_message_update,
+    vessel_note_message_reply_form,
+    vessel_note_message_reply_save,
+    vessel_note_share,
+)
 from app.webapp.views.views import (
     home,
     sailboats_index,
@@ -13,11 +23,6 @@ from app.webapp.views.views import (
     vessel_detail,
     vessel_update,
     vessel_delete,
-    vessel_note_update,
-    vessel_note_create,
-    vessel_note_message_add,
-    vessel_note_share,
-    terms_of_service,
 )
 
 
@@ -33,14 +38,34 @@ urlpatterns = [
     path("vessels/<int:pk>/", vessel_detail, name="vessel_detail"),
     path("vessels/<int:pk>/update/", vessel_update, name="vessel_update"),
     path("vessels/<int:pk>/delete/", vessel_delete, name="vessel_delete"),
-    path("vessels/<int:pk>/note/", vessel_note_update, name="vessel_note_update"),
+    # path("vessels/<int:pk>/note/", vessel_note_update, name="vessel_note_update"),
     path(
         "vessels/<int:pk>/note/create/", vessel_note_create, name="vessel_note_create"
     ),
     path(
         "vessels/note/<int:note_id>/add_message/",
-        vessel_note_message_add,
-        name="vessel_note_message_add",
+        vessel_note_message_add_form,
+        name="vessel_note_message_add_form",
+    ),
+    path(
+        "vessels/note/<int:note_id>/add_message/save/",
+        vessel_note_message_add_save,
+        name="vessel_note_message_add_save",
+    ),
+    path(
+        "vessels/note/message/<int:message_id>/update/",
+        vessel_note_message_update,
+        name="vessel_note_message_update",
+    ),
+    path(
+        "vessels/note/message/<int:message_id>/reply/",
+        vessel_note_message_reply_form,
+        name="vessel_note_message_reply_form",
+    ),
+    path(
+        "vessels/note/message/<int:message_id>/reply/save/",
+        vessel_note_message_reply_save,
+        name="vessel_note_message_reply_save",
     ),
     path(
         "vessels/note/<int:note_id>/share/", vessel_note_share, name="vessel_note_share"
