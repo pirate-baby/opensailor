@@ -28,6 +28,11 @@
         {% endwith %}
       {% endif %}
     </span>
+    {% if note.user == request.user %}
+      <button class="note-action-btn" style="margin-left: 1em; font-size: 0.95em;" onclick="openShareDialog({{ note.id }}); return false;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em;">share</span> Share
+      </button>
+    {% endif %}
   </div>
   <!-- Messages Scroll -->
   <div class="messages-scroll" id="messages-scroll-{{ note.id }}" style="max-height: 400px; overflow-y: auto; border: none !important; border-radius: 8px 8px 0 0 !important; margin-bottom: 0;{% if not open_note_id or note.id|stringformat:'s' != open_note_id %}display:none;{% endif %}">
@@ -75,6 +80,24 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Share Note Modal -->
+<div id="share-note-modal-{{ note.id }}" class="share-note-modal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 8px; max-width: 95vw; width: 350px; margin: 10vh auto; padding: 2em; box-shadow: 0 2px 16px rgba(0,0,0,0.18); position: relative;">
+    <button onclick="closeShareDialog({{ note.id }})" style="position: absolute; top: 0.7em; right: 0.7em; background: none; border: none; font-size: 1.3em; color: #888; cursor: pointer;">&times;</button>
+    <h3 style="font-size: 1.1em; font-weight: 600; margin-bottom: 1em;">Share this note</h3>
+    <form method="post" action="/vessels/note/{{ note.id }}/share/" onsubmit="return submitShareNote(event, {{ note.id }});">
+      {% csrf_token %}
+      <label for="share-email-{{ note.id }}" style="font-size: 0.97em;">User email to share with:</label>
+      <input type="email" id="share-email-{{ note.id }}" name="email" class="form-control" style="width: 100%; margin: 0.7em 0 1.2em 0; padding: 0.5em; border: 1px solid #ccc; border-radius: 4px;" required placeholder="user@email.com">
+      <div style="display: flex; justify-content: flex-end; gap: 0.5em;">
+        <button type="button" onclick="closeShareDialog({{ note.id }})" class="note-action-btn" style="background: #f3f4f6; color: #374151;">Cancel</button>
+        <button type="submit" class="note-action-btn" style="background: #007bff; color: white;">Share</button>
+      </div>
+    </form>
+    <div id="share-note-status-{{ note.id }}" style="margin-top: 1em; font-size: 0.95em;"></div>
   </div>
 </div>
 
@@ -254,6 +277,48 @@ function toggleNoteCollapse(noteId) {
     form.style.display = 'none';
     icon.textContent = '►';
   }
+}
+
+function openShareDialog(noteId) {
+  document.getElementById('share-note-modal-' + noteId).style.display = 'flex';
+  document.getElementById('share-email-' + noteId).focus();
+}
+function closeShareDialog(noteId) {
+  document.getElementById('share-note-modal-' + noteId).style.display = 'none';
+  document.getElementById('share-note-status-' + noteId).textContent = '';
+}
+function submitShareNote(event, noteId) {
+  event.preventDefault();
+  var email = document.getElementById('share-email-' + noteId).value.trim();
+  if (!email) return false;
+  var statusDiv = document.getElementById('share-note-status-' + noteId);
+  statusDiv.textContent = 'Sharing...';
+  var formData = new FormData();
+  formData.append('email', email);
+  fetch(`/vessels/note/${noteId}/share/`, {
+    method: 'POST',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: formData
+  })
+  .then(response => response.json().catch(() => null))
+  .then(data => {
+    if (data && data.error) {
+      statusDiv.textContent = data.error;
+      statusDiv.style.color = 'red';
+    } else {
+      statusDiv.textContent = 'Note shared!';
+      statusDiv.style.color = 'green';
+      setTimeout(() => closeShareDialog(noteId), 1200);
+    }
+  })
+  .catch(() => {
+    statusDiv.textContent = 'An error occurred.';
+    statusDiv.style.color = 'red';
+  });
+  return false;
 }
 
 </script>
