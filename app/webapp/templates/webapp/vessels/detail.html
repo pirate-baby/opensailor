@@ -162,30 +162,32 @@
 
         {% if sailboat_attributes %}
             <!-- Attributes by Section -->
-            {% regroup sailboat_attributes by section as attribute_sections %}
+            {% regroup sailboat_attributes by section.id as attribute_sections %}
 
             {% for section_group in attribute_sections %}
-                {% with section=section_group.grouper attributes=section_group.list %}
-                    {% if attributes|length > 0 %}
-                        <div class="mt-6 mb-6">
-                            <div class="flex items-center mb-2">
-                                <span class="material-symbols-outlined text-accent text-3xl mr-3">{{ section.icon }}</span>
-                                <h3 class="text-lg font-semibold text-gray-800">{{ section.name }}</h3>
+                {% with attributes=section_group.list %}
+                    {% with section=attributes.0.section %}
+                        {% if attributes|length > 0 %}
+                            <div class="mt-6 mb-6">
+                                <div class="flex items-center mb-2">
+                                    <span class="material-symbols-outlined text-accent text-3xl mr-3">{{ section.icon }}</span>
+                                    <h3 class="text-lg font-semibold text-gray-800">{{ section.name }}</h3>
+                                </div>
+                                <hr class="border-t border-accent/30 mb-4" />
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {% for attr in attributes %}
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-500">{{ attr.attribute.name }}:</span>
+                                            <span class="text-sm text-gray-900">{{ attr.value|default:"Not specified" }}</span>
+                                            <sup>
+                                                <span class="material-symbols-outlined align-super text-accent cursor-help" title="{{ attr.info }}" style="font-size: 1em; vertical-align: super;">info</span>
+                                            </sup>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            <hr class="border-t border-accent/30 mb-4" />
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {% for attr in attributes %}
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-500">{{ attr.attribute.name }}:</span>
-                                        <span class="text-sm text-gray-900">{{ attr.value|default:"Not specified" }}</span>
-                                        <sup>
-                                            <span class="material-symbols-outlined align-super text-accent cursor-help" title="{{ attr.info }}" style="font-size: 1em; vertical-align: super;">info</span>
-                                        </sup>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    {% endwith %}
                 {% endwith %}
             {% endfor %}
         {% else %}
