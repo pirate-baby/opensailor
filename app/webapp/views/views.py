@@ -18,6 +18,7 @@ from webapp.controllers.vessels import create_vessel
 from django.utils.safestring import mark_safe
 import json
 from django.db import models
+from collections import defaultdict
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
@@ -330,22 +331,29 @@ def vessel_detail(request, pk):
         "attribute", "attribute__section"
     ).all()
 
-    # Preprocess for template grouping
-    sailboat_attributes_for_template = [
-        {
+    # Group attributes by section in the view
+    grouped = defaultdict(list)
+    for attr in sailboat_attributes:
+        section = attr.attribute.section
+        section_id = section.id
+        grouped[section_id].append({
             "info": attr.attribute.description,
-            "section": attr.attribute.section,
             "attribute": attr.attribute,
             "value": attr.value,
+        })
+    sailboat_attributes_grouped = [
+        {
+            "section": section,
+            "attributes": attrs
         }
-        for attr in sailboat_attributes
+        for section, attrs in grouped.items()
     ]
 
     context = {
         "vessel": vessel,
         "user_note": user_note,
         "accessible_notes": accessible_notes,
-        "sailboat_attributes": sailboat_attributes_for_template,
+        "sailboat_attributes_grouped": sailboat_attributes_grouped,
         "open_note_id": open_note_id,
     }
     return render(request, "webapp/vessels/detail.html", context)
