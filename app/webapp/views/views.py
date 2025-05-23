@@ -315,6 +315,7 @@ def vessel_detail(request, pk):
     vessel = get_object_or_404(Vessel.objects.select_related("sailboat"), pk=pk)
     user_note = None
     accessible_notes = []
+    open_note_id = request.GET.get("open_note_id")
     if request.user.is_authenticated:
         # Notes where the user is the owner or is in shared_with
         accessible_notes = (
@@ -345,6 +346,7 @@ def vessel_detail(request, pk):
         "user_note": user_note,
         "accessible_notes": accessible_notes,
         "sailboat_attributes": sailboat_attributes_for_template,
+        "open_note_id": open_note_id,
     }
     return render(request, "webapp/vessels/detail.html", context)
 

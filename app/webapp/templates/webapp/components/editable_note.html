@@ -7,20 +7,30 @@
 {# Slack-style vessel note messages component #}
 <div class="note-messages-component" style="border: 1.5px solid #d1d5db; border-radius: 10px; background: #fafbfc; padding: 1.5rem; margin-bottom: 2rem;">
   <!-- Note Title -->
-  <div class="note-title" style="font-size: 1.1em; font-weight: 600; color: #374151; margin-bottom: 1rem;">
-    {% with shared_users=note.shared_with.all %}
-      {% if shared_users|length == 0 %}
+  <div class="note-title" style="display: flex; align-items: center; font-size: 1.1em; font-weight: 600; color: #374151; margin-bottom: 1rem;">
+    <button id="toggle-note-{{ note.id }}" class="collapse-expand-btn" aria-label="Expand/collapse note" onclick="toggleNoteCollapse('{{ note.id }}'); return false;">
+      <span id="collapse-icon-{{ note.id }}">{% if open_note_id and note.id|stringformat:'s' == open_note_id %}▼{% else %}►{% endif %}</span>
+    </button>
+    <span>
+      {# Show 'your private notes' if this note is the user's own note #}
+      {% if user_note and note.id == user_note.id %}
         your private notes
       {% else %}
-        notes shared with
-        {% for user in shared_users %}
-          {{ user.username }}{% if not forloop.last and forloop.revcounter == 2 %} & {% elif not forloop.last %}, {% endif %}
-        {% endfor %}
+        {% with shared_users=note.shared_with.all %}
+          {% if shared_users|length == 0 %}
+            your private notes
+          {% else %}
+            notes shared with
+            {% for user in shared_users %}
+              {{ user.username }}{% if not forloop.last and forloop.revcounter == 2 %} & {% elif not forloop.last %}, {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
       {% endif %}
-    {% endwith %}
+    </span>
   </div>
   <!-- Messages Scroll -->
-  <div class="messages-scroll" id="messages-scroll-{{ note.id }}" style="max-height: 400px; overflow-y: auto; border: none !important; border-radius: 8px 8px 0 0 !important; margin-bottom: 0;">
+  <div class="messages-scroll" id="messages-scroll-{{ note.id }}" style="max-height: 400px; overflow-y: auto; border: none !important; border-radius: 8px 8px 0 0 !important; margin-bottom: 0;{% if not open_note_id or note.id|stringformat:'s' != open_note_id %}display:none;{% endif %}">
     {% for message in note.messages.all %}
       <div id="vessel-note-message-{{ message.id }}" class="message-item mb-3 p-2" style="border-bottom: 1px solid #e0e0e0; margin-bottom: 1rem; padding: 0.5rem;">
         <div style="display: flex; align-items: center; margin-bottom: 0.25rem;">
@@ -33,7 +43,7 @@
              data-raw="{{ message.content|safe }}"
         >
           {% if message.content|length > 500 %}
-            <span class="truncated">{{ message.content|slice:":500" }}&hellip;</span>
+            <span class="truncated">{{ message.content|slice:':500' }}&hellip;</span>
             <a href="#" class="expand-link" data-message-id="{{ message.id }}" onclick="expandMessage({{ message.id }}); return false;">Expand ▼</a>
             <span class="full-content" style="display: none;">{{ message.content|linebreaksbr }}</span>
             <a href="#" class="collapse-link" data-message-id="{{ message.id }}" style="display: none;" onclick="collapseMessage({{ message.id }}); return false;">Collapse ▲</a>
@@ -56,7 +66,7 @@
     {% endfor %}
   </div>
   <!-- Add Message Form (always visible) -->
-  <div id="add-message-form-container" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 0;">
+  <div id="add-message-form-container-{{ note.id }}" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 0;{% if not open_note_id or note.id|stringformat:'s' != open_note_id %}display:none;{% endif %}">
     <form id="add-message-form-{{ note.id }}" onsubmit="submitAddMessage(event, {{ note.id }})">
       <textarea id="add-message-content-{{ note.id }}" class="form-control" style="width: 100%; min-height: 4em; resize: vertical; margin-bottom: 0.5em;" rows="4" placeholder="Write a message..."></textarea>
       <div style="display: flex; justify-content: flex-end; align-items: center;">
@@ -228,6 +238,24 @@ function submitAddMessage(event, noteId) {
   });
 }
 
+function toggleNoteCollapse(noteId) {
+  const scroll = document.getElementById('messages-scroll-' + noteId);
+  const form = document.getElementById('add-message-form-container-' + noteId);
+  const icon = document.getElementById('collapse-icon-' + noteId);
+  if (!scroll || !form || !icon) return;
+  const isCollapsed = scroll.style.display === 'none';
+  if (isCollapsed) {
+    scroll.style.display = '';
+    form.style.display = '';
+    icon.textContent = '▼';
+    scrollMessagesToBottom();
+  } else {
+    scroll.style.display = 'none';
+    form.style.display = 'none';
+    icon.textContent = '►';
+  }
+}
+
 </script>
 
 <style>
@@ -353,5 +381,21 @@ function submitAddMessage(event, noteId) {
   padding: 0.5em 1em;
   border-radius: 4px;
   font-style: italic;
+}
+
+.collapse-expand-btn {
+  margin-right: 0.7em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.collapse-expand-btn:hover, .collapse-expand-btn:focus {
+  background: #e6f0ff;
 }
 </style>
