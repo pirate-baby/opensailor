@@ -1,5 +1,6 @@
 {% extends "webapp/base.html" %}
 {% load custom_filters %}
+{% load responsive_images %}
 
 {% block title %}{{ sailboat.make.name }} {{ sailboat.name }} - {{ APP_NAME }}{% endblock %}
 
@@ -38,7 +39,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for image in sailboat.images.all %}
                 <div class="relative aspect-w-16 aspect-h-9">
-                    <img src="{{ image.url }}" alt="Sailboat image" class="w-full h-full object-cover rounded-lg">
+                    {% responsive_image image alt_text="Sailboat image" css_classes="rounded-lg" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" %}
                 </div>
                 {% endfor %}
             </div>

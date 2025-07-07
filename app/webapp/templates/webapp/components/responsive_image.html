@@ -1,0 +1,10 @@
+{% comment %}
+Responsive image component with lazy loading
+Since we don't have multiple image sizes yet (depends on Issue #30), 
+we'll use CSS-based responsive behavior with the single image size.
+{% endcomment %}
+<img src="{{ image.url }}" 
+     alt="{{ alt_text }}"
+     {% if lazy %}loading="lazy"{% endif %}
+     {% if sizes %}sizes="{{ sizes }}"{% endif %}
+     class="w-full h-full object-cover {{ css_classes }}">
