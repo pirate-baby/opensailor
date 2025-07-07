@@ -2,6 +2,11 @@ from django import template
 
 register = template.Library()
 
+# Common responsive image sizes patterns
+CARD_SIZES = "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+DETAIL_SIZES = "(max-width: 1024px) 100vw, 66vw"
+THUMBNAIL_SIZES = "120px"
+
 @register.inclusion_tag('webapp/components/responsive_image.html')
 def responsive_image(image, alt_text="", css_classes="", lazy=True, sizes="100vw"):
     """
@@ -21,3 +26,18 @@ def responsive_image(image, alt_text="", css_classes="", lazy=True, sizes="100vw
         'lazy': lazy,
         'sizes': sizes
     }
+
+@register.inclusion_tag('webapp/components/responsive_image.html')
+def card_image(image, alt_text="", css_classes="", lazy=True):
+    """Responsive image for card layouts (index pages)."""
+    return responsive_image(image, alt_text, css_classes, lazy, CARD_SIZES)
+
+@register.inclusion_tag('webapp/components/responsive_image.html')
+def detail_image(image, alt_text="", css_classes="", lazy=True):
+    """Responsive image for detail page main images."""
+    return responsive_image(image, alt_text, css_classes, lazy, DETAIL_SIZES)
+
+@register.inclusion_tag('webapp/components/responsive_image.html')
+def thumbnail_image(image, alt_text="", css_classes="", lazy=True):
+    """Responsive image for small thumbnails."""
+    return responsive_image(image, alt_text, css_classes, lazy, THUMBNAIL_SIZES)

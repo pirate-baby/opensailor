@@ -63,14 +63,14 @@
             <div class="bg-white rounded-lg shadow overflow-hidden">
                 {% if vessel.has_images %}
                     <div class="relative h-96 bg-gray-200">
-                        {% responsive_image vessel.first_image alt_text=vessel.name css_classes="absolute" sizes="(max-width: 1024px) 100vw, 66vw" %}
+                        {% detail_image vessel.first_image alt_text=vessel.name css_classes="absolute" %}
                     </div>
                     {% with images=vessel.images_all %}
                         {% if images|length > 1 %}
                             <div class="grid grid-cols-6 gap-2 p-2">
                                 {% for image in images %}
                                     <div class="h-20 bg-gray-200 rounded overflow-hidden">
-                                        {% responsive_image image alt_text=vessel.name css_classes="rounded" sizes="120px" %}
+                                        {% thumbnail_image image alt_text=vessel.name css_classes="rounded" %}
                                     </div>
                                 {% endfor %}
                             </div>

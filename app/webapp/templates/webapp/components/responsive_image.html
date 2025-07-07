@@ -7,4 +7,6 @@ we'll use CSS-based responsive behavior with the single image size.
      alt="{{ alt_text }}"
      {% if lazy %}loading="lazy"{% endif %}
      {% if sizes %}sizes="{{ sizes }}"{% endif %}
+     {% if image.width %}width="{{ image.width }}"{% endif %}
+     {% if image.height %}height="{{ image.height }}"{% endif %}
      class="w-full h-full object-cover {{ css_classes }}">

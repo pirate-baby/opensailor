@@ -109,7 +109,7 @@
             <a href="{% url 'sailboat_detail' sailboat.pk %}" class="block bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
                 {% if sailboat.images.first %}
                     <div class="h-48 overflow-hidden">
-                        {% responsive_image sailboat.images.first alt_text=sailboat.make.name|add:" "|add:sailboat.name sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" %}
+                        {% card_image sailboat.images.first alt_text=sailboat.make.name|add:" "|add:sailboat.name %}
                     </div>
                 {% endif %}
                 <div class="p-6">
