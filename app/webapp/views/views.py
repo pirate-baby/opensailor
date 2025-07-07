@@ -164,13 +164,14 @@ def sailboat_detail(request, pk):
     grouped = {}
     for attr in sailboat_attributes:
         section = attr.attribute.section
-        in_grouped = grouped.get(section.id,
-                                 {"section": section, "attributes": []})
-        in_grouped["attributes"].append({
-            "info": attr.attribute.description,
-            "attribute": attr.attribute,
-            "value": attr.value,
-        })
+        in_grouped = grouped.get(section.id, {"section": section, "attributes": []})
+        in_grouped["attributes"].append(
+            {
+                "info": attr.attribute.description,
+                "attribute": attr.attribute,
+                "value": attr.value,
+            }
+        )
         grouped[section.id] = in_grouped
     sailboat_attributes_grouped = list(grouped.values())
 
@@ -272,11 +273,13 @@ def sailboat_update(request, pk):
         section_id = section.id
         if section_id not in grouped:
             grouped[section_id] = {"section": section, "attributes": []}
-        grouped[section_id]["attributes"].append({
-            "info": attr.attribute.description,
-            "attribute": attr.attribute,
-            "value": attr.value,
-        })
+        grouped[section_id]["attributes"].append(
+            {
+                "info": attr.attribute.description,
+                "attribute": attr.attribute,
+                "value": attr.value,
+            }
+        )
     sailboat_attributes_grouped = list(grouped.values())
 
     context = {
@@ -367,11 +370,13 @@ def vessel_detail(request, pk):
         section_id = section.id
         if section_id not in grouped:
             grouped[section_id] = {"section": section, "attributes": []}
-        grouped[section_id]["attributes"].append({
-            "info": attr.attribute.description,
-            "attribute": attr.attribute,
-            "value": attr.value,
-        })
+        grouped[section_id]["attributes"].append(
+            {
+                "info": attr.attribute.description,
+                "attribute": attr.attribute,
+                "value": attr.value,
+            }
+        )
     sailboat_attributes_grouped = list(grouped.values())
 
     context = {
