@@ -64,7 +64,7 @@
             <a href="{% url 'vessel_detail' vessel.pk %}" class="block bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
                 {% if vessel.first_image %}
                     <div class="h-48 overflow-hidden">
-                        {% responsive_image vessel.first_image alt_text=vessel.name sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" %}
+                        {% card_image vessel.first_image alt_text=vessel.name %}
                     </div>
                 {% else %}
                     <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
