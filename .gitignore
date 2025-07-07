@@ -27,3 +27,6 @@ opentofu/.terraform.lock.hcl
 opentofu/terraform.tfstate*
 opentofu/tofu.tfstate*
 opentofu/*.tfplan
+
+# VSCODE and Mac
+.DS_Store
