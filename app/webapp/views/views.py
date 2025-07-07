@@ -465,7 +465,9 @@ def vessel_update(request, pk):
                     user=request.user,
                 )
             else:
-                raise Exception("You must select a sailboat or enter a make and model.")
+                raise ValueError(
+                    "You must select a sailboat or enter a make and model."
+                )
 
             # Update vessel fields
             vessel.sailboat = sailboat
