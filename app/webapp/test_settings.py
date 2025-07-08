@@ -3,6 +3,8 @@ Test settings for webapp project.
 Inherits from main settings but uses in-memory SQLite database.
 """
 
+import tempfile
+
 from .settings import *  # noqa: F401,F403 pylint: disable=unused-wildcard-import,wildcard-import
 
 # Use in-memory SQLite database for testing
@@ -44,9 +46,6 @@ LOGGING = {
 }
 
 # Use local storage for testing (no S3)
-import tempfile
-import os
-
 MEDIA_ROOT = tempfile.mkdtemp()
 
 STORAGES = {
