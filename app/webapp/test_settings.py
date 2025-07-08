@@ -9,11 +9,12 @@ from .settings import *  # noqa: F401,F403 pylint: disable=unused-wildcard-impor
 
 # Use in-memory SQLite database for testing
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
     }
 }
+
 
 # Disable migrations for faster tests
 class DisableMigrations:
@@ -28,20 +29,20 @@ MIGRATION_MODULES = DisableMigrations()
 
 # Use a simple password hasher for faster tests
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+    "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
 # Disable logging during tests
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.NullHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.NullHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
+    "root": {
+        "handlers": ["console"],
     },
 }
 
@@ -49,17 +50,17 @@ LOGGING = {
 MEDIA_ROOT = tempfile.mkdtemp()
 
 STORAGES = {
-    'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
-        'OPTIONS': {
-            'location': MEDIA_ROOT,
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": MEDIA_ROOT,
         },
     },
-    'staticfiles': {
-        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
 # Override S3 settings for testing
-STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
+STATIC_URL = "/static/"
+MEDIA_URL = "/media/"
