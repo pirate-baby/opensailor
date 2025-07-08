@@ -36,4 +36,5 @@ jobs:
         AWS_S3_CLIENT_ENDPOINT_URL: ""
         EMAIL_HOST_PASSWORD: ""
         EMAIL_HOST: ""
+        AWS_SESSION_TOKEN: ""
       run: docker compose run --rm test
