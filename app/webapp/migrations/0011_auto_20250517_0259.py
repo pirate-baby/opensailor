@@ -13,7 +13,7 @@ def find_ethan(user_model):
             return user_model.objects.get(email=possible_email)
         except user_model.DoesNotExist:
             continue
-    raise Exception("Ethan not found")
+    raise ValueError("Ethan not found")
 
 
 def add_bootstrap_admin_user(apps, schema_editor):
