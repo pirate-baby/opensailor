@@ -3,12 +3,18 @@ from django.template import Context, Template
 from django.test import TestCase
 from webapp.models import Media
 from django.core.files.uploadedfile import SimpleUploadedFile
+import shutil
+import tempfile
+from django.test import override_settings
 
 
 @m.describe("Responsive Images Template Tags")
 class TestResponsiveImages(TestCase):
     def setUp(self):
         """Set up test data."""
+        # Create a temporary directory for this test
+        self.temp_dir = tempfile.mkdtemp()
+        
         # Create a mock image file
         image_file = SimpleUploadedFile(
             "test.jpg",
@@ -16,10 +22,27 @@ class TestResponsiveImages(TestCase):
             content_type="image/jpeg"
         )
         
-        self.media = Media.objects.create(
-            file=image_file,
-            media_type="image"
-        )
+        # Override media root for this test
+        with override_settings(MEDIA_ROOT=self.temp_dir):
+            self.media = Media.objects.create(
+                file=image_file,
+                media_type="image"
+            )
+    
+    def tearDown(self):
+        """Clean up test data."""
+        # Clean up the temporary directory
+        if hasattr(self, 'temp_dir'):
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+        
+        # Clean up any files created in the repo root
+        import os
+        import glob
+        for file in glob.glob("image-*.jpg"):
+            try:
+                os.remove(file)
+            except OSError:
+                pass
 
     @m.it("Should render responsive_image tag with default values")
     def test_responsive_image_default(self):

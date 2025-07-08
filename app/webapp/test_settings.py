@@ -44,9 +44,17 @@ LOGGING = {
 }
 
 # Use local storage for testing (no S3)
+import tempfile
+import os
+
+MEDIA_ROOT = tempfile.mkdtemp()
+
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'OPTIONS': {
+            'location': MEDIA_ROOT,
+        },
     },
     'staticfiles': {
         'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
