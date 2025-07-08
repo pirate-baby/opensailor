@@ -15,7 +15,7 @@ app/static/
 .env
 
 # data
-.data/
+.data/*
 !.data/.gitkeep
 
 # tailwind
