@@ -12,7 +12,7 @@ from webapp.schemas.attributes import AttributeAssignment
 
 
 if TYPE_CHECKING:
-    from webapp.models.user import User
+    from webapp.models.user import User  # noqa: F401
     from django.core.files.uploadedfile import UploadedFile
 
 
