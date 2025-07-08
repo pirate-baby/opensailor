@@ -12,7 +12,7 @@ from webapp.models.media import Media
 from webapp.models.moderation import Moderation
 
 if TYPE_CHECKING:
-    from django.contrib.auth.models import User
+    from webapp.models.user import User
 
 
 class SailboatImage(models.Model):
