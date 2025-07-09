@@ -3,7 +3,6 @@ from guardian.shortcuts import assign_perm
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
-from django.core.exceptions import ValidationError
 from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermissionBase
 from webapp.models.make import Make
@@ -13,7 +12,7 @@ from webapp.models.media import Media
 from webapp.models.moderation import Moderation
 
 if TYPE_CHECKING:
-    from django.contrib.auth.models import User
+    from webapp.models.user import User
 
 
 class SailboatImage(models.Model):

@@ -1,5 +1,6 @@
 {% extends "webapp/base.html" %}
 {% load custom_filters %}
+{% load responsive_images %}
 
 {% block title %}Sailboats - {{ APP_NAME }}{% endblock %}
 
@@ -107,7 +108,9 @@
         {% for sailboat in page_obj %}
             <a href="{% url 'sailboat_detail' sailboat.pk %}" class="block bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
                 {% if sailboat.images.first %}
-                    <img src="{{ sailboat.images.first.url }}" alt="{{ sailboat.make.name }} {{ sailboat.name }}" class="w-full h-48 object-cover">
+                    <div class="h-48 overflow-hidden">
+                        {% card_image sailboat.images.first alt_text=sailboat.make.name|add:" "|add:sailboat.name %}
+                    </div>
                 {% endif %}
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900">{{ sailboat.make.name }} {{ sailboat.name }}</h3>

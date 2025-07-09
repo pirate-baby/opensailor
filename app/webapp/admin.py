@@ -64,7 +64,7 @@ class CSVImportMixin:
         }
         return render(request, "admin/csv_form.html", context)
 
-    def download_template(self, request):
+    def download_template(self, _request):
         # Get the first instance of the model
         instance = self.model.objects.first()
 
@@ -215,7 +215,7 @@ class SailboatAdmin(CSVImportMixin, admin.ModelAdmin):
     def process_csv(self, reader):
         for row in reader:
             make, _ = Make.objects.get_or_create(name=row["make"].lower())
-            sailboat, created = Sailboat.objects.get_or_create(
+            sailboat, _ = Sailboat.objects.get_or_create(
                 name=row["name"].lower(),
                 make=make,
                 defaults={
@@ -297,12 +297,12 @@ class VesselAdmin(CSVImportMixin, admin.ModelAdmin):
                         "year_built": row.get("year_built", None),
                     },
                 )
-            except Sailboat.DoesNotExist:
-                raise Exception(
+            except Sailboat.DoesNotExist as exc:
+                raise ValueError(
                     f"Sailboat with name '{row['sailboat_name']}' does not exist"
-                )
+                ) from exc
             except KeyError as e:
-                raise Exception(f"Missing required field: {str(e)}")
+                raise ValueError(f"Missing required field: {str(e)}") from e
 
 
 @admin.register(SailboatImage)
@@ -350,7 +350,7 @@ class ModerationAdmin(admin.ModelAdmin):
         (_("Timestamps"), {"fields": ("created_at", "updated_at")}),
     )
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, _request):
         # Moderations should only be created programmatically
         return False
 

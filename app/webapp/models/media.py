@@ -70,10 +70,6 @@ class Media(models.Model):
                 return InMemoryUploadedFile(
                     new_image, None, image.name, image.content_type, None, None
                 )
-
-                # Make sure we can read from the file again
-                image.seek(0)
-                return image
             except Exception:
                 # If there's any error, return the original image
                 image.seek(0)

@@ -12,7 +12,7 @@ from webapp.schemas.attributes import AttributeAssignment
 
 
 if TYPE_CHECKING:
-    from webapp.models.user import User
+    from webapp.models.user import User  # noqa: F401
     from django.core.files.uploadedfile import UploadedFile
 
 
@@ -38,13 +38,17 @@ class VesselAttribute(models.Model):
             case Attribute.DataType.FLOAT:
                 try:
                     self.value = float(self.value)
-                except ValueError:
-                    raise ValidationError({"value": _("Value must be a number")})
+                except ValueError as exc:
+                    raise ValidationError(
+                        {"value": _("Value must be a number")}
+                    ) from exc
             case Attribute.DataType.INTEGER:
                 try:
                     self.value = int(self.value)
-                except ValueError:
-                    raise ValidationError({"value": _("Value must be an integer")})
+                except ValueError as exc:
+                    raise ValidationError(
+                        {"value": _("Value must be an integer")}
+                    ) from exc
             case _:
                 self.value = str(self.value)
         # if the attribute has options, make sure the value is in that list

@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from webapp.models.moderation import Moderation
 
 if TYPE_CHECKING:
-    from django.contrib.auth.models import User
+    from webapp.models.user import User
 
 
 class Make(models.Model):

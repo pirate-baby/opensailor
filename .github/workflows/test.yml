@@ -11,5 +11,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: build docker images
+      run: |
+        docker compose build
     - name: Run tests with Docker Compose
-      run: docker compose run --rm test
+      run: |
+        set -a
+        source .github/test.env
+        set +a
+        docker compose run --rm test

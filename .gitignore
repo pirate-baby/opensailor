@@ -15,7 +15,7 @@ app/static/
 .env
 
 # data
-.data/
+.data/*
 !.data/.gitkeep
 
 # tailwind
@@ -27,3 +27,6 @@ opentofu/.terraform.lock.hcl
 opentofu/terraform.tfstate*
 opentofu/tofu.tfstate*
 opentofu/*.tfplan
+
+# VSCODE and Mac
+.DS_Store
