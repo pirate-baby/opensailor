@@ -147,7 +147,7 @@ services:
       retries: 3
 
   opentofu:
-    image: ghcr.io/opentofu/opentofu
+    image: ghcr.io/opentofu/opentofu:1.9.1
     profiles:
       - deploy
     working_dir: /infra

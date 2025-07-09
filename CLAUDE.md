@@ -89,3 +89,16 @@ The application runs in Docker containers with:
 - Media files stored in S3 with public-read ACL
 - Email verification required for account signup
 - HTMX used for dynamic frontend interactions without full page reloads
+
+## Critical Development Principles
+
+### When Asked to "Fix" Something
+**ALWAYS follow this approach:**
+
+1. **Investigate first** - Understand what's broken and why before making any changes
+2. **Make the smallest possible fix** - Only change what needs to be changed to solve the specific problem
+3. **Never rewrite working code** - If I'm making large changes or rewriting functionality, I'm probably doing something wrong
+
+**Key insight:** When something that was working suddenly breaks without code changes, look for what changed externally (versions, dependencies, environment) and make the minimal fix to restore the working state.
+
+**If I catch myself wanting to rewrite or make major changes to fix something, STOP and ask: "What is the actual root cause, and what's the smallest change to fix it?"**
