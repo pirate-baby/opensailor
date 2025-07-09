@@ -50,7 +50,7 @@ jobs:
       - name: Set up OpenTofu
         uses: opentofu/setup-opentofu@v1
         with:
-          tofu-version: 'latest'
+          tofu-version: '1.8.3'
 
       - name: Export ECS task definition from OpenTofu
         run: |
