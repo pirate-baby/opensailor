@@ -1,6 +1,7 @@
 {% extends "webapp/base.html" %}
 {% load custom_filters %}
 {% load static %}
+{% load responsive_images %}
 
 {% block extra_head %}
   <script src="{% static 'libraries/assets/main.js' %}"></script>
@@ -62,14 +63,14 @@
             <div class="bg-white rounded-lg shadow overflow-hidden">
                 {% if vessel.has_images %}
                     <div class="relative h-96 bg-gray-200">
-                        <img src="{{ vessel.first_image.url }}" alt="{{ vessel.name }}" class="absolute h-full w-full object-cover">
+                        {% detail_image vessel.first_image alt_text=vessel.name css_classes="absolute" %}
                     </div>
                     {% with images=vessel.images_all %}
                         {% if images|length > 1 %}
                             <div class="grid grid-cols-6 gap-2 p-2">
                                 {% for image in images %}
                                     <div class="h-20 bg-gray-200 rounded overflow-hidden">
-                                        <img src="{{ image.url }}" alt="{{ vessel.name }}" class="h-full w-full object-cover">
+                                        {% thumbnail_image image alt_text=vessel.name css_classes="rounded" %}
                                     </div>
                                 {% endfor %}
                             </div>

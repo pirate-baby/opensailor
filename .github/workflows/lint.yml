@@ -12,4 +12,28 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Run linter with Docker Compose
+      env:
+        ENVIRONMENT: development
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: postgres
+        POSTGRES_HOST: database
+        POSTGRES_PORT: 5432
+        LANGFUSE_DB_PASSWORD: langfuse
+        APP_DB: webapp
+        APP_DB_USER: webapp
+        APP_DB_PASSWORD: webapp
+        DJANGO_SECRET_KEY: test-secret-key
+        GOOGLE_CLIENT_ID: ""
+        GOOGLE_CLIENT_SECRET: ""
+        GITHUB_CLIENT_ID: ""
+        GITHUB_CLIENT_SECRET: ""
+        AWS_SECRET_ACCESS_KEY: ""
+        AWS_ACCESS_KEY_ID: ""
+        AWS_DEFAULT_REGION_NAME: ""
+        AWS_S3_STORAGE_BUCKET: ""
+        AWS_S3_ENDPOINT_URL: ""
+        AWS_S3_CLIENT_ENDPOINT_URL: ""
+        EMAIL_HOST_PASSWORD: ""
+        EMAIL_HOST: ""
       run: docker compose run --rm lint

@@ -1,5 +1,4 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -9,14 +8,6 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
-
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.contrib import messages
-from django.conf import settings
-from django.core.mail import send_mail
-from django.urls import reverse
 
 from webapp.models.vessel_note import VesselNote, NoteMessage
 from webapp.models.vessel import Vessel

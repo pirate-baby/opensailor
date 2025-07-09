@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 
 if TYPE_CHECKING:
-    from webapp.models.user import User
+    from webapp.models.user import User  # noqa: F401
 
 
 class Moderation(models.Model):

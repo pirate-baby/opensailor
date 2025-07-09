@@ -83,13 +83,43 @@ def sailboats_index(request):
     return render(request, "webapp/sailboats/index.html", context)
 
 
+def _create_sailboat_designers(sailboat, designers_string):
+    """Helper to create and assign designers to a sailboat"""
+    designer_names = [
+        name.strip().lower() for name in designers_string.split(",") if name.strip()
+    ]
+    for designer_name in designer_names:
+        designer, _ = Designer.objects.get_or_create(name=designer_name)
+        sailboat.designers.add(designer)
+
+
+def _create_sailboat_attributes(sailboat, post_data):
+    """Helper to create sailboat attributes from form data"""
+    for attr in Attribute.objects.all():
+        if attr.is_in_form_data(post_data):
+            values = attr.get_values_from_form_data(post_data)
+            if values:
+                SailboatAttribute.objects.create(
+                    sailboat=sailboat,
+                    attribute=attr,
+                    section=attr.section,
+                    values=values,
+                )
+
+
+def _create_sailboat_images(sailboat, images):
+    """Helper to create sailboat images"""
+    for index, image in enumerate(images):
+        media = Media.objects.create(file=image)
+        SailboatImage.objects.create(sailboat=sailboat, image=media, order=index)
+
+
 @admin_or_moderator_required
 def sailboat_create(request):
     if request.method == "POST":
         try:
             # Get or create make
-            make_name = request.POST.get("make").lower()
-            make, _ = Make.objects.get_or_create(name=make_name)
+            make, _ = Make.objects.get_or_create(name=request.POST.get("make").lower())
 
             # Create sailboat
             sailboat = Sailboat.objects.create(
@@ -99,45 +129,10 @@ def sailboat_create(request):
                 manufactured_end_year=request.POST.get("manufactured_end_year"),
             )
 
-            # Handle designers
-            designer_names = [
-                name.strip().lower()
-                for name in request.POST.get("designers", "").split(",")
-            ]
-            for designer_name in designer_names:
-                if designer_name:
-                    designer, _ = Designer.objects.get_or_create(name=designer_name)
-                    sailboat.designers.add(designer)
-
-            # Handle attributes
-            all_attributes = Attribute.objects.all()
-
-            # Process each attribute from the form
-            for attr in all_attributes:
-                # Check if the attribute is in the form
-                if not attr.is_in_form_data(request.POST):
-                    continue
-
-                # Get values for this attribute
-                values = attr.get_values_from_form_data(request.POST)
-
-                # Only create the attribute if there are values
-                if values:
-                    SailboatAttribute.objects.create(
-                        sailboat=sailboat,
-                        attribute=attr,
-                        section=attr.section,
-                        values=values,
-                    )
-
-            # Handle images
-            images = request.FILES.getlist("images")
-            for index, image in enumerate(images):
-                media = Media.objects.create(file=image)
-                # Create the through model instance instead of using add()
-                SailboatImage.objects.create(
-                    sailboat=sailboat, image=media, order=index
-                )
+            # Handle designers, attributes, and images
+            _create_sailboat_designers(sailboat, request.POST.get("designers", ""))
+            _create_sailboat_attributes(sailboat, request.POST)
+            _create_sailboat_images(sailboat, request.FILES.getlist("images"))
 
             messages.success(request, "Sailboat created successfully.")
             return redirect("sailboat_detail", pk=sailboat.pk)
@@ -164,13 +159,14 @@ def sailboat_detail(request, pk):
     grouped = {}
     for attr in sailboat_attributes:
         section = attr.attribute.section
-        in_grouped = grouped.get(section.id,
-                                 {"section": section, "attributes": []})
-        in_grouped["attributes"].append({
-            "info": attr.attribute.description,
-            "attribute": attr.attribute,
-            "value": attr.value,
-        })
+        in_grouped = grouped.get(section.id, {"section": section, "attributes": []})
+        in_grouped["attributes"].append(
+            {
+                "info": attr.attribute.description,
+                "attribute": attr.attribute,
+                "value": attr.value,
+            }
+        )
         grouped[section.id] = in_grouped
     sailboat_attributes_grouped = list(grouped.values())
 
@@ -183,17 +179,57 @@ def sailboat_detail(request, pk):
     return render(request, "webapp/sailboats/detail.html", context)
 
 
+def _update_sailboat_designers(sailboat, designers_string):
+    """Helper to update designers for a sailboat"""
+    sailboat.designers.clear()
+    designer_names = [
+        name.strip().lower() for name in designers_string.split(",") if name.strip()
+    ]
+    for designer_name in designer_names:
+        designer, _ = Designer.objects.get_or_create(name=designer_name)
+        sailboat.designers.add(designer)
+
+
+def _update_sailboat_attributes(sailboat, post_data):
+    """Helper to update sailboat attributes from form data"""
+    logger.info(
+        f"Starting attribute updates for sailboat {sailboat.id} ({sailboat.name})"
+    )
+
+    for attr in Attribute.objects.all():
+        if not attr.is_in_form_data(post_data):
+            logger.info(
+                f"Attribute {attr.id} ({attr.snake_case_name}) not in form, skipping"
+            )
+            continue
+
+        values = attr.get_values_from_form_data(post_data)
+
+        if not values:
+            deleted = sailboat.attribute_values.filter(attribute=attr).delete()
+            logger.info(
+                f"Deleted attribute {attr.id} ({attr.snake_case_name}) for sailboat {sailboat.id}: {deleted}"
+            )
+            continue
+
+        _, created = SailboatAttribute.objects.update_or_create(
+            sailboat=sailboat, attribute=attr, defaults={"values": values}
+        )
+        logger.info(
+            f"{'Created' if created else 'Updated'} attribute {attr.id} ({attr.snake_case_name}) for sailboat {sailboat.id} with values: {values}"
+        )
+
+    logger.info(f"Completed attribute updates for sailboat {sailboat.id}")
+
+
 @admin_or_moderator_required
 def sailboat_update(request, pk):
     sailboat = get_object_or_404(Sailboat, pk=pk)
 
     if request.method == "POST":
         try:
-            # Update make
-            make_name = request.POST.get("make").lower()
-            make, _ = Make.objects.get_or_create(name=make_name)
-
-            # Update sailboat
+            # Update make and sailboat basic info
+            make, _ = Make.objects.get_or_create(name=request.POST.get("make").lower())
             sailboat.name = request.POST.get("name").lower()
             sailboat.make = make
             sailboat.manufactured_start_year = request.POST.get(
@@ -202,57 +238,10 @@ def sailboat_update(request, pk):
             sailboat.manufactured_end_year = request.POST.get("manufactured_end_year")
             sailboat.save()
 
-            # Update designers
-            sailboat.designers.clear()
-            designer_names = [
-                name.strip().lower()
-                for name in request.POST.get("designers", "").split(",")
-            ]
-            for designer_name in designer_names:
-                if designer_name:
-                    designer, _ = Designer.objects.get_or_create(name=designer_name)
-                    sailboat.designers.add(designer)
-
-            # Log the start of attribute updates
-            logger.info(
-                f"Starting attribute updates for sailboat {sailboat.id} ({sailboat.name})"
-            )
-
-            all_attributes = Attribute.objects.all()
-            for attr in all_attributes:
-                # Check if the attribute is in the form
-                if not attr.is_in_form_data(request.POST):
-                    logger.info(
-                        f"Attribute {attr.id} ({attr.snake_case_name}) not in form, skipping"
-                    )
-                    continue
-
-                # Get values for this attribute
-                values = attr.get_values_from_form_data(request.POST)
-
-                if not values:
-                    deleted = sailboat.attribute_values.filter(attribute=attr).delete()
-                    logger.info(
-                        f"Deleted attribute {attr.id} ({attr.snake_case_name}) for sailboat {sailboat.id}: {deleted}"
-                    )
-                    continue
-
-                _, created = SailboatAttribute.objects.update_or_create(
-                    sailboat=sailboat, attribute=attr, defaults={"values": values}
-                )
-                logger.info(
-                    f"{'Created' if created else 'Updated'} new attribute {attr.id} ({attr.snake_case_name}) for sailboat {sailboat.id} with values: {values}"
-                )
-
-            logger.info(f"Completed attribute updates for sailboat {sailboat.id}")
-
-            # Handle new images
-            images = request.FILES.getlist("images")
-            for index, image in enumerate(images):
-                media = Media.objects.create(file=image)
-                SailboatImage.objects.create(
-                    sailboat=sailboat, image=media, order=index
-                )
+            # Update related data
+            _update_sailboat_designers(sailboat, request.POST.get("designers", ""))
+            _update_sailboat_attributes(sailboat, request.POST)
+            _create_sailboat_images(sailboat, request.FILES.getlist("images"))
 
             messages.success(request, "Sailboat updated successfully.")
             return redirect("sailboat_detail", pk=sailboat.pk)
@@ -272,11 +261,13 @@ def sailboat_update(request, pk):
         section_id = section.id
         if section_id not in grouped:
             grouped[section_id] = {"section": section, "attributes": []}
-        grouped[section_id]["attributes"].append({
-            "info": attr.attribute.description,
-            "attribute": attr.attribute,
-            "value": attr.value,
-        })
+        grouped[section_id]["attributes"].append(
+            {
+                "info": attr.attribute.description,
+                "attribute": attr.attribute,
+                "value": attr.value,
+            }
+        )
     sailboat_attributes_grouped = list(grouped.values())
 
     context = {
@@ -367,11 +358,13 @@ def vessel_detail(request, pk):
         section_id = section.id
         if section_id not in grouped:
             grouped[section_id] = {"section": section, "attributes": []}
-        grouped[section_id]["attributes"].append({
-            "info": attr.attribute.description,
-            "attribute": attr.attribute,
-            "value": attr.value,
-        })
+        grouped[section_id]["attributes"].append(
+            {
+                "info": attr.attribute.description,
+                "attribute": attr.attribute,
+                "value": attr.value,
+            }
+        )
     sailboat_attributes_grouped = list(grouped.values())
 
     context = {
@@ -436,31 +429,53 @@ def vessel_create(request):
     return redirect("vessel_detail", pk=vessel_id)
 
 
+def _get_or_create_sailboat(post_data, vessel, user):
+    """Helper to get or create sailboat from form data"""
+    sailboat_id = post_data.get("sailboat")
+    manual_make = post_data.get("manual_make")
+    manual_model = post_data.get("manual_model")
+    year_built = post_data.get("year_built")
+    year_built = int(year_built) if year_built else None
+
+    if sailboat_id:
+        return get_object_or_404(Sailboat, pk=sailboat_id), year_built
+    if manual_make and manual_model:
+        make = Make.get_or_create_moderated(name=manual_make, user=user)
+        sailboat = Sailboat.get_or_create_moderated(
+            make=make,
+            name=manual_model,
+            year_built=year_built or vessel.year_built or 2000,
+            user=user,
+        )
+        return sailboat, year_built
+
+    raise ValueError("You must select a sailboat or enter a make and model.")
+
+
+def _update_vessel_attributes(vessel, attributes_json):
+    """Helper to update vessel attributes from JSON data"""
+    raw_attributes = json.loads(attributes_json or "[]")
+    vessel.vesselattribute_set.all().delete()
+
+    for attribute in raw_attributes:
+        sql_attribute = Attribute.objects.get(id=attribute["id"])
+        attr_assignment = AttributeAssignment(
+            name=sql_attribute.name,
+            value=attribute["value"],
+        )
+        vessel.create_or_update_attribute(attr_assignment)
+
+
 @admin_or_moderator_required
 def vessel_update(request, pk):
     vessel = get_object_or_404(Vessel, pk=pk)
 
     if request.method == "POST":
         try:
-            # Handle manual make/model or selected sailboat
-            sailboat_id = request.POST.get("sailboat")
-            manual_make = request.POST.get("manual_make")
-            manual_model = request.POST.get("manual_model")
-            year_built = request.POST.get("year_built")
-            year_built = int(year_built) if year_built else None
-
-            if sailboat_id:
-                sailboat = get_object_or_404(Sailboat, pk=sailboat_id)
-            elif manual_make and manual_model:
-                make = Make.get_or_create_moderated(name=manual_make, user=request.user)
-                sailboat = Sailboat.get_or_create_moderated(
-                    make=make,
-                    name=manual_model,
-                    year_built=year_built or vessel.year_built or 2000,  # fallback
-                    user=request.user,
-                )
-            else:
-                raise Exception("You must select a sailboat or enter a make and model.")
+            # Get or create sailboat
+            sailboat, year_built = _get_or_create_sailboat(
+                request.POST, vessel, request.user
+            )
 
             # Update vessel fields
             vessel.sailboat = sailboat
@@ -473,25 +488,9 @@ def vessel_update(request, pk):
             vessel.home_port = request.POST.get("home_port")
             vessel.save()
 
-            # Handle attributes
-            raw_attributes = json.loads(request.POST.get("attributes") or "[]")
-            mapped_attributes = []
-            for attribute in raw_attributes:
-                sql_attribute = Attribute.objects.get(id=attribute["id"])
-                mapped_attributes.append(
-                    AttributeAssignment(
-                        name=sql_attribute.name,
-                        value=attribute["value"],
-                    )
-                )
-            # Remove all old attributes and re-add (or update)
-            vessel.vesselattribute_set.all().delete()
-            for attr_assignment in mapped_attributes:
-                vessel.create_or_update_attribute(attr_assignment)
-
-            # Handle new images
-            images = request.FILES.getlist("images")
-            for image in images:
+            # Handle attributes and images
+            _update_vessel_attributes(vessel, request.POST.get("attributes"))
+            for image in request.FILES.getlist("images"):
                 vessel.add_image(image)
 
             messages.success(request, "Vessel updated successfully.")

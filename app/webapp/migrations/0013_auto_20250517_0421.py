@@ -3,7 +3,7 @@
 from django.db import migrations
 
 
-def add_misc_attribute_section(apps, schema_editor):
+def add_misc_attribute_section(apps, _schema_editor):
     AttributeSection = apps.get_model("webapp", "AttributeSection")
     AttributeSection.objects.create(
         name="Miscellaneous",
