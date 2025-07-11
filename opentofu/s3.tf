@@ -28,3 +28,22 @@ resource "aws_s3_bucket_policy" "public_read" {
     }]
   })
 }
+
+resource "aws_s3_bucket_versioning" "static" {
+  bucket = aws_s3_bucket.static.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_cors_configuration" "static" {
+  bucket = aws_s3_bucket.static.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = ["https://opensailor.org", "https://www.opensailor.org"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}

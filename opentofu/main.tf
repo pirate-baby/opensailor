@@ -2,6 +2,10 @@ provider "aws" {
   region = var.aws_region
 }
 
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
+
 resource "aws_secretsmanager_secret" "env_vars" {
   name = var.env_secrets_name
   lifecycle {

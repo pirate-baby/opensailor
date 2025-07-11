@@ -1,10 +1,10 @@
 from django.template.defaulttags import register
-from django.conf import settings
+from django.templatetags.static import static as django_static
 
 
 @register.simple_tag
 def static(path):
     """
-    For some reason django-storages breaks this tag if the client and server s3 paths are different.
+    Use Django's built-in static file handling to properly respect CDN configuration.
     """
-    return settings.STATIC_URL + path
+    return django_static(path)

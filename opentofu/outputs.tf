@@ -10,3 +10,11 @@ output "rds_endpoint" {
 output "ecr_repo_url" {
   value = aws_ecr_repository.app.repository_url
 }
+
+output "cloudflare_zone_id" {
+  value = cloudflare_zone.opensailor.id
+}
+
+output "cloudflare_nameservers" {
+  value = cloudflare_zone.opensailor.name_servers
+}
