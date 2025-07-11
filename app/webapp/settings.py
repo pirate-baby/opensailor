@@ -98,12 +98,12 @@ if USE_CLOUDFLARE:
         "172.64.0.0/13",
         "131.0.72.0/22",
     ]
-    
+
     # Trust Cloudflare proxy headers
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    
+
     # Security headers that work with Cloudflare
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -266,7 +266,9 @@ s3_storage_options = {
         "CacheControl": "max-age=31536000, public",
         "ACL": "public-read",
     },
-    "custom_domain": "opensailor.org" if os.environ.get("ENVIRONMENT") == "production" else None,
+    "custom_domain": (
+        "opensailor.org" if os.environ.get("ENVIRONMENT") == "production" else None
+    ),
 }
 
 media_storage_options, staticfiles_storage_options = [
