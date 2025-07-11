@@ -29,7 +29,7 @@ jobs:
       - name: Set up OpenTofu
         uses: opentofu/setup-opentofu@v1
         with:
-          tofu-version: 'latest'
+          tofu_version: 'latest'
 
       - name: Initialize OpenTofu
         run: tofu init -input=false
