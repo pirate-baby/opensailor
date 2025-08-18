@@ -172,3 +172,13 @@ services:
     command: sh -c "npm install vite @milkdown/crepe && npx vite build"
     profiles:
       - build
+
+  css:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./app:/app
+      - ./static:/static
+    command: sh -c "curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64 && chmod +x tailwindcss-linux-arm64 && ./tailwindcss-linux-arm64 -i input.css -o /static/output.css"
+    profiles:
+      - build
