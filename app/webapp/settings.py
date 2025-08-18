@@ -77,6 +77,38 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",  # Required for allauth
 ]
 
+# Cloudflare CDN settings
+USE_CLOUDFLARE = os.environ.get("ENVIRONMENT") == "production"
+if USE_CLOUDFLARE:
+    # Get real IP from Cloudflare
+    CLOUDFLARE_IPS = [
+        "173.245.48.0/20",
+        "103.21.244.0/22",
+        "103.22.200.0/22",
+        "103.31.4.0/22",
+        "141.101.64.0/18",
+        "108.162.192.0/18",
+        "190.93.240.0/20",
+        "188.114.96.0/20",
+        "197.234.240.0/22",
+        "198.41.128.0/17",
+        "162.158.0.0/15",
+        "104.16.0.0/13",
+        "104.24.0.0/14",
+        "172.64.0.0/13",
+        "131.0.72.0/22",
+    ]
+
+    # Trust Cloudflare proxy headers
+    USE_X_FORWARDED_HOST = True
+    USE_X_FORWARDED_PORT = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    # Security headers that work with Cloudflare
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
+
 ROOT_URLCONF = "webapp.urls"
 
 TEMPLATES = [
@@ -234,7 +266,9 @@ s3_storage_options = {
         "CacheControl": "max-age=31536000, public",
         "ACL": "public-read",
     },
-    "custom_domain": None,  # This ensures Django serves the files
+    "custom_domain": (
+        "opensailor.org" if os.environ.get("ENVIRONMENT") == "production" else None
+    ),
 }
 
 media_storage_options, staticfiles_storage_options = [

@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   schedule:
     - cron: '0 6 * * 1' # Every Monday at 6:00 UTC
+  workflow_dispatch: # Allow manual triggering
 
 permissions:
   id-token: write
@@ -12,6 +13,8 @@ permissions:
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
+  TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
 jobs:
   drift-check:
@@ -29,7 +32,7 @@ jobs:
       - name: Set up OpenTofu
         uses: opentofu/setup-opentofu@v1
         with:
-          tofu-version: 'latest'
+          tofu_version: '1.9.1'
 
       - name: Initialize OpenTofu
         run: tofu init -input=false
