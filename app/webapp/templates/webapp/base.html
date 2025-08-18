@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'assets/images/logo.png' %}">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'output.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100" rel="stylesheet" />
 
     {% htmx_script %}
@@ -16,30 +16,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rouge+Script&display=swap" rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#217399',
-                        accent: '#4CA6CF',
-                        secondary: '#A7D3E8',
-                        white: '#FFFFFF',
-                    },
-                    fontFamily: {
-                        script: ['Rouge Script', 'cursive'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .text-balance {
-                text-wrap: balance;
-            }
-        }
-    </style>
     <style>
     [x-cloak] { display: none !important; }
     </style>
