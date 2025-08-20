@@ -21,15 +21,23 @@ resource "cloudflare_record" "www" {
   proxied = true
 }
 
+resource "cloudflare_record" "static" {
+  zone_id = cloudflare_zone.opensailor.id
+  name    = "static"
+  content = "${aws_s3_bucket.static.id}.s3.amazonaws.com"
+  type    = "CNAME"
+  proxied = true
+}
+
 resource "cloudflare_page_rule" "static_cache" {
   zone_id  = cloudflare_zone.opensailor.id
-  target   = "opensailor.org/static/*"
+  target   = "static.opensailor.org/*"
   priority = 1
   status   = "active"
 
   actions {
-    cache_level         = "cache_everything"
-    edge_cache_ttl      = 2678400
-    browser_cache_ttl   = "2678400"
+    cache_level       = "cache_everything"
+    edge_cache_ttl    = 2678400
+    browser_cache_ttl = 2678400
   }
 }

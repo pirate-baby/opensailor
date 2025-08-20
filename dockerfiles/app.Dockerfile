@@ -12,5 +12,5 @@ libpq-dev \
 build-essential
 WORKDIR /src
 RUN uv sync
-# CSS is pre-built and included in static/output.css
+# CSS and JS are built during GitHub Actions deployment and included in static/
 CMD /bin/bash -c "./app_startup/${ENVIRONMENT}.sh"
