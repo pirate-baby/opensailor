@@ -76,6 +76,19 @@ resource "aws_iam_policy" "github_actions_ecs_ecr" {
       {
         Effect = "Allow",
         Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "${aws_s3_bucket.static.arn}",
+          "${aws_s3_bucket.static.arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:DeleteItem",
