@@ -109,6 +109,13 @@ jobs:
           echo "Static files verified:"
           ls -la static/output.css static/libraries/main.js
 
+      - name: Upload static files to S3
+        run: |
+          aws s3 sync static/ s3://static.opensailor.org/static/ \
+            --cache-control "max-age=31536000, public" \
+            --exclude "*.DS_Store" \
+            --delete
+
       - name: Build and push image to Amazon ECR
         id: build-image
         uses: docker/build-push-action@v6
