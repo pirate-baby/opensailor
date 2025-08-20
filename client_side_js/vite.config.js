@@ -5,11 +5,12 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      input: './src/main.js',
+      input: {
+        main: './src/main.js',
+        htmx: './src/htmx.js',
+      },
       output: {
-        format: 'iife',
-        name: 'MilkdownCrepeBundle',
-        entryFileNames: 'main.js',
+        entryFileNames: '[name].js',
         assetFileNames: '[name][extname]',
       },
     },

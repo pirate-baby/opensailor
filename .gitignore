@@ -21,6 +21,9 @@ app/static/
 # tailwind
 node_modules/
 
+# static files
+static/
+
 # OpenTofu/Terraform
 opentofu/.terraform/
 opentofu/.terraform.lock.hcl
@@ -30,3 +33,4 @@ opentofu/*.tfplan
 
 # VSCODE and Mac
 .DS_Store
+

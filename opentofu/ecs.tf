@@ -102,6 +102,7 @@ resource "aws_ecs_task_definition" "app" {
       }
       environment = [
         { name = "DEBUG", value = "False" },
+        { name = "ENVIRONMENT", value = "production" },
         { name = "APP_DB_USER", value = "opensailor" },
         { name = "APP_DB", value = "opensailor" },
         { name = "AWS_S3_STORAGE_BUCKET", value = "opensailor-public-storage" },

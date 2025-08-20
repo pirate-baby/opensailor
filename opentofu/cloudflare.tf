@@ -5,6 +5,13 @@ resource "cloudflare_zone" "opensailor" {
   type       = "full"
 }
 
+resource "cloudflare_zone_settings_override" "opensailor_settings" {
+  zone_id = cloudflare_zone.opensailor.id
+  settings {
+    ssl = "full"  # Use "full" mode for S3 compatibility (not "full_strict")
+  }
+}
+
 resource "cloudflare_record" "root" {
   zone_id = cloudflare_zone.opensailor.id
   name    = "opensailor.org"
@@ -33,11 +40,10 @@ resource "cloudflare_page_rule" "static_cache" {
   zone_id  = cloudflare_zone.opensailor.id
   target   = "static.opensailor.org/*"
   priority = 1
-  status   = "active"
 
   actions {
-    cache_level       = "cache_everything"
-    edge_cache_ttl    = 2678400
-    browser_cache_ttl = 2678400
+    cache_level         = "cache_everything"
+    edge_cache_ttl      = 2678400
+    browser_cache_ttl   = 2678400
   }
 }

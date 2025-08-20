@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@milkdown/crepe": "^7.15.3",
+    "htmx.org": "^2.0.4",
     "vite": "^6.3.5"
   },
   "description": ""
