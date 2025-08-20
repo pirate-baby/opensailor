@@ -81,10 +81,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build frontend assets
+      - name: Build CSS assets
         run: |
-          docker compose --profile build run --rm css
-          docker compose --profile build run --rm frontend
+          cd app
+          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
+          chmod +x tailwindcss-linux-x64
+          ./tailwindcss-linux-x64 -i input.css -o ../static/output.css
+
+      - name: Build frontend assets  
+        run: |
+          cd client_side_js
+          npm install vite @milkdown/crepe
+          npx vite build
+          cp -r dist/* ../static/libraries/
 
       - name: Verify static files exist
         run: |
