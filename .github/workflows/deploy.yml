@@ -81,6 +81,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Build frontend assets
+        run: |
+          docker compose --profile build run --rm css
+          docker compose --profile build run --rm frontend
+
+      - name: Verify static files exist
+        run: |
+          if [ ! -f "static/output.css" ]; then
+            echo "Error: static/output.css not found after build"
+            exit 1
+          fi
+          if [ ! -f "static/libraries/main.js" ]; then
+            echo "Error: static/libraries/main.js not found after build"
+            exit 1
+          fi
+          echo "Static files verified:"
+          ls -la static/output.css static/libraries/main.js
+
       - name: Build and push image to Amazon ECR
         id: build-image
         uses: docker/build-push-action@v6

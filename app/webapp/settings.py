@@ -267,7 +267,7 @@ s3_storage_options = {
         "ACL": "public-read",
     },
     "custom_domain": (
-        "opensailor.org" if os.environ.get("ENVIRONMENT") == "production" else None
+        "static.opensailor.org" if os.environ.get("ENVIRONMENT") == "production" else None
     ),
 }
 
