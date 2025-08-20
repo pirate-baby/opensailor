@@ -24,7 +24,7 @@ resource "cloudflare_record" "www" {
 resource "cloudflare_record" "static" {
   zone_id = cloudflare_zone.opensailor.id
   name    = "static"
-  content = "${aws_s3_bucket.static.id}.s3.amazonaws.com"
+  content = "${aws_s3_bucket.static.id}.s3.${var.aws_region}.amazonaws.com"
   type    = "CNAME"
   proxied = true
 }
