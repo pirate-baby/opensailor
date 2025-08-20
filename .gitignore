@@ -23,6 +23,7 @@ node_modules/
 
 # static files
 static/
+**/tailwindcss-linux-arm64*
 
 # OpenTofu/Terraform
 opentofu/.terraform/
