@@ -236,8 +236,11 @@ USE_TZ = True
 STATIC_ROOT = "/staticfiles"  # Required for collectstatic, even with S3 storage
 STATICFILES_DIRS = [
     "/src/static",
-    "/static/libraries",
 ]
+
+# In development, include frontend libraries if they exist
+if os.environ.get("ENVIRONMENT") != "production" and os.path.exists("/static/libraries"):
+    STATICFILES_DIRS.append("/static/libraries")
 
 
 # Static files configuration

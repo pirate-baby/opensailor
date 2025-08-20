@@ -90,6 +90,7 @@ jobs:
 
       - name: Build frontend assets  
         run: |
+          mkdir -p static/libraries
           cd client_side_js
           npm install vite @milkdown/crepe
           npx vite build
