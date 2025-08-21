@@ -44,7 +44,7 @@ jobs:
           set -e
           # Try to unlock any stale locks first
           tofu force-unlock -force 12c78af5-721a-9ebb-d98a-bc131ac72359 || true
-          tofu plan -detailed-exitcode -no-color
+          tofu plan -detailed-exitcode -no-color -lock=false -input=false
         working-directory: opentofu
         continue-on-error: true
 
