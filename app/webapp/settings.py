@@ -267,7 +267,6 @@ s3_storage_options = {
     "verify": True,
     "object_parameters": {
         "CacheControl": "max-age=31536000, public",
-        "ACL": "public-read",
     },
     "custom_domain": (
         "static.opensailor.org" if os.environ.get("ENVIRONMENT") == "production" else None

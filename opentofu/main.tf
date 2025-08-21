@@ -3,7 +3,8 @@ provider "aws" {
 }
 
 provider "cloudflare" {
-  api_token = var.cloudflare_api_token
+  api_key = var.cloudflare_api_key
+  email   = var.cloudflare_email
 }
 
 resource "aws_secretsmanager_secret" "env_vars" {
@@ -74,8 +75,7 @@ resource "aws_iam_policy" "app_s3_rds" {
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:PutObjectAcl"
+          "s3:ListBucket"
         ],
         Resource = [
           "${aws_s3_bucket.static.arn}",
