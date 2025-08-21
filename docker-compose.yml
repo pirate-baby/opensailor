@@ -158,7 +158,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=us-east-2
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
-      - TF_VAR_cloudflare_api_token=${TF_VAR_cloudflare_api_token}
+      - TF_VAR_cloudflare_api_key=${TF_VAR_cloudflare_api_key}
       - TF_VAR_cloudflare_account_id=${TF_VAR_cloudflare_account_id}
     entrypoint: ["/bin/sh"]
     tty: true
