@@ -18,8 +18,11 @@ app/static/
 .data/*
 !.data/.gitkeep
 
-# tailwind
+# tailwind and frontend builds
 node_modules/
+static/libraries/main.js
+static/libraries/main.css
+static/output.css
 
 # OpenTofu/Terraform
 opentofu/.terraform/
