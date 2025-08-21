@@ -240,7 +240,9 @@ STATICFILES_DIRS = [
 ]
 
 # In development, include frontend libraries if they exist
-if os.environ.get("ENVIRONMENT") != "production" and os.path.exists("/static/libraries"):
+if os.environ.get("ENVIRONMENT") != "production" and os.path.exists(
+    "/static/libraries"
+):
     STATICFILES_DIRS.append("/static/libraries")
 
 
@@ -270,7 +272,9 @@ s3_storage_options = {
         "CacheControl": "max-age=31536000, public",
     },
     "custom_domain": (
-        "static.opensailor.org" if os.environ.get("ENVIRONMENT") == "production" else None
+        "static.opensailor.org"
+        if os.environ.get("ENVIRONMENT") == "production"
+        else None
     ),
 }
 
