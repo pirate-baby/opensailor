@@ -42,7 +42,7 @@ jobs:
         id: plan
         run: |
           set -e
-          tofu plan -detailed-exitcode -no-color
+          tofu plan -detailed-exitcode -no-color -lock=false -input=false
         working-directory: opentofu
         continue-on-error: true
 
