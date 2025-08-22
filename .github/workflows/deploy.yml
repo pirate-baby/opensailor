@@ -127,8 +127,8 @@ jobs:
               pip install --upgrade pip > /dev/null 2>&1 && 
               pip install uv > /dev/null 2>&1 && 
               cd app && 
-              uv sync && 
-              uv run python manage.py collectstatic --noinput --settings=collectstatic_settings
+              uv sync --project pyproject_collectstatic.toml && 
+              uv run --project pyproject_collectstatic.toml python manage.py collectstatic --noinput --settings=collectstatic_settings
             "
 
       - name: Build and push image to Amazon ECR
