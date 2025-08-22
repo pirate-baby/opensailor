@@ -109,34 +109,25 @@ jobs:
           echo "Static files verified:"
           ls -la static/output.css static/libraries/main.js
 
-      - name: Setup Python for Django collectstatic
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install uv package manager
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: Install Python dependencies
+      - name: Build temporary Docker image for collectstatic
         run: |
-          source $HOME/.cargo/env
-          cd app
-          uv sync
+          docker build -f dockerfiles/app.Dockerfile -t temp-collectstatic-image .
 
       - name: Collect and upload all static files to S3
         run: |
-          source $HOME/.cargo/env
-          cd app
-          uv run python manage.py collectstatic --noinput
-        env:
-          # Django settings
-          ENVIRONMENT: production
-          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-          # S3 configuration
-          AWS_S3_STORAGE_BUCKET: static-opensailor-org
-          AWS_DEFAULT_REGION_NAME: ${{ vars.AWS_REGION }}
-          AWS_S3_ENDPOINT_URL: https://s3.${{ vars.AWS_REGION }}.amazonaws.com
-          AWS_S3_CLIENT_ENDPOINT_URL: https://static.opensailor.org
+          docker run --rm \
+            -v $(pwd)/static:/src/static \
+            -e ENVIRONMENT=production \
+            -e DJANGO_SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}" \
+            -e AWS_ACCESS_KEY_ID \
+            -e AWS_SECRET_ACCESS_KEY \
+            -e AWS_SESSION_TOKEN \
+            -e AWS_S3_STORAGE_BUCKET=static-opensailor-org \
+            -e AWS_DEFAULT_REGION_NAME="${{ vars.AWS_REGION }}" \
+            -e AWS_S3_ENDPOINT_URL="https://s3.${{ vars.AWS_REGION }}.amazonaws.com" \
+            -e AWS_S3_CLIENT_ENDPOINT_URL="https://static.opensailor.org" \
+            temp-collectstatic-image \
+            uv run python app/manage.py collectstatic --noinput
 
       - name: Build and push image to Amazon ECR
         id: build-image
