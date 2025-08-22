@@ -109,12 +109,30 @@ jobs:
           echo "Static files verified:"
           ls -la static/output.css static/libraries/main.js
 
-      - name: Upload static files to S3
+      - name: Setup Python for Django collectstatic
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
         run: |
-          aws s3 sync static/ s3://static-opensailor-org/static/ \
-            --cache-control "max-age=31536000, public" \
-            --exclude "*.DS_Store" \
-            --delete
+          pip install uv
+          cd app
+          uv sync
+
+      - name: Collect and upload all static files to S3
+        run: |
+          cd app
+          uv run python manage.py collectstatic --noinput
+        env:
+          # Django settings
+          ENVIRONMENT: production
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          # S3 configuration
+          AWS_S3_STORAGE_BUCKET: static-opensailor-org
+          AWS_DEFAULT_REGION_NAME: ${{ vars.AWS_REGION }}
+          AWS_S3_ENDPOINT_URL: https://s3.${{ vars.AWS_REGION }}.amazonaws.com
+          AWS_S3_CLIENT_ENDPOINT_URL: https://static.opensailor.org
 
       - name: Build and push image to Amazon ECR
         id: build-image
