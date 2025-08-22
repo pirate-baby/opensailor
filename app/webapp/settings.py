@@ -30,12 +30,12 @@ ALLOWED_HOSTS = [
     "opensailor.org",
     "127.0.0.1",
     "www.opensailor.org",
-    "static.opensailor.org",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://app.localhost",
     "https://opensailor.org",
     "https://www.opensailor.org",
+    "https://static.opensailor.org",
     "http://127.0.0.1",
     "http://opensailor.org",
     "http://www.opensailor.org",
