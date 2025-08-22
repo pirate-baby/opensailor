@@ -109,25 +109,17 @@ jobs:
           echo "Static files verified:"
           ls -la static/output.css static/libraries/main.js
 
-      - name: Build temporary Docker image for collectstatic
-        run: |
-          docker build -f dockerfiles/app.Dockerfile -t temp-collectstatic-image .
-
       - name: Collect and upload all static files to S3
         run: |
-          docker run --rm \
-            -v $(pwd)/static:/src/static \
-            -e ENVIRONMENT=production \
-            -e DJANGO_SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}" \
-            -e AWS_ACCESS_KEY_ID \
-            -e AWS_SECRET_ACCESS_KEY \
-            -e AWS_SESSION_TOKEN \
-            -e AWS_S3_STORAGE_BUCKET=static-opensailor-org \
-            -e AWS_DEFAULT_REGION_NAME="${{ vars.AWS_REGION }}" \
-            -e AWS_S3_ENDPOINT_URL="https://s3.${{ vars.AWS_REGION }}.amazonaws.com" \
-            -e AWS_S3_CLIENT_ENDPOINT_URL="https://static.opensailor.org" \
-            temp-collectstatic-image \
-            uv run python app/manage.py collectstatic --noinput
+          # Override environment variables for production S3 upload
+          export ENVIRONMENT=production
+          export DJANGO_SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}"
+          export AWS_S3_STORAGE_BUCKET=static-opensailor-org
+          export AWS_DEFAULT_REGION_NAME="${{ vars.AWS_REGION }}"
+          export AWS_S3_ENDPOINT_URL="https://s3.${{ vars.AWS_REGION }}.amazonaws.com"
+          export AWS_S3_CLIENT_ENDPOINT_URL="https://static.opensailor.org"
+          # Run collectstatic using docker-compose
+          docker compose run --rm app uv run python app/manage.py collectstatic --noinput
 
       - name: Build and push image to Amazon ECR
         id: build-image
