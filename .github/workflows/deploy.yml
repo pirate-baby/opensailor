@@ -114,14 +114,18 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install uv package manager
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: Install Python dependencies
         run: |
-          pip install uv
+          source $HOME/.cargo/env
           cd app
           uv sync
 
       - name: Collect and upload all static files to S3
         run: |
+          source $HOME/.cargo/env
           cd app
           uv run python manage.py collectstatic --noinput
         env:
