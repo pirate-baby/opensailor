@@ -124,7 +124,8 @@ jobs:
             -e AWS_S3_CLIENT_ENDPOINT_URL="https://static.opensailor.org" \
             python:3.12-slim \
             bash -c "
-              pip --root-user-action=ignore install uv && 
+              pip install --upgrade pip > /dev/null 2>&1 && 
+              pip install uv > /dev/null 2>&1 && 
               cd app && 
               uv sync && 
               uv run python manage.py collectstatic --noinput --settings=collectstatic_settings
