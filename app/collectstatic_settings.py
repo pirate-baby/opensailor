@@ -22,7 +22,7 @@ INSTALLED_APPS = [
 # Static files configuration
 STATIC_ROOT = "/staticfiles"
 STATICFILES_DIRS = [
-    "/src/static",
+    "/workspace/static",  # This is where our built CSS/JS assets are mounted
 ]
 
 # S3 storage configuration for production
