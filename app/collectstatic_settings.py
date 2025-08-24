@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Minimal required settings
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "collectstatic-only-key")
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 # Minimal apps needed for collectstatic
@@ -28,12 +28,12 @@ STATICFILES_DIRS = [
 # S3 storage configuration for production
 AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
 AWS_S3_CLIENT_ENDPOINT_URL = os.environ.get("AWS_S3_CLIENT_ENDPOINT_URL")
-STATIC_URL = "https://static.opensailor.org/static/"
+#STATIC_URL = "https://static.opensailor.org/static/"
 
 s3_storage_options = {
     "bucket_name": os.environ.get("AWS_S3_STORAGE_BUCKET"),
     "region_name": os.environ.get("AWS_DEFAULT_REGION_NAME"),
-    "endpoint_url": STATIC_URL,
+#    "endpoint_url": STATIC_URL,
     "location": "static",
     "querystring_auth": False,
     "url_protocol": "https:",
@@ -43,7 +43,7 @@ s3_storage_options = {
     "object_parameters": {
         "CacheControl": "max-age=31536000, public",
     },
-    "custom_domain": "static.opensailor.org",
+#    "custom_domain": "static.opensailor.org",
 }
 
 STORAGES = {
