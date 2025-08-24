@@ -146,6 +146,21 @@ services:
       timeout: 20s
       retries: 3
 
+  minio_setup:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID}
+      - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
+      mc mb myminio/static-opensailor-org --ignore-existing &&
+      mc anonymous set download myminio/static-opensailor-org
+      "
+
   opentofu:
     image: ghcr.io/opentofu/opentofu:1.9.1
     profiles:
@@ -179,6 +194,6 @@ services:
     volumes:
       - ./app:/app
       - ./static:/static
-    command: sh -c "curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64 && chmod +x tailwindcss-linux-arm64 && ./tailwindcss-linux-arm64 -i input.css -o /static/output.css"
+    command: sh -c "npm install && npx tailwindcss -i input.css -o /static/output.css"
     profiles:
       - build

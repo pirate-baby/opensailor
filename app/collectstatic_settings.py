@@ -28,13 +28,12 @@ STATICFILES_DIRS = [
 # S3 storage configuration for production
 AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
 AWS_S3_CLIENT_ENDPOINT_URL = os.environ.get("AWS_S3_CLIENT_ENDPOINT_URL")
-base_aws_url = f'{AWS_S3_CLIENT_ENDPOINT_URL}/{os.environ.get("AWS_S3_STORAGE_BUCKET")}/'
-STATIC_URL = base_aws_url + "static/"
+STATIC_URL = "https://static.opensailor.org/static/"
 
 s3_storage_options = {
     "bucket_name": os.environ.get("AWS_S3_STORAGE_BUCKET"),
     "region_name": os.environ.get("AWS_DEFAULT_REGION_NAME"),
-    "endpoint_url": AWS_S3_ENDPOINT_URL,
+    "endpoint_url": STATIC_URL,
     "location": "static",
     "querystring_auth": False,
     "url_protocol": "https:",

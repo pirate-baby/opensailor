@@ -18,4 +18,8 @@ module.exports = {
     }
   },
   plugins: [],
+  corePlugins: {
+    // Ensure proper CSS generation without escaping issues
+    preflight: true,
+  },
 }

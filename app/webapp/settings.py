@@ -13,16 +13,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+IS_PRODUCTION = os.environ.get("ENVIRONMENT") == "production"
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 APP_NAME = "OpenSailor.org"
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ["ENVIRONMENT"] == "development"
+DEBUG = not IS_PRODUCTION
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -36,6 +32,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://opensailor.org",
     "https://www.opensailor.org",
     "https://static.opensailor.org",
+    "http://static.opensailor.org",
     "http://127.0.0.1",
     "http://opensailor.org",
     "http://www.opensailor.org",
@@ -79,8 +76,7 @@ MIDDLEWARE = [
 ]
 
 # Cloudflare CDN settings
-USE_CLOUDFLARE = os.environ.get("ENVIRONMENT") == "production"
-if USE_CLOUDFLARE:
+if IS_PRODUCTION:
     # Get real IP from Cloudflare
     CLOUDFLARE_IPS = [
         "173.245.48.0/20",
@@ -247,42 +243,43 @@ if os.environ.get("ENVIRONMENT") != "production" and os.path.exists(
 
 
 # Static files configuration
+protocol = "https" if IS_PRODUCTION else "http"
+minio_prefix = "/" if IS_PRODUCTION else "/static-opensailor-org/"
+STATIC_URL = f"{protocol}://static.opensailor.org{minio_prefix}static/"
+MEDIA_URL = f"{protocol}://static.opensailor.org{minio_prefix}media/"
 AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
 AWS_S3_CLIENT_ENDPOINT_URL = os.environ.get("AWS_S3_CLIENT_ENDPOINT_URL")
-base_aws_url = (
-    f'{AWS_S3_CLIENT_ENDPOINT_URL}/{os.environ.get("AWS_S3_STORAGE_BUCKET")}/'
-)
-STATIC_URL = base_aws_url + "static/"
-MEDIA_URL = base_aws_url + "media/"
-
 
 s3_storage_options = {
     "bucket_name": os.environ.get("AWS_S3_STORAGE_BUCKET"),
     "region_name": os.environ.get("AWS_DEFAULT_REGION_NAME"),
-    "endpoint_url": AWS_S3_ENDPOINT_URL,
     "location": "static",
     "querystring_auth": False,
-    "url_protocol": (
-        "https:" if os.environ.get("ENVIRONMENT") == "production" else "http:"
-    ),
     "file_overwrite": True,
     "gzip": True,
     "verify": True,
     "object_parameters": {
         "CacheControl": "max-age=31536000, public",
     },
-    "custom_domain": (
-        "static.opensailor.org"
-        if os.environ.get("ENVIRONMENT") == "production"
-        else None
-    ),
 }
+
+# Production vs development storage config
+if IS_PRODUCTION:
+    s3_storage_options["custom_domain"] = "static.opensailor.org"
+s3_storage_options["endpoint_url"] = os.environ.get("AWS_S3_ENDPOINT_URL")
 
 media_storage_options, staticfiles_storage_options = [
     s3_storage_options.copy() for _ in range(2)
 ]
 media_storage_options["location"] = "media"
 staticfiles_storage_options["location"] = "static"
+
+# Override URL generation in development
+if not IS_PRODUCTION:
+    staticfiles_storage_options["url_protocol"] = "http:"
+    media_storage_options["url_protocol"] = "http:"
+    staticfiles_storage_options["custom_domain"] = "static.opensailor.org/static-opensailor-org"
+    media_storage_options["custom_domain"] = "static.opensailor.org/static-opensailor-org"
 
 STORAGES = {
     "default": {

@@ -7,6 +7,7 @@ wheels/
 *.egg-info
 staticfiles/
 app/static/
+.pytest_cache/
 
 # Virtual environments
 .venv
@@ -17,12 +18,14 @@ app/static/
 # data
 .data/*
 !.data/.gitkeep
+.playwright-mcp/
 
 # tailwind and frontend builds
 node_modules/
 static/libraries/main.js
 static/libraries/main.css
 static/output.css
+tailwindcss-linux-arm64
 
 # OpenTofu/Terraform
 opentofu/.terraform/
