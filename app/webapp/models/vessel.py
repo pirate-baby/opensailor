@@ -128,8 +128,9 @@ class Vessel(models.Model):
     )
     hull_identification_number = models.CharField(
         max_length=14,
-        unique=True,
         help_text=_("Unique Hull Identification Number (HIN) for this vessel"),
+        blank=True,
+        null=True,
     )
     USCG_number = models.CharField(
         max_length=14,
@@ -241,7 +242,7 @@ class Vessel(models.Model):
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         super().save(*args, **kwargs)
-        
+
         # Assign permissions to creator for new vessels
         if is_new and self.created_by:
             assign_perm("can_manage_vessel", self.created_by, self)
