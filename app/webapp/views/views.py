@@ -332,19 +332,16 @@ def vessels_index(request):
     return render(request, "webapp/vessels/index.html", context)
 
 
-def vessel_detail(request, pk):
+def vessel_detail(request, pk):  # pylint: disable=too-many-locals
     vessel = get_object_or_404(Vessel.objects.select_related("sailboat"), pk=pk)
     
     # Check if user can view this vessel
-    user_can_view = True
     is_obfuscated = False
     
     if not vessel.is_public:
         if not request.user.is_authenticated:
-            user_can_view = False
             is_obfuscated = True
         elif not request.user.can_view_vessel(vessel):
-            user_can_view = False
             is_obfuscated = True
     
     # If obfuscated, show minimal vessel info only
@@ -357,8 +354,6 @@ def vessel_detail(request, pk):
         return render(request, "webapp/vessels/detail.html", context)
     
     # Full vessel details for authorized users
-    user_note = None
-    accessible_notes = []
     open_note_id = request.GET.get("open_note_id")
     
     if request.user.is_authenticated:
@@ -370,6 +365,9 @@ def vessel_detail(request, pk):
             .prefetch_related("shared_with", "messages__user")
         )
         user_note = accessible_notes.filter(user=request.user).first()
+    else:
+        accessible_notes = []
+        user_note = None
     
     # Prefetch sailboat attributes with their attributes and sections
     sailboat_attributes = vessel.vesselattribute_set.select_related(
@@ -377,24 +375,25 @@ def vessel_detail(request, pk):
     ).all()
 
     # Group attributes by section in the view
-    grouped = {}
+    attributes_grouped = {}
     for attr in sailboat_attributes:
         section = attr.attribute.section
         section_id = section.id
-        if section_id not in grouped:
-            grouped[section_id] = {"section": section, "attributes": []}
-        grouped[section_id]["attributes"].append(
+        if section_id not in attributes_grouped:
+            attributes_grouped[section_id] = {"section": section, "attributes": []}
+        attributes_grouped[section_id]["attributes"].append(
             {
                 "info": attr.attribute.description,
                 "attribute": attr.attribute,
                 "value": attr.value,
             }
         )
-    sailboat_attributes_grouped = list(grouped.values())
+    sailboat_attributes_grouped = list(attributes_grouped.values())
 
     # Check user permissions for UI elements
-    user_can_manage = request.user.is_authenticated and request.user.can_manage_vessel(vessel)
-    user_can_crew = request.user.is_authenticated and request.user.can_crew_vessel(vessel)
+    is_authenticated = request.user.is_authenticated
+    user_can_manage = is_authenticated and request.user.can_manage_vessel(vessel)
+    user_can_crew = is_authenticated and request.user.can_crew_vessel(vessel)
 
     context = {
         "vessel": vessel,

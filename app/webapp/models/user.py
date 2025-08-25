@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from django.contrib.auth.models import AbstractUser, Permission
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -5,6 +6,9 @@ from django.contrib.contenttypes.models import ContentType
 from guardian.shortcuts import get_objects_for_user
 
 from webapp.models.sailboat import Sailboat
+
+if TYPE_CHECKING:
+    from webapp.models.vessel import Vessel  # pylint: disable=unused-import
 
 
 class User(AbstractUser):
@@ -72,21 +76,21 @@ class User(AbstractUser):
 
     def get_manageable_vessels(self):
         """Get all vessels that the user can manage (skipper role)"""
-        from webapp.models.vessel import Vessel  # Import here to avoid circular imports
+        from webapp.models.vessel import Vessel  # pylint: disable=import-outside-toplevel,redefined-outer-name
         if self.is_admin:
             return Vessel.objects.all()
         return get_objects_for_user(self, "webapp.can_manage_vessel", Vessel)
 
     def get_crewable_vessels(self):
         """Get all vessels that the user can crew (crew or skipper role)"""
-        from webapp.models.vessel import Vessel
+        from webapp.models.vessel import Vessel  # pylint: disable=import-outside-toplevel,redefined-outer-name
         if self.is_admin:
             return Vessel.objects.all()
         return get_objects_for_user(self, ["webapp.can_crew_vessel", "webapp.can_manage_vessel"], Vessel)
 
     def get_viewable_vessels(self):
         """Get all vessels that the user can view (any role + public vessels)"""
-        from webapp.models.vessel import Vessel
+        from webapp.models.vessel import Vessel  # pylint: disable=import-outside-toplevel,redefined-outer-name
         if self.is_admin or self.is_moderator:
             return Vessel.objects.all()
         
@@ -125,7 +129,7 @@ class User(AbstractUser):
 
     def assign_role_permissions(self):
         """Assign appropriate permissions based on user role"""
-        from webapp.models.vessel import Vessel
+        from webapp.models.vessel import Vessel  # pylint: disable=import-outside-toplevel,redefined-outer-name
 
         # Get content types
         sailboat_ct = ContentType.objects.get_for_model(Sailboat)

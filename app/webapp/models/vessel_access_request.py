@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from guardian.shortcuts import assign_perm
 
 
 User = get_user_model()
@@ -75,9 +77,6 @@ class VesselAccessRequest(models.Model):
 
     def approve(self, reviewer):
         """Approve the request and assign permissions"""
-        from guardian.shortcuts import assign_perm
-        from django.utils import timezone
-        
         self.status = self.Status.APPROVED
         self.reviewed_by = reviewer
         self.reviewed_at = timezone.now()
@@ -96,8 +95,6 @@ class VesselAccessRequest(models.Model):
 
     def deny(self, reviewer):
         """Deny the request"""
-        from django.utils import timezone
-        
         self.status = self.Status.DENIED
         self.reviewed_by = reviewer
         self.reviewed_at = timezone.now()

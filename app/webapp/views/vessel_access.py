@@ -1,13 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from django import forms
 from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
-from guardian.shortcuts import assign_perm, remove_perm, get_objects_for_user, get_users_with_perms
+from guardian.shortcuts import assign_perm, remove_perm, get_users_with_perms
 
 from webapp.models.vessel import Vessel
 from webapp.models.vessel_access_request import VesselAccessRequest
@@ -51,7 +50,7 @@ def vessel_access_request(request, pk):
     requested_role = request.POST.get('requested_role', 'viewer')
     message = request.POST.get('message', '')
     
-    access_request = VesselAccessRequest.objects.create(
+    VesselAccessRequest.objects.create(
         vessel=vessel,
         requester=request.user,
         requested_role=requested_role,
@@ -62,9 +61,12 @@ def vessel_access_request(request, pk):
     try:
         send_mail(
             subject=f'Access Request for {vessel.name}',
-            message=f'{request.user.get_full_name() or request.user.username} has requested {requested_role} access to your vessel "{vessel.name}".\n\n'
-                   f'Message: {message}\n\n'
-                   f'Review this request at: {request.build_absolute_uri(reverse("vessel_manage_roles", args=[vessel.pk]))}',
+            message=(
+                f'{request.user.get_full_name() or request.user.username} has requested {requested_role} '
+                f'access to your vessel "{vessel.name}".\n\n'
+                f'Message: {message}\n\n'
+                f'Review this request at: {request.build_absolute_uri(reverse("vessel_manage_roles", args=[vessel.pk]))}'
+            ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[vessel.created_by.email],
             fail_silently=True,
@@ -72,7 +74,10 @@ def vessel_access_request(request, pk):
     except Exception:
         pass  # Email sending is optional
     
-    messages.success(request, f"Access request sent! The vessel owner will be notified of your {requested_role} access request.")
+    messages.success(
+        request, 
+        f"Access request sent! The vessel owner will be notified of your {requested_role} access request."
+    )
     return redirect('vessel_detail', pk=vessel.pk)
 
 
@@ -129,7 +134,11 @@ def vessel_access_approve(request, pk, request_id):
         return redirect('vessel_manage_roles', pk=vessel.pk)
     
     access_request.approve(request.user)
-    messages.success(request, f"Approved {access_request.requested_role} access for {access_request.requester.get_full_name() or access_request.requester.username}.")
+    messages.success(
+        request, 
+        f"Approved {access_request.requested_role} access for "
+        f"{access_request.requester.get_full_name() or access_request.requester.username}."
+    )
     
     return redirect('vessel_manage_roles', pk=vessel.pk)
 
@@ -146,7 +155,11 @@ def vessel_access_deny(request, pk, request_id):
         return redirect('vessel_manage_roles', pk=vessel.pk)
     
     access_request.deny(request.user)
-    messages.success(request, f"Denied {access_request.requested_role} access for {access_request.requester.get_full_name() or access_request.requester.username}.")
+    messages.success(
+        request, 
+        f"Denied {access_request.requested_role} access for "
+        f"{access_request.requester.get_full_name() or access_request.requester.username}."
+    )
     
     return redirect('vessel_manage_roles', pk=vessel.pk)
 
@@ -193,7 +206,10 @@ def vessel_add_user(request, pk):
     
     # Don't add duplicate permissions for existing users
     if user.can_view_vessel(vessel):
-        messages.info(request, f"{user.get_full_name() or user.username} already has access to this vessel.")
+        messages.info(
+            request, 
+            f"{user.get_full_name() or user.username} already has access to this vessel."
+        )
         return redirect('vessel_manage_roles', pk=vessel.pk)
     
     # Assign permissions based on role
@@ -253,7 +269,10 @@ def vessel_change_user_role(request, pk, user_id):
         messages.error(request, "Invalid role specified.")
         return redirect('vessel_manage_roles', pk=vessel.pk)
     
-    messages.success(request, f"Changed {user.get_full_name() or user.username}'s role to {role_name}.")
+    messages.success(
+        request, 
+        f"Changed {user.get_full_name() or user.username}'s role to {role_name}."
+    )
     return redirect('vessel_manage_roles', pk=vessel.pk)
 
 
@@ -273,13 +292,22 @@ def vessel_revoke_permission(request, pk, user_id):
     
     if permission == 'can_manage_vessel':
         remove_perm('webapp.can_manage_vessel', user, vessel)
-        messages.success(request, f"Revoked skipper permissions from {user.get_full_name() or user.username}.")
+        messages.success(
+            request, 
+            f"Revoked skipper permissions from {user.get_full_name() or user.username}."
+        )
     elif permission == 'can_crew_vessel':
         remove_perm('webapp.can_crew_vessel', user, vessel)
-        messages.success(request, f"Revoked crew permissions from {user.get_full_name() or user.username}.")
+        messages.success(
+            request, 
+            f"Revoked crew permissions from {user.get_full_name() or user.username}."
+        )
     elif permission == 'can_view_vessel':
         remove_perm('webapp.can_view_vessel', user, vessel)
-        messages.success(request, f"Revoked view permissions from {user.get_full_name() or user.username}.")
+        messages.success(
+            request, 
+            f"Revoked view permissions from {user.get_full_name() or user.username}."
+        )
     else:
         messages.error(request, "Invalid permission specified.")
     
@@ -301,7 +329,9 @@ def vessel_confirm_delete(request, pk):
         # Additional safety check - require vessel name confirmation
         confirm_name = request.POST.get('confirm_name', '').strip()
         if confirm_name != vessel.name:
-            messages.error(request, "Vessel name confirmation does not match. Deletion cancelled.")
+            messages.error(
+                request, "Vessel name confirmation does not match. Deletion cancelled."
+            )
             return redirect('vessel_confirm_delete', pk=vessel.pk)
         
         vessel_name = vessel.name
