@@ -285,7 +285,9 @@ staticfiles_storage_options["location"] = "static"
 if not IS_PRODUCTION:
     staticfiles_storage_options["url_protocol"] = "http:"
     media_storage_options["url_protocol"] = "http:"
-    staticfiles_storage_options["custom_domain"] = "minio.localhost/static-opensailor-org"
+    staticfiles_storage_options["custom_domain"] = (
+        "minio.localhost/static-opensailor-org"
+    )
     media_storage_options["custom_domain"] = "minio.localhost/static-opensailor-org"
 
 STORAGES = {
