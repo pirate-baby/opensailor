@@ -334,16 +334,16 @@ def vessels_index(request):
 
 def vessel_detail(request, pk):  # pylint: disable=too-many-locals
     vessel = get_object_or_404(Vessel.objects.select_related("sailboat"), pk=pk)
-    
+
     # Check if user can view this vessel
     is_obfuscated = False
-    
+
     if not vessel.is_public:
         if not request.user.is_authenticated:
             is_obfuscated = True
         elif not request.user.can_view_vessel(vessel):
             is_obfuscated = True
-    
+
     # If obfuscated, show minimal vessel info only
     if is_obfuscated:
         context = {
@@ -352,10 +352,10 @@ def vessel_detail(request, pk):  # pylint: disable=too-many-locals
             "user_can_view": False,
         }
         return render(request, "webapp/vessels/detail.html", context)
-    
+
     # Full vessel details for authorized users
     open_note_id = request.GET.get("open_note_id")
-    
+
     if request.user.is_authenticated:
         # Notes where the user is the owner or is in shared_with
         accessible_notes = (
@@ -368,7 +368,7 @@ def vessel_detail(request, pk):  # pylint: disable=too-many-locals
     else:
         accessible_notes = []
         user_note = None
-    
+
     # Prefetch sailboat attributes with their attributes and sections
     sailboat_attributes = vessel.vesselattribute_set.select_related(
         "attribute", "attribute__section"

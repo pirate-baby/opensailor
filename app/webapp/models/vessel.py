@@ -157,14 +157,13 @@ class Vessel(models.Model):
         max_length=255, null=True, blank=True, help_text=_("Home port of this vessel")
     )
     is_public = models.BooleanField(
-        default=True,
-        help_text=_("Whether this vessel is publicly viewable or private")
+        default=True, help_text=_("Whether this vessel is publicly viewable or private")
     )
     created_by = models.ForeignKey(
         "User",
         on_delete=models.CASCADE,
         related_name="created_vessels",
-        help_text=_("User who created this vessel")
+        help_text=_("User who created this vessel"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

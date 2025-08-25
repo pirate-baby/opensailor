@@ -83,16 +83,52 @@ urlpatterns = [
         "vessels/note/<int:note_id>/share/", vessel_note_share, name="vessel_note_share"
     ),
     # Vessel access management
-    path("vessels/<int:pk>/access/request/", vessel_access_request, name="vessel_access_request"),
-    path("vessels/<int:pk>/manage-roles/", vessel_manage_roles, name="vessel_manage_roles"),
-    path("vessels/<int:pk>/access/<int:request_id>/approve/", vessel_access_approve, name="vessel_access_approve"),
-    path("vessels/<int:pk>/access/<int:request_id>/deny/", vessel_access_deny, name="vessel_access_deny"),
-    path("vessels/<int:pk>/remove-user/<int:user_id>/", vessel_remove_user, name="vessel_remove_user"),
+    path(
+        "vessels/<int:pk>/access/request/",
+        vessel_access_request,
+        name="vessel_access_request",
+    ),
+    path(
+        "vessels/<int:pk>/manage-roles/",
+        vessel_manage_roles,
+        name="vessel_manage_roles",
+    ),
+    path(
+        "vessels/<int:pk>/access/<int:request_id>/approve/",
+        vessel_access_approve,
+        name="vessel_access_approve",
+    ),
+    path(
+        "vessels/<int:pk>/access/<int:request_id>/deny/",
+        vessel_access_deny,
+        name="vessel_access_deny",
+    ),
+    path(
+        "vessels/<int:pk>/remove-user/<int:user_id>/",
+        vessel_remove_user,
+        name="vessel_remove_user",
+    ),
     path("vessels/<int:pk>/add-user/", vessel_add_user, name="vessel_add_user"),
-    path("vessels/<int:pk>/change-role/<int:user_id>/", vessel_change_user_role, name="vessel_change_user_role"),
-    path("vessels/<int:pk>/revoke-permission/<int:user_id>/", vessel_revoke_permission, name="vessel_revoke_permission"),
-    path("vessels/<int:pk>/confirm-delete/", vessel_confirm_delete, name="vessel_confirm_delete"),
-    path("vessels/<int:pk>/toggle-privacy/", vessel_toggle_privacy, name="vessel_toggle_privacy"),
+    path(
+        "vessels/<int:pk>/change-role/<int:user_id>/",
+        vessel_change_user_role,
+        name="vessel_change_user_role",
+    ),
+    path(
+        "vessels/<int:pk>/revoke-permission/<int:user_id>/",
+        vessel_revoke_permission,
+        name="vessel_revoke_permission",
+    ),
+    path(
+        "vessels/<int:pk>/confirm-delete/",
+        vessel_confirm_delete,
+        name="vessel_confirm_delete",
+    ),
+    path(
+        "vessels/<int:pk>/toggle-privacy/",
+        vessel_toggle_privacy,
+        name="vessel_toggle_privacy",
+    ),
     path("admin/", admin.site.urls),
     path("api/", api.urls),
     path("accounts/", include("allauth.urls")),

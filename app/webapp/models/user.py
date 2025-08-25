@@ -31,7 +31,7 @@ class User(AbstractUser):
             ("can_manage_sailboats", "Can manage sailboats"),
             ("can_view_sailboats", "Can view sailboats"),
             ("can_manage_vessels", "Can manage vessels"),
-            ("can_crew_vessels", "Can crew vessels"), 
+            ("can_crew_vessels", "Can crew vessels"),
             ("can_view_vessels", "Can view vessels"),
         ]
 
@@ -76,32 +76,49 @@ class User(AbstractUser):
 
     def get_manageable_vessels(self):
         """Get all vessels that the user can manage (skipper role)"""
-        from webapp.models.vessel import Vessel  # pylint: disable=import-outside-toplevel,redefined-outer-name
+        from webapp.models.vessel import (
+            Vessel,
+        )  # pylint: disable=import-outside-toplevel,redefined-outer-name
+
         if self.is_admin:
             return Vessel.objects.all()
         return get_objects_for_user(self, "webapp.can_manage_vessel", Vessel)
 
     def get_crewable_vessels(self):
         """Get all vessels that the user can crew (crew or skipper role)"""
-        from webapp.models.vessel import Vessel  # pylint: disable=import-outside-toplevel,redefined-outer-name
+        from webapp.models.vessel import (
+            Vessel,
+        )  # pylint: disable=import-outside-toplevel,redefined-outer-name
+
         if self.is_admin:
             return Vessel.objects.all()
-        return get_objects_for_user(self, ["webapp.can_crew_vessel", "webapp.can_manage_vessel"], Vessel)
+        return get_objects_for_user(
+            self, ["webapp.can_crew_vessel", "webapp.can_manage_vessel"], Vessel
+        )
 
     def get_viewable_vessels(self):
         """Get all vessels that the user can view (any role + public vessels)"""
-        from webapp.models.vessel import Vessel  # pylint: disable=import-outside-toplevel,redefined-outer-name
+        from webapp.models.vessel import (
+            Vessel,
+        )  # pylint: disable=import-outside-toplevel,redefined-outer-name
+
         if self.is_admin or self.is_moderator:
             return Vessel.objects.all()
-        
+
         # Get private vessels user has access to
         private_vessels = get_objects_for_user(
-            self, ["webapp.can_view_vessel", "webapp.can_crew_vessel", "webapp.can_manage_vessel"], Vessel
+            self,
+            [
+                "webapp.can_view_vessel",
+                "webapp.can_crew_vessel",
+                "webapp.can_manage_vessel",
+            ],
+            Vessel,
         ).filter(is_public=False)
-        
+
         # Combine with public vessels
         public_vessels = Vessel.objects.filter(is_public=True)
-        
+
         return private_vessels.union(public_vessels)
 
     def can_manage_vessel(self, vessel):
@@ -114,8 +131,9 @@ class User(AbstractUser):
         """Check if user can crew a specific vessel (crew or skipper role)"""
         if self.is_admin:
             return True
-        return (self.has_perm("webapp.can_crew_vessel", vessel) or 
-                self.has_perm("webapp.can_manage_vessel", vessel))
+        return self.has_perm("webapp.can_crew_vessel", vessel) or self.has_perm(
+            "webapp.can_manage_vessel", vessel
+        )
 
     def can_view_vessel(self, vessel):
         """Check if user can view a specific vessel (any role or public)"""
@@ -123,13 +141,17 @@ class User(AbstractUser):
             return True
         if vessel.is_public:
             return True
-        return (self.has_perm("webapp.can_view_vessel", vessel) or
-                self.has_perm("webapp.can_crew_vessel", vessel) or
-                self.has_perm("webapp.can_manage_vessel", vessel))
+        return (
+            self.has_perm("webapp.can_view_vessel", vessel)
+            or self.has_perm("webapp.can_crew_vessel", vessel)
+            or self.has_perm("webapp.can_manage_vessel", vessel)
+        )
 
     def assign_role_permissions(self):
         """Assign appropriate permissions based on user role"""
-        from webapp.models.vessel import Vessel  # pylint: disable=import-outside-toplevel,redefined-outer-name
+        from webapp.models.vessel import (
+            Vessel,
+        )  # pylint: disable=import-outside-toplevel,redefined-outer-name
 
         # Get content types
         sailboat_ct = ContentType.objects.get_for_model(Sailboat)
@@ -156,20 +178,29 @@ class User(AbstractUser):
 
         # Remove all permissions first
         self.user_permissions.remove(
-            manage_sailboat_perm, view_sailboat_perm,
-            manage_vessel_perm, crew_vessel_perm, view_vessel_perm
+            manage_sailboat_perm,
+            view_sailboat_perm,
+            manage_vessel_perm,
+            crew_vessel_perm,
+            view_vessel_perm,
         )
 
         # Assign permissions based on role
         if self.is_admin:
             self.user_permissions.add(
-                manage_sailboat_perm, view_sailboat_perm,
-                manage_vessel_perm, crew_vessel_perm, view_vessel_perm
+                manage_sailboat_perm,
+                view_sailboat_perm,
+                manage_vessel_perm,
+                crew_vessel_perm,
+                view_vessel_perm,
             )
         elif self.is_moderator:
             self.user_permissions.add(
-                manage_sailboat_perm, view_sailboat_perm,
-                manage_vessel_perm, crew_vessel_perm, view_vessel_perm
+                manage_sailboat_perm,
+                view_sailboat_perm,
+                manage_vessel_perm,
+                crew_vessel_perm,
+                view_vessel_perm,
             )
         else:
             self.user_permissions.add(view_sailboat_perm, view_vessel_perm)
