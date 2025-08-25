@@ -7,10 +7,11 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
-from guardian.shortcuts import assign_perm, remove_perm, get_objects_for_user
+from guardian.shortcuts import assign_perm, remove_perm, get_objects_for_user, get_users_with_perms
 
 from webapp.models.vessel import Vessel
 from webapp.models.vessel_access_request import VesselAccessRequest
+from webapp.models.user import User
 from webapp.decorators import vessel_skipper_required
 
 
@@ -57,25 +58,19 @@ def vessel_access_request(request, pk):
         message=message
     )
     
-    # Send notification to vessel skippers
-    skippers = get_objects_for_user(
-        vessel.created_by, 'webapp.can_manage_vessel', Vessel
-    ).filter(pk=vessel.pk)
-    
-    if skippers.exists():
-        # Send email to vessel owner/skippers
-        try:
-            send_mail(
-                subject=f'Access Request for {vessel.name}',
-                message=f'{request.user.get_full_name() or request.user.username} has requested {requested_role} access to your vessel "{vessel.name}".\n\n'
-                       f'Message: {message}\n\n'
-                       f'Review this request at: {request.build_absolute_uri(reverse("vessel_manage_roles", args=[vessel.pk]))}',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[vessel.created_by.email],
-                fail_silently=True,
-            )
-        except Exception:
-            pass  # Email sending is optional
+    # Send email notification to vessel owner
+    try:
+        send_mail(
+            subject=f'Access Request for {vessel.name}',
+            message=f'{request.user.get_full_name() or request.user.username} has requested {requested_role} access to your vessel "{vessel.name}".\n\n'
+                   f'Message: {message}\n\n'
+                   f'Review this request at: {request.build_absolute_uri(reverse("vessel_manage_roles", args=[vessel.pk]))}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[vessel.created_by.email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass  # Email sending is optional
     
     messages.success(request, f"Access request sent! The vessel owner will be notified of your {requested_role} access request.")
     return redirect('vessel_detail', pk=vessel.pk)
@@ -94,9 +89,6 @@ def vessel_manage_roles(request, pk):
     
     # Get current users with permissions
     vessel_users = []
-    
-    from django.contrib.auth import get_user_model
-    from guardian.shortcuts import get_users_with_perms
     
     # Get all users who have any permission on this specific vessel
     users_with_perms = get_users_with_perms(vessel, attach_perms=True)
@@ -164,8 +156,6 @@ def vessel_access_deny(request, pk, request_id):
 def vessel_remove_user(request, pk, user_id):
     """Remove a user's access to a vessel"""
     vessel = get_object_or_404(Vessel, pk=pk)
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
     user = get_object_or_404(User, pk=user_id)
     
     # Don't allow removing the vessel creator
@@ -194,9 +184,6 @@ def vessel_add_user(request, pk):
     if not email:
         messages.error(request, "Please provide an email address.")
         return redirect('vessel_manage_roles', pk=vessel.pk)
-    
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
     
     try:
         user = User.objects.get(email=email)
@@ -235,8 +222,6 @@ def vessel_add_user(request, pk):
 def vessel_change_user_role(request, pk, user_id):
     """Change a user's role on a vessel"""
     vessel = get_object_or_404(Vessel, pk=pk)
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
     user = get_object_or_404(User, pk=user_id)
     
     # Don't allow changing the vessel creator's permissions
@@ -270,6 +255,71 @@ def vessel_change_user_role(request, pk, user_id):
     
     messages.success(request, f"Changed {user.get_full_name() or user.username}'s role to {role_name}.")
     return redirect('vessel_manage_roles', pk=vessel.pk)
+
+
+@vessel_skipper_required
+@require_http_methods(["POST"])
+def vessel_revoke_permission(request, pk, user_id):
+    """Revoke a specific permission from a user"""
+    vessel = get_object_or_404(Vessel, pk=pk)
+    user = get_object_or_404(User, pk=user_id)
+    
+    # Don't allow revoking the vessel creator's permissions
+    if user == vessel.created_by:
+        messages.error(request, "Cannot revoke vessel creator's permissions.")
+        return redirect('vessel_manage_roles', pk=vessel.pk)
+    
+    permission = request.POST.get('permission')
+    
+    if permission == 'can_manage_vessel':
+        remove_perm('webapp.can_manage_vessel', user, vessel)
+        messages.success(request, f"Revoked skipper permissions from {user.get_full_name() or user.username}.")
+    elif permission == 'can_crew_vessel':
+        remove_perm('webapp.can_crew_vessel', user, vessel)
+        messages.success(request, f"Revoked crew permissions from {user.get_full_name() or user.username}.")
+    elif permission == 'can_view_vessel':
+        remove_perm('webapp.can_view_vessel', user, vessel)
+        messages.success(request, f"Revoked view permissions from {user.get_full_name() or user.username}.")
+    else:
+        messages.error(request, "Invalid permission specified.")
+    
+    return redirect('vessel_manage_roles', pk=vessel.pk)
+
+
+@vessel_skipper_required
+@require_http_methods(["POST", "GET"])
+def vessel_confirm_delete(request, pk):
+    """Confirm and delete a vessel with additional safety checks"""
+    vessel = get_object_or_404(Vessel, pk=pk)
+    
+    # Only vessel creator can delete (even other skippers cannot)
+    if request.user != vessel.created_by:
+        messages.error(request, "Only the vessel creator can delete this vessel.")
+        return redirect('vessel_detail', pk=vessel.pk)
+    
+    if request.method == "POST":
+        # Additional safety check - require vessel name confirmation
+        confirm_name = request.POST.get('confirm_name', '').strip()
+        if confirm_name != vessel.name:
+            messages.error(request, "Vessel name confirmation does not match. Deletion cancelled.")
+            return redirect('vessel_confirm_delete', pk=vessel.pk)
+        
+        vessel_name = vessel.name
+        try:
+            vessel.delete()
+            messages.success(request, f"Vessel '{vessel_name}' has been permanently deleted.")
+            return redirect('vessels_index')
+        except Exception as e:
+            messages.error(request, f"Error deleting vessel: {str(e)}")
+            return redirect('vessel_detail', pk=vessel.pk)
+    
+    # GET request - show confirmation page
+    context = {
+        'vessel': vessel,
+        'user_count': len(get_users_with_perms(vessel)),
+        'notes_count': vessel.vesselnote_set.count(),
+    }
+    return render(request, 'webapp/vessels/confirm_delete.html', context)
 
 
 @vessel_skipper_required

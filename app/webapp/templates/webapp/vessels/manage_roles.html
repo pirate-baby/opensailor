@@ -68,6 +68,96 @@
     </div>
     {% endif %}
 
+    <!-- Role Explanation Section -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h2 class="text-lg font-medium text-blue-900 mb-4">📋 User Roles Explained</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleRole('viewer')">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <h3 class="font-semibold text-green-800">Viewer</h3>
+                        </div>
+                        <svg id="viewer-chevron" class="w-4 h-4 text-green-600 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div id="viewer-content" class="hidden mt-2">
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• View vessel details and specifications</li>
+                            <li>• See vessel images and information</li>
+                            <li>• Read existing notes and logs</li>
+                            <li>• <strong>Cannot</strong> add or edit content</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleRole('crew')">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                            <h3 class="font-semibold text-yellow-800">Crew</h3>
+                        </div>
+                        <svg id="crew-chevron" class="w-4 h-4 text-yellow-600 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div id="crew-content" class="hidden mt-2">
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• Everything Viewers can do</li>
+                            <li>• Create and edit vessel notes</li>
+                            <li>• Add log entries and updates</li>
+                            <li>• Share notes with other users</li>
+                            <li>• <strong>Cannot</strong> manage other users</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleRole('skipper')">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                            <h3 class="font-semibold text-red-800">Skipper</h3>
+                        </div>
+                        <svg id="skipper-chevron" class="w-4 h-4 text-red-600 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div id="skipper-content" class="hidden mt-2">
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• Everything Crew can do</li>
+                            <li>• Edit vessel information</li>
+                            <li>• Manage user roles and permissions</li>
+                            <li>• Approve/deny access requests</li>
+                            <li>• Toggle vessel privacy settings</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        
+        <div class="mt-4">
+            <p class="text-sm text-gray-600">
+                💡 <strong>Tip:</strong> Start with Viewer access and upgrade users to Crew or Skipper as needed. The vessel creator always has full Skipper permissions and cannot be removed.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        
+        function toggleRole(role) {
+            const content = document.getElementById(role + '-content');
+            const chevron = document.getElementById(role + '-chevron');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+    </script>
+
     <!-- Add User Section -->
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-lg font-medium text-gray-900 mb-4">Add User</h2>
