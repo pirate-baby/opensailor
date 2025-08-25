@@ -52,7 +52,7 @@ class VesselCreateRequest(BaseModel):
     sailboat_name: Optional[str] = Field(
         None, description="The name of the sailboat to create the vessel for, if exists"
     )
-    hull_identification_number: str = Field(
+    hull_identification_number: Optional[str] = Field(
         ..., description="The hull identification number of the vessel"
     )
     year_built: int = Field(int, description="The year the vessel was built")
@@ -67,6 +67,8 @@ class VesselCreateRequest(BaseModel):
     @field_validator("hull_identification_number")
     def validate_hull_identification_number(cls, v):
         """alphanumeric only"""
+        if not v:
+            return v
         if not re.match(r"^[a-zA-Z0-9]+$", v):
             raise ValueError("Hull identification number must be alphanumeric")
         return v

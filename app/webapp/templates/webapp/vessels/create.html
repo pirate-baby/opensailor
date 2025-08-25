@@ -48,9 +48,9 @@
             <!-- HIN -->
             <div>
                 <label for="hull_identification_number" class="block text-sm font-medium text-gray-700">
-                    Hull Identification Number (HIN) *
+                    Hull Identification Number (HIN)
                 </label>
-                <input type="text" id="hull_identification_number" name="hull_identification_number" required
+                <input type="text" id="hull_identification_number" name="hull_identification_number"
                        maxlength="14" placeholder="e.g. ABC12345D606"
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
                 <p class="mt-1 text-sm text-gray-500">
@@ -81,9 +81,9 @@
 
             <!-- Year Built -->
             <div>
-                <label for="year_built" class="block text-sm font-medium text-gray-700">Year Built</label>
+                <label for="year_built" class="block text-sm font-medium text-gray-700">Year Built *</label>
                 <input type="number" id="year_built" name="year_built"
-                       min="1800" max="{% now 'Y' %}" placeholder="e.g. 2005"
+                       min="1800" max="{% now 'Y' %}" placeholder="e.g. 2005" required
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent">
             </div>
 

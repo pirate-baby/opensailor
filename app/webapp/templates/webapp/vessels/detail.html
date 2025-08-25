@@ -43,20 +43,95 @@
             <h1 class="text-3xl font-bold text-gray-900">{{ vessel.name }}</h1>
             <p class="mt-1 text-lg text-gray-500">{{ vessel.sailboat.make.name|title }} {{ vessel.sailboat.name|title }}</p>
         </div>
-        {% if user.is_admin or user.is_moderator %}
-        <div class="flex space-x-4">
-            <a href="{% url 'vessel_update' vessel.pk %}"
-               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
-                Edit Vessel
-            </a>
-            <a href="{% url 'vessel_delete' vessel.pk %}"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                Delete
+        <div class="flex items-center space-x-4">
+            {% if not vessel.is_public %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <svg class="-ml-0.5 mr-1.5 h-2 w-2" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3" />
+                    </svg>
+                    Private
+                </span>
+            {% endif %}
+            
+            {% if user_can_manage %}
+            <div class="flex space-x-2">
+                <a href="{% url 'vessel_update' vessel.pk %}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                    Edit Vessel
+                </a>
+                <a href="{% url 'vessel_confirm_delete' vessel.pk %}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    Delete
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if is_obfuscated %}
+    <!-- Obfuscated View for Private Vessels -->
+    <div class="bg-white rounded-lg shadow p-8 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">This Vessel is Private</h3>
+        <p class="text-sm text-gray-500 mb-6">
+            This vessel's detailed information is only available to authorized users. You can see basic information below, but detailed specs, images, and notes are restricted.
+        </p>
+        
+        {% if user.is_authenticated %}
+        <div class="space-y-4">
+            <form method="post" action="{% url 'vessel_access_request' vessel.pk %}" class="max-w-md mx-auto">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="requested_role" class="block text-sm font-medium text-gray-700 mb-2">Requested Access Level</label>
+                    <select id="requested_role" name="requested_role" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent">
+                        <option value="viewer">Viewer - View vessel details and logs</option>
+                        <option value="crew">Crew - Add logs and view all data</option>
+                        <option value="skipper">Skipper - Manage vessel and users</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message (Optional)</label>
+                    <textarea id="message" name="message" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Why do you need access to this vessel?"></textarea>
+                </div>
+                <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                    Request Access
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div>
+            <a href="{% url 'account_login' %}?next={{ request.path }}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                Sign in to Request Access
             </a>
         </div>
         {% endif %}
+        
+        <!-- Basic vessel info still visible -->
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <h4 class="text-sm font-medium text-gray-900 mb-4">Basic Information</h4>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <dt class="font-medium text-gray-500">Model</dt>
+                    <dd class="mt-1 text-gray-900">
+                        <a href="{% url 'sailboat_detail' vessel.sailboat.pk %}" class="text-accent hover:text-primary">
+                            {{ vessel.sailboat.make.name }} {{ vessel.sailboat.name }}
+                        </a>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="font-medium text-gray-500">Year Built</dt>
+                    <dd class="mt-1 text-gray-900">{{ vessel.year_built|default:"Unknown" }}</dd>
+                </div>
+            </dl>
+        </div>
     </div>
-
+    {% else %}
+    <!-- Full View for Authorized Users -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Images -->
         <div class="col-span-1 lg:col-span-2">
@@ -91,27 +166,11 @@
                 <dl class="mt-4 space-y-4">
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Hull ID Number (HIN)</dt>
-                        <dd class="mt-1 text-sm text-gray-900">
-                            {% if user.is_authenticated %}
-                                {{ vessel.hull_identification_number }}
-                            {% else %}
-                                <a href="{% url 'account_login' %}?next={{ request.path }}" class="text-accent hover:text-primary">
-                                    Log in to see HIN
-                                </a>
-                            {% endif %}
-                        </dd>
+                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.hull_identification_number }}</dd>
                     </div>
                     <div>
                         <dt class="text-sm font-medium text-gray-500">USCG Number</dt>
-                        <dd class="mt-1 text-sm text-gray-900">
-                            {% if user.is_authenticated %}
-                                {{ vessel.uscg_number|default:"Not specified" }}
-                            {% else %}
-                                <a href="{% url 'account_login' %}?next={{ request.path }}" class="text-accent hover:text-primary">
-                                    Log in to see USCG Number
-                                </a>
-                            {% endif %}
-                        </dd>
+                        <dd class="mt-1 text-sm text-gray-900">{{ vessel.uscg_number|default:"Not specified" }}</dd>
                     </div>
                     <div>
                         <dt class="text-sm font-medium text-gray-500">Year Built</dt>
@@ -202,7 +261,7 @@
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-medium text-gray-900">Notes</h2>
-                {% if not user_note %}
+                {% if not user_note and user_can_crew %}
                 <a href="{% url 'vessel_note_create' vessel.pk %}"
                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
                     + Create New Note
@@ -216,7 +275,13 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="text-gray-500 italic mt-4">You do not have access to any notes for this vessel.</div>
+                <div class="text-gray-500 italic mt-4">
+                    {% if user_can_crew %}
+                        You do not have any notes for this vessel yet.
+                    {% else %}
+                        You need crew access to view and create notes for this vessel.
+                    {% endif %}
+                </div>
             {% endif %}
         </div>
     {% else %}
@@ -230,6 +295,26 @@
                 </a>
             </div>
         </div>
+    {% endif %}
+    
+    <!-- Role Management Section for Skippers -->
+    {% if user_can_manage %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-medium text-gray-900 mb-4">Manage Access</h2>
+        <div class="flex space-x-4">
+            <a href="{% url 'vessel_manage_roles' vessel.pk %}"
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                Manage User Roles
+            </a>
+            <form method="post" action="{% url 'vessel_toggle_privacy' vessel.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                    {% if vessel.is_public %}Make Private{% else %}Make Public{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
     {% endif %}
 </div>
 

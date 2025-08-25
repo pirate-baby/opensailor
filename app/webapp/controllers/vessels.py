@@ -30,6 +30,7 @@ def create_vessel(request: VesselCreateRequest) -> int:
         hull_identification_number=request.hull_identification_number,
         name=request.name,
         year_built=request.year_built,
+        created_by=request.user,
     )
 
     # handle images and attributes

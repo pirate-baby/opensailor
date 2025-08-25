@@ -11,6 +11,7 @@ from django.views.decorators.http import require_http_methods
 
 from webapp.models.vessel_note import VesselNote, NoteMessage
 from webapp.models.vessel import Vessel
+from webapp.decorators import vessel_crew_or_skipper_required
 
 
 class VesselNoteCreateForm(forms.Form):
@@ -20,7 +21,7 @@ class VesselNoteCreateForm(forms.Form):
     )
 
 
-@login_required
+@vessel_crew_or_skipper_required
 def vessel_note_create(request, pk):
     vessel = get_object_or_404(Vessel, pk=pk)
     if request.method == "POST":
@@ -173,7 +174,8 @@ def vessel_note_message_reply_save(request, message_id):
 @login_required
 def vessel_note_share(request, note_id):
     note = get_object_or_404(VesselNote, pk=note_id)
-    if note.owner != request.user:
+    # Check if user can crew the vessel (permission to manage notes)
+    if not request.user.can_crew_vessel(note.vessel) and note.user != request.user:
         messages.error(request, "You do not have permission to share this note.")
         return redirect("vessel_detail", pk=note.vessel.pk)
     if request.method != "POST":
