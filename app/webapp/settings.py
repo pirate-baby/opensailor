@@ -243,10 +243,17 @@ if os.environ.get("ENVIRONMENT") != "production" and os.path.exists(
 
 
 # Static files configuration
-protocol = "https" if IS_PRODUCTION else "http"
-minio_prefix = "/" if IS_PRODUCTION else "/static-opensailor-org/"
-STATIC_URL = f"{protocol}://static.opensailor.org{minio_prefix}static/"
-MEDIA_URL = f"{protocol}://static.opensailor.org{minio_prefix}media/"
+if IS_PRODUCTION:
+    protocol = "https"
+    domain = "static.opensailor.org"
+    minio_prefix = "/"
+else:
+    protocol = "http"
+    domain = "minio.localhost"
+    minio_prefix = "/static-opensailor-org/"
+
+STATIC_URL = f"{protocol}://{domain}{minio_prefix}static/"
+MEDIA_URL = f"{protocol}://{domain}{minio_prefix}media/"
 AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
 AWS_S3_CLIENT_ENDPOINT_URL = os.environ.get("AWS_S3_CLIENT_ENDPOINT_URL")
 
@@ -278,8 +285,10 @@ staticfiles_storage_options["location"] = "static"
 if not IS_PRODUCTION:
     staticfiles_storage_options["url_protocol"] = "http:"
     media_storage_options["url_protocol"] = "http:"
-    staticfiles_storage_options["custom_domain"] = "static.opensailor.org/static-opensailor-org"
-    media_storage_options["custom_domain"] = "static.opensailor.org/static-opensailor-org"
+    staticfiles_storage_options["custom_domain"] = (
+        "minio.localhost/static-opensailor-org"
+    )
+    media_storage_options["custom_domain"] = "minio.localhost/static-opensailor-org"
 
 STORAGES = {
     "default": {
