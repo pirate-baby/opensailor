@@ -17,12 +17,29 @@ resource "aws_s3_bucket_policy" "public_read" {
   bucket = aws_s3_bucket.static.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = "*"
-      Action    = ["s3:GetObject"]
-      Resource  = "${aws_s3_bucket.static.arn}/*"
-    }]
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = ["s3:GetObject"]
+        Resource  = "${aws_s3_bucket.static.arn}/*"
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = aws_iam_role.github_actions_deploy.arn
+        }
+        Action = [
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.static.arn,
+          "${aws_s3_bucket.static.arn}/*"
+        ]
+      }
+    ]
   })
 }
 
