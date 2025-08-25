@@ -3,6 +3,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from guardian.models import UserObjectPermissionBase, GroupObjectPermissionBase
+from guardian.shortcuts import assign_perm
 from webapp.models.sailboat import Sailboat
 from webapp.models.media import Media
 from webapp.models.attribute import Attribute
@@ -153,15 +155,32 @@ class Vessel(models.Model):
     home_port = models.CharField(
         max_length=255, null=True, blank=True, help_text=_("Home port of this vessel")
     )
+    is_public = models.BooleanField(
+        default=True,
+        help_text=_("Whether this vessel is publicly viewable or private")
+    )
+    created_by = models.ForeignKey(
+        "User",
+        on_delete=models.CASCADE,
+        related_name="created_vessels",
+        help_text=_("User who created this vessel")
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = _("vessel")
         verbose_name_plural = _("vessels")
+        permissions = [
+            ("can_manage_vessel", "Can manage vessel and assign roles"),
+            ("can_crew_vessel", "Can add logs and view detailed vessel info"),
+            ("can_view_vessel", "Can view private vessel details"),
+        ]
         indexes = [
             models.Index(fields=["hull_identification_number"]),
             models.Index(fields=["year_built"]),
+            models.Index(fields=["is_public"]),
+            models.Index(fields=["created_by"]),
         ]
 
     def __str__(self):
@@ -218,3 +237,21 @@ class Vessel(models.Model):
         return VesselAttribute.objects.create(
             vessel=self, attribute=attribute, value=attribute_assignment.value
         )
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Assign permissions to creator for new vessels
+        if is_new and self.created_by:
+            assign_perm("can_manage_vessel", self.created_by, self)
+            assign_perm("can_crew_vessel", self.created_by, self)
+            assign_perm("can_view_vessel", self.created_by, self)
+
+
+class VesselUserObjectPermission(UserObjectPermissionBase):
+    content_object = models.ForeignKey("Vessel", on_delete=models.CASCADE)
+
+
+class VesselGroupObjectPermission(GroupObjectPermissionBase):
+    content_object = models.ForeignKey("Vessel", on_delete=models.CASCADE)

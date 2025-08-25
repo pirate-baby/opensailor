@@ -26,6 +26,9 @@ class User(AbstractUser):
         permissions = [
             ("can_manage_sailboats", "Can manage sailboats"),
             ("can_view_sailboats", "Can view sailboats"),
+            ("can_manage_vessels", "Can manage vessels"),
+            ("can_crew_vessels", "Can crew vessels"), 
+            ("can_view_vessels", "Can view vessels"),
         ]
 
     def __str__(self):
@@ -67,29 +70,105 @@ class User(AbstractUser):
             return Sailboat.objects.all()
         return get_objects_for_user(self, "webapp.can_view_sailboats", Sailboat)
 
+    def get_manageable_vessels(self):
+        """Get all vessels that the user can manage (skipper role)"""
+        from webapp.models.vessel import Vessel  # Import here to avoid circular imports
+        if self.is_admin:
+            return Vessel.objects.all()
+        return get_objects_for_user(self, "webapp.can_manage_vessel", Vessel)
+
+    def get_crewable_vessels(self):
+        """Get all vessels that the user can crew (crew or skipper role)"""
+        from webapp.models.vessel import Vessel
+        if self.is_admin:
+            return Vessel.objects.all()
+        return get_objects_for_user(self, ["webapp.can_crew_vessel", "webapp.can_manage_vessel"], Vessel)
+
+    def get_viewable_vessels(self):
+        """Get all vessels that the user can view (any role + public vessels)"""
+        from webapp.models.vessel import Vessel
+        if self.is_admin or self.is_moderator:
+            return Vessel.objects.all()
+        
+        # Get private vessels user has access to
+        private_vessels = get_objects_for_user(
+            self, ["webapp.can_view_vessel", "webapp.can_crew_vessel", "webapp.can_manage_vessel"], Vessel
+        ).filter(is_public=False)
+        
+        # Combine with public vessels
+        public_vessels = Vessel.objects.filter(is_public=True)
+        
+        return private_vessels.union(public_vessels)
+
+    def can_manage_vessel(self, vessel):
+        """Check if user can manage a specific vessel (skipper role)"""
+        if self.is_admin:
+            return True
+        return self.has_perm("webapp.can_manage_vessel", vessel)
+
+    def can_crew_vessel(self, vessel):
+        """Check if user can crew a specific vessel (crew or skipper role)"""
+        if self.is_admin:
+            return True
+        return (self.has_perm("webapp.can_crew_vessel", vessel) or 
+                self.has_perm("webapp.can_manage_vessel", vessel))
+
+    def can_view_vessel(self, vessel):
+        """Check if user can view a specific vessel (any role or public)"""
+        if self.is_admin or self.is_moderator:
+            return True
+        if vessel.is_public:
+            return True
+        return (self.has_perm("webapp.can_view_vessel", vessel) or
+                self.has_perm("webapp.can_crew_vessel", vessel) or
+                self.has_perm("webapp.can_manage_vessel", vessel))
+
     def assign_role_permissions(self):
         """Assign appropriate permissions based on user role"""
+        from webapp.models.vessel import Vessel
 
-        # Get content type for Sailboat model
+        # Get content types
         sailboat_ct = ContentType.objects.get_for_model(Sailboat)
+        vessel_ct = ContentType.objects.get_for_model(Vessel)
 
-        # Get permissions
-        manage_perm = Permission.objects.get(
+        # Get sailboat permissions
+        manage_sailboat_perm = Permission.objects.get(
             content_type=sailboat_ct, codename="can_manage_sailboats"
         )
-        view_perm = Permission.objects.get(
+        view_sailboat_perm = Permission.objects.get(
             content_type=sailboat_ct, codename="can_view_sailboats"
         )
 
-        self.user_permissions.remove(manage_perm, view_perm)
+        # Get vessel permissions
+        manage_vessel_perm = Permission.objects.get(
+            content_type=vessel_ct, codename="can_manage_vessels"
+        )
+        crew_vessel_perm = Permission.objects.get(
+            content_type=vessel_ct, codename="can_crew_vessels"
+        )
+        view_vessel_perm = Permission.objects.get(
+            content_type=vessel_ct, codename="can_view_vessels"
+        )
+
+        # Remove all permissions first
+        self.user_permissions.remove(
+            manage_sailboat_perm, view_sailboat_perm,
+            manage_vessel_perm, crew_vessel_perm, view_vessel_perm
+        )
 
         # Assign permissions based on role
         if self.is_admin:
-            self.user_permissions.add(manage_perm, view_perm)
+            self.user_permissions.add(
+                manage_sailboat_perm, view_sailboat_perm,
+                manage_vessel_perm, crew_vessel_perm, view_vessel_perm
+            )
         elif self.is_moderator:
-            self.user_permissions.add(manage_perm, view_perm)
+            self.user_permissions.add(
+                manage_sailboat_perm, view_sailboat_perm,
+                manage_vessel_perm, crew_vessel_perm, view_vessel_perm
+            )
         else:
-            self.user_permissions.add(view_perm)
+            self.user_permissions.add(view_sailboat_perm, view_vessel_perm)
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None

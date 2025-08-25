@@ -7,7 +7,7 @@ from webapp.models.make import Make
 from webapp.models.designer import Designer
 from webapp.models.media import Media
 from webapp.models.vessel import Vessel
-from webapp.decorators import admin_or_moderator_required
+from webapp.decorators import admin_or_moderator_required, vessel_skipper_required
 from webapp.models.sailboat_attribute import SailboatAttribute
 from webapp.models.vessel_note import VesselNote
 from webapp.schemas.attributes import AttributeAssignment
@@ -334,9 +334,33 @@ def vessels_index(request):
 
 def vessel_detail(request, pk):
     vessel = get_object_or_404(Vessel.objects.select_related("sailboat"), pk=pk)
+    
+    # Check if user can view this vessel
+    user_can_view = True
+    is_obfuscated = False
+    
+    if not vessel.is_public:
+        if not request.user.is_authenticated:
+            user_can_view = False
+            is_obfuscated = True
+        elif not request.user.can_view_vessel(vessel):
+            user_can_view = False
+            is_obfuscated = True
+    
+    # If obfuscated, show minimal vessel info only
+    if is_obfuscated:
+        context = {
+            "vessel": vessel,
+            "is_obfuscated": True,
+            "user_can_view": False,
+        }
+        return render(request, "webapp/vessels/detail.html", context)
+    
+    # Full vessel details for authorized users
     user_note = None
     accessible_notes = []
     open_note_id = request.GET.get("open_note_id")
+    
     if request.user.is_authenticated:
         # Notes where the user is the owner or is in shared_with
         accessible_notes = (
@@ -346,6 +370,7 @@ def vessel_detail(request, pk):
             .prefetch_related("shared_with", "messages__user")
         )
         user_note = accessible_notes.filter(user=request.user).first()
+    
     # Prefetch sailboat attributes with their attributes and sections
     sailboat_attributes = vessel.vesselattribute_set.select_related(
         "attribute", "attribute__section"
@@ -367,12 +392,20 @@ def vessel_detail(request, pk):
         )
     sailboat_attributes_grouped = list(grouped.values())
 
+    # Check user permissions for UI elements
+    user_can_manage = request.user.is_authenticated and request.user.can_manage_vessel(vessel)
+    user_can_crew = request.user.is_authenticated and request.user.can_crew_vessel(vessel)
+
     context = {
         "vessel": vessel,
         "user_note": user_note,
         "accessible_notes": accessible_notes,
         "sailboat_attributes_grouped": sailboat_attributes_grouped,
         "open_note_id": open_note_id,
+        "is_obfuscated": False,
+        "user_can_view": True,
+        "user_can_manage": user_can_manage,
+        "user_can_crew": user_can_crew,
     }
     return render(request, "webapp/vessels/detail.html", context)
 
@@ -466,7 +499,7 @@ def _update_vessel_attributes(vessel, attributes_json):
         vessel.create_or_update_attribute(attr_assignment)
 
 
-@admin_or_moderator_required
+@vessel_skipper_required
 def vessel_update(request, pk):
     vessel = get_object_or_404(Vessel, pk=pk)
 
@@ -530,7 +563,7 @@ def vessel_update(request, pk):
     return render(request, "webapp/vessels/update.html", context)
 
 
-@admin_or_moderator_required
+@vessel_skipper_required
 def vessel_delete(request, pk):
     vessel = get_object_or_404(Vessel, pk=pk)
 
