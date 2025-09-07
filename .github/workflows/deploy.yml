@@ -102,12 +102,12 @@ jobs:
             echo "Error: static/output.css not found after build"
             exit 1
           fi
-          if [ ! -f "static/libraries/main.js" ]; then
-            echo "Error: static/libraries/main.js not found after build"
+          if ! ls static/libraries/main.*.js 1> /dev/null 2>&1; then
+            echo "Error: static/libraries/main.*.js not found after build"
             exit 1
           fi
           echo "Static files verified:"
-          ls -la static/output.css static/libraries/main.js
+          ls -la static/output.css static/libraries/main.*.js
 
       - name: Collect and upload all static files to S3
         run: |
