@@ -207,11 +207,11 @@ def _process_attachment_uploads(request, attachments, log_entry):
     """Helper to process attachment file uploads"""
     for i, attachment in enumerate(attachments):
         attachment.log_entry = log_entry
-        
+
         file_field_name = f"attachments-{i}-file"
         if file_field_name in request.FILES:
             uploaded_file = request.FILES[file_field_name]
-            
+
             media = Media(
                 uploaded_by=request.user,
                 original_filename=uploaded_file.name,
@@ -219,13 +219,10 @@ def _process_attachment_uploads(request, attachments, log_entry):
             media.save()
             media.file.save(uploaded_file.name, uploaded_file, save=True)
             attachment.media = media
-            
-            if (
-                media.media_type == "image"
-                and attachment.attachment_type == "other"
-            ):
+
+            if media.media_type == "image" and attachment.attachment_type == "other":
                 attachment.attachment_type = "image"
-        
+
         attachment.save()
 
 
@@ -233,14 +230,14 @@ def _process_attachment_uploads_edit(request, attachments, log_entry):
     """Helper to process attachment file uploads for edit"""
     for i, attachment in enumerate(attachments):
         attachment.log_entry = log_entry
-        
+
         file_field_name = f"attachments-{i}-file"
         if file_field_name in request.FILES:
             uploaded_file = request.FILES[file_field_name]
-            
+
             if attachment.media:
                 attachment.media.delete()
-            
+
             media = Media(
                 uploaded_by=request.user,
                 original_filename=uploaded_file.name,
@@ -248,13 +245,10 @@ def _process_attachment_uploads_edit(request, attachments, log_entry):
             media.save()
             media.file.save(uploaded_file.name, uploaded_file, save=True)
             attachment.media = media
-            
-            if (
-                media.media_type == "image"
-                and attachment.attachment_type == "other"
-            ):
+
+            if media.media_type == "image" and attachment.attachment_type == "other":
                 attachment.attachment_type = "image"
-        
+
         attachment.save()
 
 
@@ -262,7 +256,7 @@ def _handle_formset_deletions(location_formset, attachment_formset):
     """Helper to handle formset deletions"""
     for location in location_formset.deleted_objects:
         location.delete()
-    
+
     for attachment in attachment_formset.deleted_objects:
         if attachment.media:
             attachment.media.delete()
