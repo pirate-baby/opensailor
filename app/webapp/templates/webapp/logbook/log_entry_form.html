@@ -437,15 +437,108 @@ function deleteFormsetForm(button, formsetType) {
   }
 }
 
+function createLocationTemplate() {
+  const template = document.createElement('div');
+  template.className = 'formset-form location-form';
+  template.innerHTML = `
+    <div class="formset-header">
+      <span>Location 1</span>
+      <button type="button" class="delete-formset-btn" onclick="deleteFormsetForm(this, 'location')">Remove</button>
+    </div>
+    
+    <input type="hidden" name="locations-__prefix__-id">
+    <input type="hidden" name="locations-__prefix__-DELETE">
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>Location name</label>
+        <input type="text" name="locations-__prefix__-name" class="form-input" placeholder="Location name (optional)">
+      </div>
+      <div class="form-group">
+        <label>Location type</label>
+        <select name="locations-__prefix__-location_type" class="form-select">
+          <option value="waypoint">Waypoint</option>
+          <option value="start">Start Point</option>
+          <option value="end">End Point</option>
+          <option value="anchorage">Anchorage</option>
+          <option value="marina">Marina</option>
+          <option value="fuel">Fuel Stop</option>
+          <option value="emergency">Emergency</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Latitude</label>
+        <input type="number" name="locations-__prefix__-latitude" class="form-input" step="0.000001" placeholder="e.g. 37.7749">
+      </div>
+      <div class="form-group">
+        <label>Longitude</label>
+        <input type="number" name="locations-__prefix__-longitude" class="form-input" step="0.000001" placeholder="e.g. -122.4194">
+      </div>
+    </div>
+
+    <div class="form-row triple">
+      <div class="form-group">
+        <label>Speed (knots)</label>
+        <input type="number" name="locations-__prefix__-speed_knots" class="form-input" step="0.1" min="0">
+      </div>
+      <div class="form-group">
+        <label>Heading (degrees)</label>
+        <input type="number" name="locations-__prefix__-heading_degrees" class="form-input" min="0" max="359">
+      </div>
+      <div class="form-group">
+        <label>Depth (feet)</label>
+        <input type="number" name="locations-__prefix__-depth_feet" class="form-input" step="0.1" min="0">
+      </div>
+    </div>
+
+    <div class="form-row triple">
+      <div class="form-group">
+        <label>Wind speed (knots)</label>
+        <input type="number" name="locations-__prefix__-wind_speed_knots" class="form-input" step="0.1" min="0">
+      </div>
+      <div class="form-group">
+        <label>Wind direction (degrees)</label>
+        <input type="number" name="locations-__prefix__-wind_direction_degrees" class="form-input" min="0" max="359">
+      </div>
+      <div class="form-group">
+        <label>Temperature (°F)</label>
+        <input type="number" name="locations-__prefix__-temperature_f" class="form-input">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Sea state</label>
+        <input type="text" name="locations-__prefix__-sea_state" class="form-input" placeholder="e.g. Calm, Light chop, Moderate seas">
+      </div>
+      <div class="form-group">
+        <label>Barometric pressure (inHg)</label>
+        <input type="number" name="locations-__prefix__-barometric_pressure" class="form-input" step="0.01" min="25" max="35">
+      </div>
+    </div>
+  `;
+  return template;
+}
+
 function addLocationForm() {
   const formsetDiv = document.getElementById('location-forms');
   const totalForms = document.getElementById('id_locations-TOTAL_FORMS');
   const formCount = parseInt(totalForms.value);
 
-  const emptyForm = formsetDiv.querySelector('.location-form').cloneNode(true);
+  // If there are no existing forms, create a template
+  let emptyForm = formsetDiv.querySelector('.location-form');
+  if (!emptyForm) {
+    emptyForm = createLocationTemplate();
+  } else {
+    emptyForm = emptyForm.cloneNode(true);
+  }
 
   // Update form index in field names and IDs
-  const formRegex = new RegExp('locations-(\\d+)', 'g');
+  const formRegex = new RegExp('locations-(__prefix__|\\d+)', 'g');
   emptyForm.innerHTML = emptyForm.innerHTML.replace(formRegex, `locations-${formCount}`);
 
   // Clear values
@@ -465,15 +558,63 @@ function addLocationForm() {
   totalForms.value = formCount + 1;
 }
 
+function createAttachmentTemplate() {
+  const template = document.createElement('div');
+  template.className = 'formset-form attachment-form';
+  template.innerHTML = `
+    <div class="formset-header">
+      <span>Attachment 1</span>
+      <button type="button" class="delete-formset-btn" onclick="deleteFormsetForm(this, 'attachment')">Remove</button>
+    </div>
+    
+    <input type="hidden" name="attachments-__prefix__-id">
+    <input type="hidden" name="attachments-__prefix__-DELETE">
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label>File</label>
+        <input type="file" name="attachments-__prefix__-file" class="form-input">
+        <div class="help-text">Upload images, documents, receipts, or manuals</div>
+      </div>
+      <div class="form-group">
+        <label>Attachment type</label>
+        <select name="attachments-__prefix__-attachment_type" class="form-select">
+          <option value="image">Image</option>
+          <option value="receipt">Receipt</option>
+          <option value="manual">Manual</option>
+          <option value="document">Document</option>
+          <option value="video">Video</option>
+          <option value="audio">Audio</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row full-width">
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" name="attachments-__prefix__-description" class="form-input" placeholder="Optional description">
+      </div>
+    </div>
+  `;
+  return template;
+}
+
 function addAttachmentForm() {
   const formsetDiv = document.getElementById('attachment-forms');
   const totalForms = document.getElementById('id_attachments-TOTAL_FORMS');
   const formCount = parseInt(totalForms.value);
 
-  const emptyForm = formsetDiv.querySelector('.attachment-form').cloneNode(true);
+  // If there are no existing forms, create a template
+  let emptyForm = formsetDiv.querySelector('.attachment-form');
+  if (!emptyForm) {
+    emptyForm = createAttachmentTemplate();
+  } else {
+    emptyForm = emptyForm.cloneNode(true);
+  }
 
   // Update form index in field names and IDs
-  const formRegex = new RegExp('attachments-(\\d+)', 'g');
+  const formRegex = new RegExp('attachments-(__prefix__|\\d+)', 'g');
   emptyForm.innerHTML = emptyForm.innerHTML.replace(formRegex, `attachments-${formCount}`);
 
   // Clear values

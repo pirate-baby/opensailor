@@ -176,7 +176,7 @@ LocationFormSet = inlineformset_factory(
     LogEntry,
     LogEntryLocation,
     form=LogEntryLocationForm,
-    extra=1,
+    extra=0,
     can_delete=True,
     fields=[
         'name', 'latitude', 'longitude', 'location_type', 'order',
@@ -191,7 +191,7 @@ AttachmentFormSet = inlineformset_factory(
     LogEntry,
     LogEntryAttachment,
     form=LogEntryAttachmentForm,
-    extra=2,
+    extra=0,
     can_delete=True,
     fields=['attachment_type', 'description']
 )
