@@ -103,7 +103,9 @@ def exclude_type(queryset, attachment_type):
 @register.filter
 def can_crew_vessel(vessel, user):
     """Check if user can crew vessel (add log entries)."""
-    return user.has_perm("can_crew_vessel", vessel) or user.has_perm("can_manage_vessel", vessel)
+    return user.has_perm("can_crew_vessel", vessel) or user.has_perm(
+        "can_manage_vessel", vessel
+    )
 
 
 @register.filter

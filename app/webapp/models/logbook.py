@@ -14,22 +14,20 @@ class LogEntry(models.Model):
         Vessel,
         on_delete=models.CASCADE,
         related_name="log_entries",
-        help_text=_("The vessel this log entry belongs to")
+        help_text=_("The vessel this log entry belongs to"),
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="log_entries",
-        help_text=_("The user who created this log entry")
+        help_text=_("The user who created this log entry"),
     )
     title = models.CharField(
         max_length=200,
         blank=True,
-        help_text=_("Optional short title for the log entry")
+        help_text=_("Optional short title for the log entry"),
     )
-    content = models.TextField(
-        help_text=_("Log entry content in markdown format")
-    )
+    content = models.TextField(help_text=_("Log entry content in markdown format"))
     log_timestamp = models.DateTimeField(
         help_text=_("When this log event occurred (not when it was recorded)")
     )
@@ -77,36 +75,33 @@ class LogEntryLocation(models.Model):
         LogEntry,
         on_delete=models.CASCADE,
         related_name="locations",
-        help_text=_("The log entry this location belongs to")
+        help_text=_("The log entry this location belongs to"),
     )
     name = models.CharField(
-        max_length=200,
-        blank=True,
-        help_text=_("Optional name for this location")
+        max_length=200, blank=True, help_text=_("Optional name for this location")
     )
     latitude = models.DecimalField(
         max_digits=10,
         decimal_places=7,
         validators=[MinValueValidator(-90), MaxValueValidator(90)],
-        help_text=_("Latitude in decimal degrees")
+        help_text=_("Latitude in decimal degrees"),
     )
     longitude = models.DecimalField(
         max_digits=11,
         decimal_places=7,
         validators=[MinValueValidator(-180), MaxValueValidator(180)],
-        help_text=_("Longitude in decimal degrees")
+        help_text=_("Longitude in decimal degrees"),
     )
     location_type = models.CharField(
         max_length=20,
         choices=LOCATION_TYPE_CHOICES,
         default="waypoint",
-        help_text=_("Type of location")
+        help_text=_("Type of location"),
     )
     order = models.PositiveIntegerField(
-        default=0,
-        help_text=_("Order of this location in the route (0-based)")
+        default=0, help_text=_("Order of this location in the route (0-based)")
     )
-    
+
     # Additional location metadata
     speed_knots = models.DecimalField(
         max_digits=5,
@@ -114,13 +109,13 @@ class LogEntryLocation(models.Model):
         null=True,
         blank=True,
         validators=[MinValueValidator(0)],
-        help_text=_("Speed in knots at this location")
+        help_text=_("Speed in knots at this location"),
     )
     heading_degrees = models.PositiveIntegerField(
         null=True,
         blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(359)],
-        help_text=_("Compass heading in degrees (0-359)")
+        help_text=_("Compass heading in degrees (0-359)"),
     )
     depth_feet = models.DecimalField(
         max_digits=6,
@@ -128,7 +123,7 @@ class LogEntryLocation(models.Model):
         null=True,
         blank=True,
         validators=[MinValueValidator(0)],
-        help_text=_("Water depth in feet")
+        help_text=_("Water depth in feet"),
     )
     wind_speed_knots = models.DecimalField(
         max_digits=4,
@@ -136,18 +131,16 @@ class LogEntryLocation(models.Model):
         null=True,
         blank=True,
         validators=[MinValueValidator(0)],
-        help_text=_("Wind speed in knots")
+        help_text=_("Wind speed in knots"),
     )
     wind_direction_degrees = models.PositiveIntegerField(
         null=True,
         blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(359)],
-        help_text=_("Wind direction in degrees (0-359)")
+        help_text=_("Wind direction in degrees (0-359)"),
     )
     temperature_f = models.IntegerField(
-        null=True,
-        blank=True,
-        help_text=_("Temperature in Fahrenheit")
+        null=True, blank=True, help_text=_("Temperature in Fahrenheit")
     )
     barometric_pressure = models.DecimalField(
         max_digits=5,
@@ -155,12 +148,10 @@ class LogEntryLocation(models.Model):
         null=True,
         blank=True,
         validators=[MinValueValidator(25), MaxValueValidator(35)],
-        help_text=_("Barometric pressure in inches of mercury")
+        help_text=_("Barometric pressure in inches of mercury"),
     )
     sea_state = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text=_("Description of sea conditions")
+        max_length=100, blank=True, help_text=_("Description of sea conditions")
     )
     visibility_miles = models.DecimalField(
         max_digits=4,
@@ -168,13 +159,11 @@ class LogEntryLocation(models.Model):
         null=True,
         blank=True,
         validators=[MinValueValidator(0)],
-        help_text=_("Visibility in nautical miles")
+        help_text=_("Visibility in nautical miles"),
     )
-    
+
     timestamp = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text=_("Timestamp when location was recorded")
+        null=True, blank=True, help_text=_("Timestamp when location was recorded")
     )
 
     class Meta:
@@ -207,26 +196,25 @@ class LogEntryAttachment(models.Model):
         LogEntry,
         on_delete=models.CASCADE,
         related_name="attachments",
-        help_text=_("The log entry this attachment belongs to")
+        help_text=_("The log entry this attachment belongs to"),
     )
     media = models.ForeignKey(
         Media,
         on_delete=models.CASCADE,
-        help_text=_("The media file for this attachment")
+        help_text=_("The media file for this attachment"),
     )
     attachment_type = models.CharField(
         max_length=20,
         choices=ATTACHMENT_TYPE_CHOICES,
-        help_text=_("Type of attachment")
+        help_text=_("Type of attachment"),
     )
     description = models.CharField(
         max_length=500,
         blank=True,
-        help_text=_("Optional description of the attachment")
+        help_text=_("Optional description of the attachment"),
     )
     order = models.PositiveIntegerField(
-        default=0,
-        help_text=_("Display order of attachments")
+        default=0, help_text=_("Display order of attachments")
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

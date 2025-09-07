@@ -18,11 +18,11 @@ def upload_image(request, file: UploadedFile = File(...)):
     """Upload image for Milkdown editor and return URL"""
     if not request.user.is_authenticated:
         return {"error": "Authentication required"}, 401
-    
+
     # Check if file is an image
-    if not file.content_type.startswith('image/'):
+    if not file.content_type.startswith("image/"):
         return {"error": "Only image files are allowed"}, 400
-    
+
     try:
         # Create Media object
         media = Media(
@@ -30,15 +30,11 @@ def upload_image(request, file: UploadedFile = File(...)):
             original_filename=file.name,
         )
         media.save()
-        
+
         # Save the uploaded file
         media.file.save(file.name, file, save=True)
-        
-        return {
-            "success": True,
-            "url": media.url,
-            "id": media.id
-        }
-    
+
+        return {"success": True, "url": media.url, "id": media.id}
+
     except Exception as e:
         return {"error": str(e)}, 500
