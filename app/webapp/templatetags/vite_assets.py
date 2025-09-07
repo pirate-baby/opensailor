@@ -22,7 +22,8 @@ def vite_asset(asset_name):
             manifest = json.load(f)
 
         # Get the entry file info
-        entry = manifest.get("src/main.js", {})
+        # Try different possible keys for the main entry
+        entry = manifest.get("main", {}) or manifest.get("src/main.js", {})
         if "file" in entry:
             return static(f'libraries/{entry["file"]}')
 

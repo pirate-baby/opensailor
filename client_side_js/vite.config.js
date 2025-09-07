@@ -6,7 +6,9 @@ export default defineConfig({
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {
-      input: './src/main.js',
+      input: {
+        main: './src/main.js'
+      },
       output: {
         format: 'iife',
         entryFileNames: 'main.[hash].js',
