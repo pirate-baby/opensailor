@@ -1,5 +1,6 @@
 services:
   app: &app
+    image: opensailor-app
     build:
       context: .
       dockerfile: dockerfiles/app.Dockerfile
