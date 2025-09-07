@@ -1,6 +1,7 @@
 {% load static %}
 {% load dj_htmx %}
 {% load custom_filters %}
+{% load vite_assets %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +21,7 @@
     [x-cloak] { display: none !important; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script src="{% static 'libraries/main.js' %}"></script>
+    <script src="{% vite_asset 'main.js' %}"></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-white text-gray-900 min-h-screen">
