@@ -9,6 +9,7 @@ from .vessel import Vessel
 from .vessel_note import VesselNote
 from .vessel_access_request import VesselAccessRequest
 from .moderation import Moderation
+from .logbook import LogEntry, LogEntryLocation, LogEntryAttachment
 
 __all__ = [
     "User",
@@ -23,4 +24,7 @@ __all__ = [
     "VesselNote",
     "VesselAccessRequest",
     "Moderation",
+    "LogEntry",
+    "LogEntryLocation",
+    "LogEntryAttachment",
 ]

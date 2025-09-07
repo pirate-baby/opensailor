@@ -256,6 +256,11 @@
         </div>
     </div>
 
+    <!-- Logbook Section -->
+    {% if user.is_authenticated %}
+        {% include "webapp/components/logbook_display.html" with vessel=vessel %}
+    {% endif %}
+
     <!-- Notes Section -->
     {% if user.is_authenticated %}
         <div class="bg-white rounded-lg shadow p-6">

@@ -1,0 +1,216 @@
+{% load static %}
+{% load dj_htmx %}
+{% load custom_filters %}
+{% load humanize %}
+
+{# Vessel Logbook Display Component #}
+<div class="logbook-component" style="border: 1.5px solid #d1d5db; border-radius: 10px; background: #fafbfc; padding: 1.5rem; margin-bottom: 2rem;">
+  <!-- Logbook Header -->
+  <div class="logbook-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+    <div class="logbook-title" style="display: flex; align-items: center; font-size: 1.1em; font-weight: 600; color: #374151;">
+      <span class="material-symbols-outlined" style="margin-right: 0.5rem; font-size: 1.3em; color: #059669;">book</span>
+      Logbook
+      <span style="color: #6b7280; font-weight: normal; margin-left: 0.5rem;">({{ vessel.log_entries.count }} entries)</span>
+    </div>
+    {% if vessel|can_crew_vessel:request.user %}
+      <button class="btn btn-primary" style="font-size: 0.9em; padding: 0.5rem 1rem;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-right: 0.25rem;">add</span>
+        Add Entry
+      </button>
+    {% endif %}
+  </div>
+
+  <!-- Logbook Entries -->
+  <div class="logbook-entries">
+    {% for entry in vessel.log_entries.all %}
+      <div class="log-entry" style="border: 1px solid #e5e7eb; border-radius: 8px; background: white; margin-bottom: 1.5rem; overflow: hidden;">
+        
+        <!-- Entry Header -->
+        <div class="entry-header" style="padding: 1rem; border-bottom: 1px solid #f3f4f6; background: #f9fafb;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              {% if entry.title %}
+                <h3 style="font-size: 1.1em; font-weight: 600; color: #111827; margin: 0 0 0.25rem 0;">{{ entry.title }}</h3>
+              {% endif %}
+              <div style="display: flex; align-items: center; color: #6b7280; font-size: 0.9em;">
+                <span style="font-weight: 500;">{{ entry.author.username }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span title="{{ entry.log_timestamp|date:'c' }}">{{ entry.log_timestamp|date:"M j, Y g:i A" }}</span>
+                {% if entry.created_at != entry.updated_at %}
+                  <span style="margin: 0 0.5rem;">•</span>
+                  <span style="font-style: italic;">edited {{ entry.updated_at|naturaltime }}</span>
+                {% endif %}
+              </div>
+            </div>
+            {% if entry|can_edit_entry:request.user %}
+              <div class="entry-actions">
+                <button class="btn-ghost" style="padding: 0.25rem; color: #6b7280;" title="Edit entry">
+                  <span class="material-symbols-outlined" style="font-size: 1.1em;">edit</span>
+                </button>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Entry Content -->
+        <div class="entry-content" style="padding: 1rem;">
+          <!-- Main Content -->
+          {% if entry.content %}
+            <div class="entry-text" style="margin-bottom: 1rem; line-height: 1.6;">
+              {{ entry.content|render_markdown|safe }}
+            </div>
+          {% endif %}
+
+          <!-- Locations -->
+          {% if entry.locations.exists %}
+            <div class="entry-locations" style="margin-bottom: 1rem;">
+              <h4 style="font-size: 0.9em; font-weight: 600; color: #374151; margin: 0 0 0.5rem 0; display: flex; align-items: center;">
+                <span class="material-symbols-outlined" style="font-size: 1.1em; margin-right: 0.25rem; color: #059669;">location_on</span>
+                {% if entry.locations.count == 1 %}Location{% else %}Route{% endif %}
+              </h4>
+              <div class="locations-list" style="background: #f9fafb; border-radius: 6px; padding: 0.75rem;">
+                {% for location in entry.locations.all %}
+                  <div class="location-item" style="display: flex; align-items: center; {% if not forloop.last %}margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb;{% endif %}">
+                    <div class="location-info" style="flex-grow: 1;">
+                      {% if location.name %}
+                        <div style="font-weight: 500; color: #111827;">{{ location.name }}</div>
+                      {% endif %}
+                      <div style="font-family: monospace; color: #6b7280; font-size: 0.85em;">
+                        {{ location.latitude|floatformat:6 }}°, {{ location.longitude|floatformat:6 }}°
+                      </div>
+                      {% if location.location_type != 'waypoint' %}
+                        <span class="location-type" style="display: inline-block; background: #dbeafe; color: #1e40af; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.75em; margin-top: 0.25rem;">
+                          {{ location.get_location_type_display }}
+                        </span>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- Weather/Conditions Summary -->
+                    {% if location.speed_knots or location.wind_speed_knots or location.temperature_f %}
+                      <div class="location-conditions" style="color: #6b7280; font-size: 0.8em; text-align: right;">
+                        {% if location.speed_knots %}
+                          <div>Speed: {{ location.speed_knots }}kts</div>
+                        {% endif %}
+                        {% if location.wind_speed_knots %}
+                          <div>Wind: {{ location.wind_speed_knots }}kts</div>
+                        {% endif %}
+                        {% if location.temperature_f %}
+                          <div>Temp: {{ location.temperature_f }}°F</div>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Images (inline display) -->
+          {% with image_attachments=entry.attachments.all|filter_by_type:"image" %}
+            {% if image_attachments %}
+              <div class="entry-images" style="margin-bottom: 1rem;">
+                <div class="images-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                  {% for attachment in image_attachments %}
+                    <div class="image-item" style="border-radius: 6px; overflow: hidden; background: #f3f4f6;">
+                      {% include "webapp/components/responsive_image.html" with image=attachment.media alt_text=attachment.description|default:"Log entry image" lazy=True css_classes="w-full h-32 object-cover" %}
+                      {% if attachment.description %}
+                        <div style="padding: 0.5rem; font-size: 0.85em; color: #6b7280;">{{ attachment.description }}</div>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          <!-- Other Attachments -->
+          {% with other_attachments=entry.attachments.all|exclude_type:"image" %}
+            {% if other_attachments %}
+              <div class="entry-attachments" style="margin-bottom: 1rem;">
+                <h4 style="font-size: 0.9em; font-weight: 600; color: #374151; margin: 0 0 0.5rem 0; display: flex; align-items: center;">
+                  <span class="material-symbols-outlined" style="font-size: 1.1em; margin-right: 0.25rem; color: #059669;">attach_file</span>
+                  Attachments
+                </h4>
+                <div class="attachments-list" style="background: #f9fafb; border-radius: 6px; padding: 0.75rem;">
+                  {% for attachment in other_attachments %}
+                    <div class="attachment-item" style="display: flex; align-items: center; {% if not forloop.last %}margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb;{% endif %}">
+                      <span class="material-symbols-outlined" style="margin-right: 0.5rem; color: #6b7280;">
+                        {% if attachment.attachment_type == 'receipt' %}receipt
+                        {% elif attachment.attachment_type == 'manual' %}book
+                        {% elif attachment.attachment_type == 'video' %}movie
+                        {% elif attachment.attachment_type == 'audio' %}audio_file
+                        {% else %}description{% endif %}
+                      </span>
+                      <div style="flex-grow: 1;">
+                        <div style="font-weight: 500; color: #111827;">{{ attachment.media.original_filename }}</div>
+                        {% if attachment.description %}
+                          <div style="color: #6b7280; font-size: 0.85em;">{{ attachment.description }}</div>
+                        {% endif %}
+                        <span class="attachment-type" style="display: inline-block; background: #fef3c7; color: #92400e; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.7em; margin-top: 0.25rem;">
+                          {{ attachment.get_attachment_type_display }}
+                        </span>
+                      </div>
+                      <a href="{{ attachment.media.url }}" download="{{ attachment.media.original_filename }}" 
+                         style="color: #059669; text-decoration: none; padding: 0.25rem;">
+                        <span class="material-symbols-outlined">download</span>
+                      </a>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="empty-logbook" style="text-align: center; padding: 2rem; color: #6b7280;">
+        <span class="material-symbols-outlined" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem; display: block;">book</span>
+        <p style="font-size: 1.1em; margin-bottom: 0.5rem;">No logbook entries yet</p>
+        <p style="font-size: 0.9em;">
+          {% if vessel|can_crew_vessel:request.user %}
+            Start documenting your sailing adventures by adding your first log entry.
+          {% else %}
+            Log entries will appear here once crew members start adding them.
+          {% endif %}
+        </p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+.btn {
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #059669;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #047857;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background-color: #f3f4f6;
+}
+</style>
