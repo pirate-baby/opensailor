@@ -90,11 +90,12 @@ jobs:
 
       - name: Build frontend assets
         run: |
-          mkdir -p static/libraries
+          mkdir -p static/libraries/.vite
           cd client_side_js
           npm install vite @milkdown/crepe
           npx vite build
           cp -r dist/* ../static/libraries/
+          cp dist/manifest.json ../static/libraries/.vite/manifest.json
 
       - name: Verify static files exist
         run: |
