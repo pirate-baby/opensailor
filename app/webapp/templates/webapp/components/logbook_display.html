@@ -22,7 +22,7 @@
 
   <!-- Logbook Entries -->
   <div class="logbook-entries">
-    {% for entry in vessel.log_entries.all %}
+    {% for entry in vessel.log_entries.all|order_by:"-log_timestamp" %}
       <div class="log-entry" style="border: 1px solid #e5e7eb; border-radius: 8px; background: white; margin-bottom: 1.5rem; overflow: hidden;">
         
         <!-- Entry Header -->

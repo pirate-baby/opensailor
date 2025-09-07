@@ -16,6 +16,23 @@
         #{{ field_id }}-editor .ProseMirror {
             padding: 0.5rem !important;
         }
+        
+        /* Image size constraints */
+        #{{ field_id }}-editor img {
+            max-width: 100% !important;
+            max-height: 400px !important;
+            height: auto !important;
+            width: auto !important;
+            object-fit: contain !important;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Ensure images don't break layout */
+        #{{ field_id }}-editor .ProseMirror img {
+            display: block !important;
+            margin: 0.5rem auto !important;
+        }
     </style>
     {% if errors %}
         <div class="text-red-500 text-sm mt-2">{{ errors }}</div>

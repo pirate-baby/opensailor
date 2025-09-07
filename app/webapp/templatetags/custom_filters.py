@@ -110,3 +110,9 @@ def can_crew_vessel(vessel, user):
 def can_edit_entry(entry, user):
     """Check if user can edit a log entry."""
     return entry.can_edit(user)
+
+
+@register.filter
+def order_by(queryset, field):
+    """Order a queryset by a given field."""
+    return queryset.order_by(field)

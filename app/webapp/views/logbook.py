@@ -3,6 +3,7 @@ from django.contrib import messages
 from django import forms
 from django.views.decorators.http import require_http_methods
 from django.forms import inlineformset_factory
+from django.utils import timezone
 import datetime
 
 from webapp.models.vessel import Vessel
@@ -21,11 +22,11 @@ class LogEntryForm(forms.ModelForm):
     log_timestamp = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={
             "type": "datetime-local",
-            "class": "form-input"
+            "class": "form-input",
+            "step": "60"  # Allow minute precision, not seconds
         }),
         label="Log Date & Time",
         help_text="When did this log event occur?",
-        initial=datetime.datetime.now
     )
 
     class Meta:
@@ -45,7 +46,9 @@ class LogEntryForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Set initial datetime to current time if creating new entry
         if not self.instance.pk:
-            self.fields['log_timestamp'].initial = datetime.datetime.now()
+            # Format datetime for HTML5 datetime-local input
+            now = timezone.now()
+            self.fields['log_timestamp'].initial = now.strftime('%Y-%m-%dT%H:%M')
 
 
 class LogEntryLocationForm(forms.ModelForm):
