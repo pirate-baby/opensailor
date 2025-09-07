@@ -1,0 +1,502 @@
+{% extends "webapp/base.html" %}
+
+{% block title %}
+  {% if is_edit %}
+    Edit Log Entry for {{ vessel.name }}
+  {% else %}
+    Create Log Entry for {{ vessel.name }}
+  {% endif %} - {{ APP_NAME }}
+{% endblock %}
+
+{% block extra_head %}
+
+<style>
+.formset-form {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #f9fafb;
+}
+
+.formset-form.to-delete {
+  opacity: 0.5;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.formset-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.delete-formset-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.delete-formset-btn:hover {
+  background: #b91c1c;
+}
+
+.add-formset-btn {
+  background: #059669;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.add-formset-btn:hover {
+  background: #047857;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.form-section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.form-section h3 .material-symbols-outlined {
+  margin-right: 0.5rem;
+  font-size: 1.3rem;
+  color: #059669;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-row.full-width {
+  grid-template-columns: 1fr;
+}
+
+.form-row.triple {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.form-group .help-text {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.form-input, .form-select, .form-textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.collapsible-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.collapsible-header {
+  background: #f9fafb;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.collapsible-content {
+  padding: 1rem;
+}
+
+.collapse-icon {
+  transition: transform 0.2s ease;
+}
+
+.collapsed .collapse-icon {
+  transform: rotate(-90deg);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-10">
+  <div class="bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold mb-6">
+      {% if is_edit %}
+        Edit Log Entry for {{ vessel.name }}
+      {% else %}
+        Create Log Entry for {{ vessel.name }}
+      {% endif %}
+    </h1>
+
+    <form method="post" enctype="multipart/form-data" id="log-entry-form">
+      {% csrf_token %}
+
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h3>
+          <span class="material-symbols-outlined">edit_note</span>
+          Basic Information
+        </h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.help_text %}
+              <div class="help-text">{{ form.title.help_text }}</div>
+            {% endif %}
+            {% if form.title.errors %}
+              <div class="error">{{ form.title.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.log_timestamp.id_for_label }}">{{ form.log_timestamp.label }}</label>
+            {{ form.log_timestamp }}
+            {% if form.log_timestamp.help_text %}
+              <div class="help-text">{{ form.log_timestamp.help_text }}</div>
+            {% endif %}
+            {% if form.log_timestamp.errors %}
+              <div class="error">{{ form.log_timestamp.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-row full-width">
+          <div class="form-group">
+            {% include "webapp/components/milkdown_editor.html" with field_name="content" field_id="log-content" label=form.content.label initial_value=form.content.value|default:"" errors=form.content.errors form_id="log-entry-form" %}
+            {% if form.content.help_text %}
+              <div class="help-text">{{ form.content.help_text }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Locations Section -->
+      <div class="form-section">
+        <div class="collapsible-section" id="locations-section">
+          <div class="collapsible-header" onclick="toggleSection('locations')">
+            <h3 style="margin: 0;">
+              <span class="material-symbols-outlined">location_on</span>
+              Locations & Weather Data
+            </h3>
+            <span class="material-symbols-outlined collapse-icon">expand_more</span>
+          </div>
+          <div class="collapsible-content" id="locations-content">
+            <div id="location-formset">
+              {{ location_formset.management_form }}
+              <div id="location-forms">
+                {% for form in location_formset %}
+                  <div class="formset-form location-form">
+                    <div class="formset-header">
+                      <span>Location {{ forloop.counter }}</span>
+                      <button type="button" class="delete-formset-btn" onclick="deleteFormsetForm(this, 'location')">Remove</button>
+                    </div>
+
+                    {% for hidden in form.hidden_fields %}
+                      {{ hidden }}
+                    {% endfor %}
+
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>{{ form.name.label }}</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="error">{{ form.name.errors.0 }}</div>{% endif %}
+                      </div>
+                      <div class="form-group">
+                        <label>{{ form.location_type.label }}</label>
+                        {{ form.location_type }}
+                        {% if form.location_type.errors %}<div class="error">{{ form.location_type.errors.0 }}</div>{% endif %}
+                      </div>
+                    </div>
+
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>{{ form.latitude.label }}</label>
+                        {{ form.latitude }}
+                        {% if form.latitude.errors %}<div class="error">{{ form.latitude.errors.0 }}</div>{% endif %}
+                      </div>
+                      <div class="form-group">
+                        <label>{{ form.longitude.label }}</label>
+                        {{ form.longitude }}
+                        {% if form.longitude.errors %}<div class="error">{{ form.longitude.errors.0 }}</div>{% endif %}
+                      </div>
+                    </div>
+
+                    <div class="form-row triple">
+                      <div class="form-group">
+                        <label>{{ form.speed_knots.label }}</label>
+                        {{ form.speed_knots }}
+                        {% if form.speed_knots.errors %}<div class="error">{{ form.speed_knots.errors.0 }}</div>{% endif %}
+                      </div>
+                      <div class="form-group">
+                        <label>{{ form.heading_degrees.label }}</label>
+                        {{ form.heading_degrees }}
+                        {% if form.heading_degrees.errors %}<div class="error">{{ form.heading_degrees.errors.0 }}</div>{% endif %}
+                      </div>
+                      <div class="form-group">
+                        <label>{{ form.depth_feet.label }}</label>
+                        {{ form.depth_feet }}
+                        {% if form.depth_feet.errors %}<div class="error">{{ form.depth_feet.errors.0 }}</div>{% endif %}
+                      </div>
+                    </div>
+
+                    <div class="form-row triple">
+                      <div class="form-group">
+                        <label>{{ form.wind_speed_knots.label }}</label>
+                        {{ form.wind_speed_knots }}
+                        {% if form.wind_speed_knots.errors %}<div class="error">{{ form.wind_speed_knots.errors.0 }}</div>{% endif %}
+                      </div>
+                      <div class="form-group">
+                        <label>{{ form.wind_direction_degrees.label }}</label>
+                        {{ form.wind_direction_degrees }}
+                        {% if form.wind_direction_degrees.errors %}<div class="error">{{ form.wind_direction_degrees.errors.0 }}</div>{% endif %}
+                      </div>
+                      <div class="form-group">
+                        <label>{{ form.temperature_f.label }}</label>
+                        {{ form.temperature_f }}
+                        {% if form.temperature_f.errors %}<div class="error">{{ form.temperature_f.errors.0 }}</div>{% endif %}
+                      </div>
+                    </div>
+
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>{{ form.sea_state.label }}</label>
+                        {{ form.sea_state }}
+                        {% if form.sea_state.errors %}<div class="error">{{ form.sea_state.errors.0 }}</div>{% endif %}
+                      </div>
+                      <div class="form-group">
+                        <label>{{ form.barometric_pressure.label }}</label>
+                        {{ form.barometric_pressure }}
+                        {% if form.barometric_pressure.errors %}<div class="error">{{ form.barometric_pressure.errors.0 }}</div>{% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+              <button type="button" class="add-formset-btn" onclick="addLocationForm()">
+                <span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 0.25rem;">add</span>
+                Add Location
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attachments Section -->
+      <div class="form-section">
+        <div class="collapsible-section" id="attachments-section">
+          <div class="collapsible-header" onclick="toggleSection('attachments')">
+            <h3 style="margin: 0;">
+              <span class="material-symbols-outlined">attach_file</span>
+              Attachments
+            </h3>
+            <span class="material-symbols-outlined collapse-icon">expand_more</span>
+          </div>
+          <div class="collapsible-content collapsed" id="attachments-content">
+            <div id="attachment-formset">
+              {{ attachment_formset.management_form }}
+              <div id="attachment-forms">
+                {% for form in attachment_formset %}
+                  <div class="formset-form attachment-form">
+                    <div class="formset-header">
+                      <span>Attachment {{ forloop.counter }}</span>
+                      <button type="button" class="delete-formset-btn" onclick="deleteFormsetForm(this, 'attachment')">Remove</button>
+                    </div>
+
+                    {% for hidden in form.hidden_fields %}
+                      {{ hidden }}
+                    {% endfor %}
+
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>File</label>
+                        <input type="file" name="attachments-{{ forloop.counter0 }}-file" class="form-input">
+                        <div class="help-text">Upload images, documents, receipts, or manuals</div>
+                      </div>
+                      <div class="form-group">
+                        <label>{{ form.attachment_type.label }}</label>
+                        {{ form.attachment_type }}
+                        {% if form.attachment_type.errors %}<div class="error">{{ form.attachment_type.errors.0 }}</div>{% endif %}
+                      </div>
+                    </div>
+
+                    <div class="form-row full-width">
+                      <div class="form-group">
+                        <label>{{ form.description.label }}</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="error">{{ form.description.errors.0 }}</div>{% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+              <button type="button" class="add-formset-btn" onclick="addAttachmentForm()">
+                <span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 0.25rem;">add</span>
+                Add Attachment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex justify-end pt-6 border-t border-gray-200">
+        <a href="{% url 'vessel_detail' vessel.pk %}"
+           class="mr-4 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+          Cancel
+        </a>
+        <button type="submit"
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-primary">
+          {% if is_edit %}Update Entry{% else %}Create Entry{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleSection(sectionName) {
+  const content = document.getElementById(sectionName + '-content');
+  const section = document.getElementById(sectionName + '-section');
+
+  if (content.classList.contains('collapsed')) {
+    content.classList.remove('collapsed');
+    content.style.display = 'block';
+    section.classList.remove('collapsed');
+  } else {
+    content.classList.add('collapsed');
+    content.style.display = 'none';
+    section.classList.add('collapsed');
+  }
+}
+
+function deleteFormsetForm(button, formsetType) {
+  const form = button.closest('.formset-form');
+  const deleteField = form.querySelector(`input[name$='-DELETE']`);
+
+  if (deleteField) {
+    deleteField.checked = true;
+    form.classList.add('to-delete');
+    button.textContent = 'Undo';
+    button.onclick = function() {
+      deleteField.checked = false;
+      form.classList.remove('to-delete');
+      button.textContent = 'Remove';
+      button.onclick = function() { deleteFormsetForm(button, formsetType); };
+    };
+  } else {
+    form.style.display = 'none';
+  }
+}
+
+function addLocationForm() {
+  const formsetDiv = document.getElementById('location-forms');
+  const totalForms = document.getElementById('id_locations-TOTAL_FORMS');
+  const formCount = parseInt(totalForms.value);
+
+  const emptyForm = formsetDiv.querySelector('.location-form').cloneNode(true);
+
+  // Update form index in field names and IDs
+  const formRegex = new RegExp('locations-(\\d+)', 'g');
+  emptyForm.innerHTML = emptyForm.innerHTML.replace(formRegex, `locations-${formCount}`);
+
+  // Clear values
+  emptyForm.querySelectorAll('input, select, textarea').forEach(field => {
+    if (field.type !== 'hidden' && field.name !== `locations-${formCount}-DELETE`) {
+      field.value = '';
+    }
+  });
+
+  // Update header
+  emptyForm.querySelector('.formset-header span').textContent = `Location ${formCount + 1}`;
+
+  // Remove to-delete class if present
+  emptyForm.classList.remove('to-delete');
+
+  formsetDiv.appendChild(emptyForm);
+  totalForms.value = formCount + 1;
+}
+
+function addAttachmentForm() {
+  const formsetDiv = document.getElementById('attachment-forms');
+  const totalForms = document.getElementById('id_attachments-TOTAL_FORMS');
+  const formCount = parseInt(totalForms.value);
+
+  const emptyForm = formsetDiv.querySelector('.attachment-form').cloneNode(true);
+
+  // Update form index in field names and IDs
+  const formRegex = new RegExp('attachments-(\\d+)', 'g');
+  emptyForm.innerHTML = emptyForm.innerHTML.replace(formRegex, `attachments-${formCount}`);
+
+  // Clear values
+  emptyForm.querySelectorAll('input, select, textarea').forEach(field => {
+    if (field.type !== 'hidden' && field.name !== `attachments-${formCount}-DELETE`) {
+      field.value = '';
+    }
+  });
+
+  // Update header
+  emptyForm.querySelector('.formset-header span').textContent = `Attachment ${formCount + 1}`;
+
+  // Remove to-delete class if present
+  emptyForm.classList.remove('to-delete');
+
+  formsetDiv.appendChild(emptyForm);
+  totalForms.value = formCount + 1;
+}
+
+// Initialize collapsed state
+document.addEventListener('DOMContentLoaded', function() {
+  const attachmentsContent = document.getElementById('attachments-content');
+  attachmentsContent.style.display = 'none';
+});
+</script>
+{% endblock %}

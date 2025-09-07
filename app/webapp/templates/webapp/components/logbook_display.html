@@ -13,10 +13,10 @@
       <span style="color: #6b7280; font-weight: normal; margin-left: 0.5rem;">({{ vessel.log_entries.count }} entries)</span>
     </div>
     {% if vessel|can_crew_vessel:request.user %}
-      <button class="btn btn-primary" style="font-size: 0.9em; padding: 0.5rem 1rem;">
+      <a href="{% url 'log_entry_create' vessel.pk %}" class="btn btn-primary" style="font-size: 0.9em; padding: 0.5rem 1rem; text-decoration: none;">
         <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-right: 0.25rem;">add</span>
         Add Entry
-      </button>
+      </a>
     {% endif %}
   </div>
 
@@ -43,10 +43,16 @@
               </div>
             </div>
             {% if entry|can_edit_entry:request.user %}
-              <div class="entry-actions">
-                <button class="btn-ghost" style="padding: 0.25rem; color: #6b7280;" title="Edit entry">
+              <div class="entry-actions" style="display: flex; gap: 0.5rem;">
+                <a href="{% url 'log_entry_edit' vessel.pk entry.pk %}" class="btn-ghost" style="padding: 0.25rem; color: #6b7280; text-decoration: none;" title="Edit entry">
                   <span class="material-symbols-outlined" style="font-size: 1.1em;">edit</span>
-                </button>
+                </a>
+                <form method="post" action="{% url 'log_entry_delete' vessel.pk entry.pk %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this log entry?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-ghost" style="padding: 0.25rem; color: #dc2626;" title="Delete entry">
+                    <span class="material-symbols-outlined" style="font-size: 1.1em;">delete</span>
+                  </button>
+                </form>
               </div>
             {% endif %}
           </div>
