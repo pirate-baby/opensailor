@@ -77,3 +77,44 @@ def markdown_no_headings(value):
     no_headings = re.sub(r"^#+[ ].*$", "", value, flags=re.MULTILINE)
     html = markdown.markdown(no_headings)
     return mark_safe(html)
+
+
+@register.filter(is_safe=True)
+def render_markdown(value):
+    """Render markdown content to HTML."""
+    if not value:
+        return ""
+    html = markdown.markdown(value)
+    return mark_safe(html)
+
+
+@register.filter
+def filter_by_type(queryset, attachment_type):
+    """Filter attachments by type."""
+    return queryset.filter(attachment_type=attachment_type)
+
+
+@register.filter
+def exclude_type(queryset, attachment_type):
+    """Exclude attachments by type."""
+    return queryset.exclude(attachment_type=attachment_type)
+
+
+@register.filter
+def can_crew_vessel(vessel, user):
+    """Check if user can crew vessel (add log entries)."""
+    return user.has_perm("can_crew_vessel", vessel) or user.has_perm(
+        "can_manage_vessel", vessel
+    )
+
+
+@register.filter
+def can_edit_entry(entry, user):
+    """Check if user can edit a log entry."""
+    return entry.can_edit(user)
+
+
+@register.filter
+def order_by(queryset, field):
+    """Order a queryset by a given field."""
+    return queryset.order_by(field)

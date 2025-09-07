@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@milkdown/crepe": "^7.15.3",
+    "@milkdown/crepe": "^7.15.5",
     "vite": "^6.3.5"
   },
   "description": ""

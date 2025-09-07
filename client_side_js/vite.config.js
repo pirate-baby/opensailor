@@ -8,7 +8,6 @@ export default defineConfig({
       input: './src/main.js',
       output: {
         format: 'iife',
-        name: 'MilkdownCrepeBundle',
         entryFileNames: 'main.js',
         assetFileNames: '[name][extname]',
       },

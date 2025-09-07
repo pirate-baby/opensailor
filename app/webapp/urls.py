@@ -11,6 +11,11 @@ from webapp.views.vessel_note import (
     vessel_note_message_reply_save,
     vessel_note_share,
 )
+from webapp.views.logbook import (
+    log_entry_create,
+    log_entry_edit,
+    log_entry_delete,
+)
 from webapp.views.vessel_access import (
     vessel_access_request,
     vessel_manage_roles,
@@ -128,6 +133,22 @@ urlpatterns = [
         "vessels/<int:pk>/toggle-privacy/",
         vessel_toggle_privacy,
         name="vessel_toggle_privacy",
+    ),
+    # Logbook management
+    path(
+        "vessels/<int:pk>/logbook/create/",
+        log_entry_create,
+        name="log_entry_create",
+    ),
+    path(
+        "vessels/<int:pk>/logbook/<int:entry_pk>/edit/",
+        log_entry_edit,
+        name="log_entry_edit",
+    ),
+    path(
+        "vessels/<int:pk>/logbook/<int:entry_pk>/delete/",
+        log_entry_delete,
+        name="log_entry_delete",
     ),
     path("admin/", admin.site.urls),
     path("api/", api.urls),

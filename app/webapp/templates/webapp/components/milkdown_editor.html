@@ -1,9 +1,39 @@
 {% load static %}
-<script src="{% static 'libraries/main.js' %}"></script>
 <div class="mb-4">
     <label for="{{ field_id }}" class="block text-lg font-medium text-gray-700 mb-2">{{ label }}</label>
     <input type="hidden" name="{{ field_name }}" id="{{ field_id }}" value="{{ initial_value|default:'' }}">
-    <div id="{{ field_id }}-editor" style="min-height: 400px; height: 60vh; max-height: 70vh; border: 1px solid #e5e7eb; border-radius: 0.5rem;"></div>
+    <div id="{{ field_id }}-editor" style="min-height: 400px; height: 60vh; max-height: 70vh; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.5rem;"></div>
+    <style>
+        #{{ field_id }}-editor .milkdown {
+            padding: 0.5rem !important;
+        }
+        #{{ field_id }}-editor .editor {
+            padding: 0.5rem !important;
+        }
+        #{{ field_id }}-editor [contenteditable] {
+            padding: 0.5rem !important;
+        }
+        #{{ field_id }}-editor .ProseMirror {
+            padding: 0.5rem !important;
+        }
+        
+        /* Image size constraints */
+        #{{ field_id }}-editor img {
+            max-width: 100% !important;
+            max-height: 400px !important;
+            height: auto !important;
+            width: auto !important;
+            object-fit: contain !important;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Ensure images don't break layout */
+        #{{ field_id }}-editor .ProseMirror img {
+            display: block !important;
+            margin: 0.5rem auto !important;
+        }
+    </style>
     {% if errors %}
         <div class="text-red-500 text-sm mt-2">{{ errors }}</div>
     {% endif %}
