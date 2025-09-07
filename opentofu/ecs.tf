@@ -104,7 +104,7 @@ resource "aws_ecs_task_definition" "app" {
         { name = "DEBUG", value = "False" },
         { name = "APP_DB_USER", value = "opensailor" },
         { name = "APP_DB", value = "opensailor" },
-        { name = "AWS_S3_STORAGE_BUCKET", value = "opensailor-public-storage" },
+        { name = "AWS_S3_STORAGE_BUCKET", value = "static-opensailor-org" },
         { name = "AWS_DEFAULT_REGION_NAME", value = "us-east-2" },
         { name = "AWS_S3_ENDPOINT_URL", value = "https://s3.us-east-2.amazonaws.com" },
         { name = "AWS_S3_CLIENT_ENDPOINT_URL", value = "https://s3.us-east-2.amazonaws.com" },
