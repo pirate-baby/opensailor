@@ -7,6 +7,7 @@ from .sailboat_attribute import SailboatAttribute
 from .media import Media
 from .vessel import Vessel
 from .vessel_note import VesselNote
+from .vessel_access_request import VesselAccessRequest
 from .moderation import Moderation
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     "Media",
     "Vessel",
     "VesselNote",
+    "VesselAccessRequest",
     "Moderation",
 ]
