@@ -115,8 +115,12 @@ jobs:
             echo "Error: static/libraries/main.*.js not found after build"
             exit 1
           fi
+          if [ ! -f "static/libraries/.vite/manifest.json" ]; then
+            echo "Error: static/libraries/.vite/manifest.json not found after build"
+            exit 1
+          fi
           echo "Static files verified:"
-          ls -la static/output.css static/libraries/main.*.js
+          ls -la static/output.css static/libraries/main.*.js static/libraries/.vite/manifest.json
 
       - name: Collect and upload all static files to S3
         run: |

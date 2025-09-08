@@ -1,7 +1,9 @@
 import json
-import os
+import requests
 from django import template
 from django.templatetags.static import static
+from django.core.cache import cache
+from webapp.settings import IS_PRODUCTION
 
 register = template.Library()
 
@@ -11,24 +13,23 @@ def vite_asset(asset_name):
     """
     Get the hashed filename from Vite's manifest for cache busting
     """
-    manifest_path = "/static/libraries/.vite/manifest.json"
-
-    # Fallback to original filename if manifest doesn't exist (development)
-    if not os.path.exists(manifest_path):
-        return static(f"libraries/{asset_name}")
-
-    try:
-        with open(manifest_path, "r", encoding="utf-8") as f:
-            manifest = json.load(f)
-
-        # Get the entry file info
-        # Try different possible keys for the main entry
-        entry = manifest.get("main", {}) or manifest.get("src/main.js", {})
-        if "file" in entry:
-            return static(f'libraries/{entry["file"]}')
-
-    except (json.JSONDecodeError, FileNotFoundError, KeyError):
-        pass
-
-    # Fallback to original filename
+    # Check cache first
+    cache_key = f"vite_manifest_{asset_name}"
+    if cached_result := cache.get(cache_key):
+        return cached_result
+    if IS_PRODUCTION:
+        try:
+            manifest = requests.get("/static/libraries/.vite/manifest.json", timeout=2).json()
+            entry = manifest.get("src/main.js", {})
+            if "file" in entry:
+                result = static(f'libraries/{entry["file"]}')
+                cache.set(cache_key, result, 3600 * 24 * 30)  # Cache for 30 days
+                return result
+        except (
+            requests.RequestException,
+            json.JSONDecodeError,
+            KeyError,
+            FileNotFoundError,
+        ):
+            pass
     return static(f"libraries/{asset_name}")
