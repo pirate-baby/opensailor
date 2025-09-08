@@ -96,10 +96,10 @@ jobs:
           npx vite build
           echo "=== Checking dist directory contents ==="
           ls -la dist/
-          if [ -f "dist/manifest.json" ]; then
+          if [ -f "dist/.vite/manifest.json" ]; then
             echo "=== Manifest content ==="
-            cat dist/manifest.json
-            cp dist/manifest.json ../static/libraries/.vite/manifest.json
+            cat dist/.vite/manifest.json
+            cp dist/.vite/manifest.json ../static/libraries/.vite/manifest.json
           else
             echo "No manifest.json found in dist/"
           fi
